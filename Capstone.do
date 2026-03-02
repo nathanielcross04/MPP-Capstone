@@ -243,7 +243,7 @@ save "Data\Cleaned 1\cleaned_5.dta", replace
 *Import Excel workbook
 import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("E-Verify (0,1)") firstrow clear
 
-local dim "enf_Everify"
+local dim "enf_everify"
 local dim2 "`dim'_"
 
 *Drop empty columns
@@ -288,7 +288,7 @@ save "Data\Cleaned 1\cleaned_6.dta", replace
 *Import Excel workbook
 import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("Limits E-Verify (0,1)") firstrow clear
 
-local dim "enf_limits_Everify"
+local dim "enf_limits_everify"
 local dim2 "`dim'_"
 
 *Drop empty columns
@@ -1159,7 +1159,7 @@ forvalues n = 2(1)25 {
 **Saving/cleaning directory 
 
 *Save data
-save "Data\State immigration policy", replace
+save "Data\Final data\State immigration policies", replace
 
 *Optional recode of ternary variables
 /*
@@ -1171,7 +1171,7 @@ foreach var of varlist enf* {
 */
 
 *Saving as a .csv
-save "Data\State immigration policy.csv", replace
+export delimited using "Data\Final data\State immigration policies.csv", replace
 
 *Erasing unneeded files
 forvalues i = 1(1)25 {

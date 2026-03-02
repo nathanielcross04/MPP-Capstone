@@ -1,4 +1,4 @@
-state,year,enf_task_force_287g,enf_warrant_287g,enf_jail_287g,enf_secure_comms,enf_lim_coop_detainers,enf_Everify,enf_limits_Everify,enf_state_omnibus,pub_tanf_post5,pub_cashass_during5,pub_foodass_lprkids,pub_foodass_lpradults,pub_ssi_replacement,pub_medicaid_lprkids,pub_pubins_unauthkids,pub_pubins_lpradults,pub_medicaid_unauthadult,pub_medicaid_lprpreg,pub_medicaid_unauthpreg,pub_medicaid_lpr_post5,int_instate_tuition,int_state_finaid,int_uni_ban,int_official_eng,int_drivers_license
+state,year,enf_task_force_287g,enf_warrant_287g,enf_jail_287g,enf_secure_comms,enf_lim_coop_detainers,enf_everify,enf_limits_everify,enf_state_omnibus,pub_tanf_post5,pub_cashass_during5,pub_foodass_lprkids,pub_foodass_lpradults,pub_ssi_replacement,pub_medicaid_lprkids,pub_pubins_unauthkids,pub_pubins_lpradults,pub_medicaid_unauthadult,pub_medicaid_lprpreg,pub_medicaid_unauthpreg,pub_medicaid_lpr_post5,int_instate_tuition,int_state_finaid,int_uni_ban,int_official_eng,int_drivers_license
 Alabama,2000,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0
 Alabama,2001,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0
 Alabama,2002,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0
