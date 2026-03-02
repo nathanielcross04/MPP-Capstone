@@ -1,5 +1,6 @@
 *.stswp        # Stata swap files
 *.log          # optionally exclude logs (or keep them — your choice)
 ~*.do          # temp do-files
+~*.do.stswp
 .DS_Store
 Thumbs.db
