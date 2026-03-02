@@ -1,4 +1,18 @@
 # Codebook
-| Variable | Description | Value type | Value notes |
-|---|---|---|---|
+| Variable | Name | Description | Value type | Value notes |
+|---|---|---|---|---|
+|state|State|Unit identifier|string|Fifty-one unique values: all 50 states plus the District of Columbia.|
+|year|Year|Time identifier|integer|Ranges from 2000 to 2020, with up to 21 observations per each state-policy.|
+|enf_task_force_287g|287(g) agreement (task force model)|287(g) deputizes local law enforcement to perform certain functions of federal immigration officials. The task force model, which ended in 2012, allowed officials to act in the community.|ternary byte|Three-part coding: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.|
+|enf_warrant_287g|287(g) agreement (Warrant Service Officer model)|287(g) deputizes local law enforcement to perform certain functions of federal immigration officials. WSO allows local officials to serve and execute administrative arrest warrants on individuals already in their jail custody.|ternary byte|Three-part coding: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.|
+|enf_jail_287g|287(g) agreement (jail model)|287(g) deputizes local law enforcement to perform certain functions of federal immigration officials. The jail model allows officials to perform immigration enforcement functions in jails.|ternary byte|Three-part coding: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.|
+|enf_secure_comms|Secure Communities (SC)|Secure Communities, a federal data-sharing program that ran from 2008 to 2014 and was reinstated in January 2017. Between 2014 and 2017, a different program, the Priority Enforcement Program, was in place. Participation in Secure Communities was initially voluntary but became mandatory and was active in all states by 2012. Through Secure Communities, the FBI shares fingerprints it receives from local law enforcement agencies with immigration enforcement agencies for checks against immigration databases. Depending on the result, immigration officials decide whether to take enforcement action, such as issuing a detainer request.|binary byte| |
+|enf_lim_coop_detainers|Limited cooperation with ICE detainer requests|ICE detainers are written requests to local jails and law enforcement agencies asking that they hold individuals for an additional 48 hours after their release date to give ICE time to process the case and decide whether to take the individual into federal custody for deportation.|ternary byte|Three-part coding: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.|
+enf_everify|E-Verify mandate|State has a policy to mandate that some or all employers use E-Verify, an electronic verification system that confirms the employment eligibility of workers. Most states with this mandate require either public employers and state contractors, or all employers with at least a certain number of employees, to use E-Verify.|ternary byte|Three-part coding: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.|
+|enf_limits_everify|Prohibition of local E-Verify mandates|State has a policy to block cities, counties, or other jurisdictions from requiring employers to use E-Verify, an electronic verification system that confirms the employment eligibility of workers.|binary byte| |
+|enf_state_omnibus|State omnibus immigration bill|State has multiple enforcement-related measures on the books as a result of passing an omnibus immigration bill, such as Arizona's SB1070 and copycat bills in several states.|binary byte| |
 |
+
+
+
+NOTE: COPIED FROM URBAN INSTITUTE
