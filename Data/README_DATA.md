@@ -13,8 +13,8 @@ This dataset was constructed by extracting 25 distinct policy frames from the or
 <pre>
 MPP Capstone/
 ├── Data/
-│   ├── README_DATA.md                                      ← Dataset documentation, including construction, file roadmap and references
-│   ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions, as well as value types
+│   ├── README_DATA.md                                      ← Dataset documentation, including construction, roadmap and references
+│   ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
 │   ├── Final data/
 │       ├── State immigration policies.csv
 │       └── State immigration policies.dta
