@@ -1,6 +1,6 @@
 # Data
 
-The final dataset published in this repository is an adapted version of the Urban Institute's State Immigration Policy Resource, which can be found [here](https://www.urban.org/data-tools/state-immigration-policy-resource).
+The final dataset published in this repository is secondary data, adapted from the Urban Institute's State Immigration Policy Resource, which can be found [here](https://www.urban.org/data-tools/state-immigration-policy-resource).
 
 The constructed set is a long panel dataset spanning 27 variables and 1,071 observations. Two variables (`state` and `year`) uniquely identify every observation in the dataset, and these identifiers span all 50 states and the District of Columbia and most years from 2000 to 2020. Some variables are only coded until 2017 or 2019 and therefore have missings due to data availability and coding timelines. Despite this, the data remains a strongly-balanced panel.
 
