@@ -9,6 +9,21 @@ Twenty-five policy dimensions make up the majority of the dataset, spanning thre
 ### Data construction
 This dataset was constructed by extracting 25 distinct policy frames from the original data, recoding, cleaning, and pivoting these frames to a more usable format in Stata, and merging all frames together to create the final dataset. 
 
+### Data roadmap
+<pre>
+MPP Capstone/
+├── Data/
+│   ├── README_DATA.md                                      ← Dataset documentation, including construction, file roadmap and references
+│   ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions, as well as value types
+│   ├── Final data/
+│       ├── State immigration policies.csv
+│       └── State immigration policies.dta
+│   └── Original data/                                      ← Original spreadsheets sourced from the Urban Institute
+│       ├── Updated_Enforcement_Policies_Data.xlsx
+│       ├── Updated_Integration_Policies_Data.xlsx
+│       └── Updated_Public_Benefits_Policies_Data.xlsx
+</pre>
+
 ### References
 Julia Gelatt, Hamutal Bernstein, Heather Koball, Charmaine Runes, & Eleanor Pratt. (2017). *State Immigration Policy Resource* (Version 1) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
 
