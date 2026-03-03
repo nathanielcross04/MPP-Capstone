@@ -1,8 +1,8 @@
 # Codebook
 
 ### Unique identifiers
-| Variable | Name | Description | Value type | Value notes |
-|---|---|---|---|---|
+| Variable | Name | Description | Value type |
+|---|---|---|---|
 |state|State|Unit identifier|string|Fifty-one unique values: all 50 states plus the District of Columbia.|
 |year|Year|Time identifier|integer|Ranges from 2000 to 2020, with up to 21 observations per each state-policy.|
 
