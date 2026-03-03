@@ -7,7 +7,7 @@ The constructed set is a long panel dataset spanning 27 variables and 1,071 obse
 Twenty-five policy dimensions make up the majority of the dataset, spanning three overarching facets of immigration policies that vary at the state level:  enforcement, public benefits, and integration. Descriptions of all variables, as well as their potential values, can be found in the codebook.
 
 ### Data construction
-This dataset was constructed by extracting 25 distinct policy frames from the original data, recoding, cleaning, and pivoting these frames to a more usable format in Stata, and merging all frames together to create the final dataset. 
+This dataset was constructed by extracting 25 distinct policy frames from the original data, recoding, cleaning, and pivoting these frames to distinct .dta files before merging all frames together to create the final panel dataset.
 
 ### Data roadmap
 <pre>
