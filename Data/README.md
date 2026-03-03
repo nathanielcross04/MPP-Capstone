@@ -28,3 +28,5 @@ Data/
 
 - Hamutal Bernstein, Paola Echave, Heather Koball, Joseph Stinson, & Susi Martinez. (2022). *State Immigration Policy Resource (2022 update)* (Version 2) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
 
+- The original Urban Institute repo can be found [here](https://github.com/UrbanInstitute/state-immigration).
+
