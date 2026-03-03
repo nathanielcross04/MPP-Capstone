@@ -11,17 +11,16 @@ This dataset was constructed by extracting 25 distinct policy frames from the or
 
 ### Data roadmap
 <pre>
-MPP Capstone/
-├── Data/
-│   ├── README_DATA.md                                      ← Dataset documentation, including construction, roadmap and references
-│   ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
-│   ├── Final data/
-│       ├── State immigration policies.csv
-│       └── State immigration policies.dta
-│   └── Original data/                                      ← Original spreadsheets sourced from the Urban Institute
-│       ├── Updated_Enforcement_Policies_Data.xlsx
-│       ├── Updated_Integration_Policies_Data.xlsx
-│       └── Updated_Public_Benefits_Policies_Data.xlsx
+Data/
+├── Final data/
+    ├── State immigration policies.csv
+    └── State immigration policies.dta
+├── Original data/                                      ← Original spreadsheets sourced from the Urban Institute
+    ├── Updated_Enforcement_Policies_Data.xlsx
+    ├── Updated_Integration_Policies_Data.xlsx
+    └── Updated_Public_Benefits_Policies_Data.xlsx
+├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
+└── README_DATA.md                                      ← Dataset documentation, including construction, roadmap and references
 </pre>
 
 ### References
