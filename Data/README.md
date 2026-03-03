@@ -20,7 +20,7 @@ Data/
     ├── Updated_Integration_Policies_Data.xlsx
     └── Updated_Public_Benefits_Policies_Data.xlsx
 ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
-└── README_DATA.md                                      ← Dataset documentation, including construction, roadmap and references
+└── README.md                                      ← Dataset documentation, including construction, roadmap and references
 </pre>
 
 ### References
