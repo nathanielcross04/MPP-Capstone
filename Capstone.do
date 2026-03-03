@@ -740,7 +740,7 @@ save "Data\Cleaned 1\cleaned_16.dta", replace
 *Import Excel workbook
 import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid unauth adult (0,1)") firstrow clear
 
-local dim "pub_medicaid_unauthadult"
+local dim "pub_pubins_unauthadult"
 local dim2 "`dim'_"
 
 *Drop empty columns
@@ -1181,6 +1181,10 @@ forvalues i = 1(1)25 {
 rmdir "Data\Cleaned 1"
 
 **#***DATASET INVESTIGATION***
+
+codebook
+
+*Investigating missingness
 missings report
 
 
@@ -1188,7 +1192,7 @@ missings report
 
 
 
-
+	
 
 
 
