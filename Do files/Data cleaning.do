@@ -10,8 +10,35 @@ cd "C:\Users\ndmcr\Desktop\MPP Capstone"
 set more off
 clear all
 
-**#***DATA CLEANING***
+**#*** DATA CLEANING --- STATE ID CROSSWALK ***
 
+*Make directory
+mkdir "Data\Using data"
+
+*Import data
+import delimited using "Data\Original data\State to State ID crosswalk.csv", varnames(1) clear
+
+*Basic cleaning
+rename (stateterritory oct1963present) (state id)
+
+keep state id
+
+label var state ""
+label var id ""
+
+*Adjusting Nebraska anomaly
+replace id = "NE" if id == "NB*"
+
+*Dropping unneeded rows
+drop if state == "" //NE observation
+drop if state == "Puerto Rico" //PR not in immigration data
+
+*Saving data
+save "Data\Using data\state crosswalk", replace
+
+**#*** DATA CLEANING --- IMMIGRATION POLICIES ***
+
+*Make directory
 mkdir "Data\Cleaned 1"
 
 **#Importing data -- Enforcement
@@ -1158,6 +1185,18 @@ forvalues n = 2(1)25 {
 	drop _merge
 }
 
+**Other misc.
+
+*Adding state IDs
+merge m:1 state using "Data\Using data\state crosswalk"
+drop _merge
+
+*Ordering variables
+order state id year
+
+*Cleaning labels
+label var state ""
+
 **Saving/cleaning directory 
 
 *Save data
@@ -1180,6 +1219,9 @@ forvalues i = 1(1)25 {
 	erase "Data\Cleaned 1\cleaned_`i'.dta" //Delete dataset from directory
 }
 
+erase "Data\Using data\state crosswalk.dta"
+
 rmdir "Data\Cleaned 1"
+rmdir "Data\Using data"
 
 **#END
