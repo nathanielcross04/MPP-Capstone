@@ -15,10 +15,11 @@ Data/
 ├── Final data/
     ├── State immigration policies.csv
     └── State immigration policies.dta
-├── Original data/                                      ← Original spreadsheets sourced from the Urban Institute
-    ├── Updated_Enforcement_Policies_Data.xlsx
-    ├── Updated_Integration_Policies_Data.xlsx
-    └── Updated_Public_Benefits_Policies_Data.xlsx
+├── Original data/                                      
+    ├── State to State ID crosswalk.csv
+    ├── Updated_Enforcement_Policies_Data.xlsx          ← Original Urban Institute spreadsheet
+    ├── Updated_Integration_Policies_Data.xlsx          ← Original Urban Institute spreadsheet
+    └── Updated_Public_Benefits_Policies_Data.xlsx      ← Original Urban Institute spreadsheet
 ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
 └── README.md                                           ← Dataset documentation, including construction, roadmap and references
 </pre>
