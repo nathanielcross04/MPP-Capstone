@@ -7,7 +7,7 @@ The constructed set is a long panel dataset spanning 27 variables and 1,071 obse
 Twenty-five policy dimensions make up the majority of the dataset, spanning three overarching facets of immigration policies that vary at the state level:  enforcement, public benefits, and integration. Descriptions of all variables, as well as their potential values, can be found in the codebook.
 
 ### Data construction
-This dataset was constructed by extracting 25 distinct policy frames from the original data, recoding, cleaning, and pivoting these frames to distinct .dta files before merging all frames together to create the final panel dataset. Data integrity was ensured through ronust missings investigations and other checks to ensure accurate pivoting and merging of the original spreadsheets.
+This dataset was constructed by extracting 25 distinct policy frames from the original data, recoding, cleaning, and pivoting these frames to distinct `.dta` files before merging all frames together to create the final panel dataset. Data integrity was ensured through robust missings investigations and other checks to ensure accurate pivoting and merging of the original spreadsheets.
 
 ### Data roadmap
 <pre>
@@ -16,19 +16,19 @@ Data/
     ├── State immigration policies.csv
     └── State immigration policies.dta
 ├── Original data/                                      
-    ├── State to State ID crosswalk.csv
-    ├── Updated_Enforcement_Policies_Data.xlsx          ← Original Urban Institute spreadsheet
-    ├── Updated_Integration_Policies_Data.xlsx          ← Original Urban Institute spreadsheet
-    └── Updated_Public_Benefits_Policies_Data.xlsx      ← Original Urban Institute spreadsheet
+    ├── Urban Institute data/                           ← Original Urban Institute spreadsheets
+        ├── Updated_Enforcement_Policies_Data.xlsx
+        ├── Updated_Integration_Policies_Data.xlsx
+        └── Updated_Public_Benefits_Policies_Data.xlsx
+    └── State to State ID crosswalk.csv                 ← USPS data to create state identifiers
 ├── Codebook.md                                         ← Dataset codebook, outlining variable names and descriptions
 └── README.md                                           ← Dataset documentation, including construction, roadmap and references
 </pre>
 
 ### References
-- Julia Gelatt, Hamutal Bernstein, Heather Koball, Charmaine Runes, & Eleanor Pratt. (2017). *State Immigration Policy Resource* (Version 1) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
-
-- Hamutal Bernstein, Paola Echave, Heather Koball, Joseph Stinson, & Susi Martinez. (2022). *State Immigration Policy Resource (2022 update)* (Version 2) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
-
-- The original Urban Institute repo can be found [here](https://github.com/UrbanInstitute/state-immigration).
-
-REFERENCE : https://about.usps.com/who/profile/history/state-abbreviations.htm
+- Urban Institute
+    - Julia Gelatt, Hamutal Bernstein, Heather Koball, Charmaine Runes, & Eleanor Pratt. (2017). *State Immigration Policy Resource* (Version 1) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
+    - Hamutal Bernstein, Paola Echave, Heather Koball, Joseph Stinson, & Susi Martinez. (2022). *State Immigration Policy Resource (2022 update)* (Version 2) \[Dataset]. UrbanInstitute/state-immigration. github.com/UrbanInstitute/state-immigration
+    - The original Urban Institute repo can be found [here](https://github.com/UrbanInstitute/state-immigration). 
+- United States Postal Service
+    - United States Postal Service. (2019). *Postal abbreviations for states/territories* (Version Oct. 1963 - Present) [Dataset]. about.usps.com/who/profile/history/state-abbreviations.htm
