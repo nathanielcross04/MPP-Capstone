@@ -44,7 +44,7 @@ enf_everify|E-Verify mandate|State has a policy to mandate that some or all empl
 
 >\* TANF (Temporary Assistance for Needy Families) provides cash assistance and supportive services for a limited period to low-income families with children to pay for living expenses.
 >
->\** Food ass kids Before 2003, several states offered food stamps to LPR children without a waiting period. A 2002 bill restored food stamp eligibility to LPR children during their first five years with this status, effective in April 2003.
+>\** Before 2003, several states offered food stamps to LPR children without a waiting period. A 2002 bill restored food stamp eligibility to LPR children during their first five years with this status, effective in April 2003.
 >
 >\*** SSI supports seniors and people with disabilities, including children, who have very little or no income.
 >
