@@ -45,7 +45,7 @@ mkdir "Data\Cleaned 1"
 
 **1. 287(g) Task Force
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("287(g) Task Force (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("287(g) Task Force (0,1)") firstrow clear
 
 local dim "enf_task_force_287g"
 local dim2 "`dim'_"
@@ -90,7 +90,7 @@ save "Data\Cleaned 1\cleaned_1.dta", replace
 
 **2. 287(g) Warrant
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("287(g) Warrant (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("287(g) Warrant (0,1)") firstrow clear
 
 local dim "enf_warrant_287g"
 local dim2 "`dim'_"
@@ -135,7 +135,7 @@ save "Data\Cleaned 1\cleaned_2.dta", replace
 
 **3. 287(g) Jail
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("287(g) Jail (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("287(g) Jail (0,1)") firstrow clear
 
 local dim "enf_jail_287g"
 local dim2 "`dim'_"
@@ -180,7 +180,7 @@ save "Data\Cleaned 1\cleaned_3.dta", replace
 
 **4. SC
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("Secure Communities (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("Secure Communities (0,1)") firstrow clear
 
 local dim "enf_secure_comms"
 local dim2 "`dim'_"
@@ -225,7 +225,7 @@ save "Data\Cleaned 1\cleaned_4.dta", replace
 
 **5. Limited cooperation with detainers
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("Limited Coop. w Detainers (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("Limited Coop. w Detainers (0,1)") firstrow clear
 
 local dim "enf_lim_coop_detainers"
 local dim2 "`dim'_"
@@ -270,7 +270,7 @@ save "Data\Cleaned 1\cleaned_5.dta", replace
 
 **6. E-Verify
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("E-Verify (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("E-Verify (0,1)") firstrow clear
 
 local dim "enf_everify"
 local dim2 "`dim'_"
@@ -315,7 +315,7 @@ save "Data\Cleaned 1\cleaned_6.dta", replace
 
 **7. Limits E-Verify
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("Limits E-Verify (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("Limits E-Verify (0,1)") firstrow clear
 
 local dim "enf_limits_everify"
 local dim2 "`dim'_"
@@ -360,7 +360,7 @@ save "Data\Cleaned 1\cleaned_7.dta", replace
 
 **8. State Omnibus
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Enforcement_Policies_Data", sheet("State Omnibus (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Enforcement_Policies_Data", sheet("State Omnibus (0,1)") firstrow clear
 
 local dim "enf_state_omnibus"
 local dim2 "`dim'_"
@@ -407,7 +407,7 @@ save "Data\Cleaned 1\cleaned_8.dta", replace
 
 **9. TANF after 5-year bar
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("TANF after 5-year bar (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("TANF after 5-year bar (0,1)") firstrow clear
 
 local dim "pub_tanf_post5"
 local dim2 "`dim'_"
@@ -452,7 +452,7 @@ save "Data\Cleaned 1\cleaned_9.dta", replace
 
 **10. Cash assistance during 5-year bar
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Cash asst dur. 5-year bar (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Cash asst dur. 5-year bar (0,1)") firstrow clear
 
 local dim "pub_cashass_during5"
 local dim2 "`dim'_"
@@ -497,7 +497,7 @@ save "Data\Cleaned 1\cleaned_10.dta", replace
 
 **11. Food assistance for LPR kids
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Food asst LPR kids (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Food asst LPR kids (0,1)") firstrow clear
 
 local dim "pub_foodass_lprkids"
 local dim2 "`dim'_"
@@ -542,7 +542,7 @@ save "Data\Cleaned 1\cleaned_11.dta", replace
 
 **12. Food assistance for LPR adults
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Food asst LPR adults (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Food asst LPR adults (0,1)") firstrow clear
 
 local dim "pub_foodass_lpradults"
 local dim2 "`dim'_"
@@ -587,7 +587,7 @@ save "Data\Cleaned 1\cleaned_12.dta", replace
 
 **13. SSI replacement
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("SSI replacement (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("SSI replacement (0,1)") firstrow clear
 
 local dim "pub_ssi_replacement"
 local dim2 "`dim'_"
@@ -632,7 +632,7 @@ save "Data\Cleaned 1\cleaned_13.dta", replace
 
 **14. Medicaid for LPR kids
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid LPR kids (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Medicaid LPR kids (0,1)") firstrow clear
 
 local dim "pub_medicaid_lprkids"
 local dim2 "`dim'_"
@@ -677,7 +677,7 @@ save "Data\Cleaned 1\cleaned_14.dta", replace
 
 **15. Public insurance for unauthorized kids
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Pub ins unauth kids (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Pub ins unauth kids (0,1)") firstrow clear
 
 local dim "pub_pubins_unauthkids"
 local dim2 "`dim'_"
@@ -722,7 +722,7 @@ save "Data\Cleaned 1\cleaned_15.dta", replace
 
 **16. Public insurance for LPR adults
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Pub ins LPR adults (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Pub ins LPR adults (0,1)") firstrow clear
 
 local dim "pub_pubins_lpradults"
 local dim2 "`dim'_"
@@ -767,7 +767,7 @@ save "Data\Cleaned 1\cleaned_16.dta", replace
 
 **17. Medicaid for unauthorized adults
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid unauth adult (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Medicaid unauth adult (0,1)") firstrow clear
 
 local dim "pub_pubins_unauthadult"
 local dim2 "`dim'_"
@@ -812,7 +812,7 @@ save "Data\Cleaned 1\cleaned_17.dta", replace
 
 **18. Medicaid for pregnant LPR
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid LPR preg (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Medicaid LPR preg (0,1)") firstrow clear
 
 local dim "pub_medicaid_lprpreg"
 local dim2 "`dim'_"
@@ -857,7 +857,7 @@ save "Data\Cleaned 1\cleaned_18.dta", replace
 
 **19. Medicaid for pregnant EWI
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid unauth preg (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Medicaid unauth preg (0,1)") firstrow clear
 
 local dim "pub_medicaid_unauthpreg"
 local dim2 "`dim'_"
@@ -902,7 +902,7 @@ save "Data\Cleaned 1\cleaned_19.dta", replace
 
 **20. Medicaid to LPR post 5-year bar
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Public_Benefits_Data", sheet("Medicaid to LPR >5 (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Public_Benefits_Data", sheet("Medicaid to LPR >5 (0,1)") firstrow clear
 
 local dim "pub_medicaid_lpr_post5"
 local dim2 "`dim'_"
@@ -949,7 +949,7 @@ save "Data\Cleaned 1\cleaned_20.dta", replace
 
 **21. In-state tuition for unauthorized immigrant students
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Integration_Policies_Data", sheet("In-state tuition (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Integration_Policies_Data", sheet("In-state tuition (0,1)") firstrow clear
 
 local dim "int_instate_tuition"
 local dim2 "`dim'_"
@@ -994,7 +994,7 @@ save "Data\Cleaned 1\cleaned_21.dta", replace
 
 **22. State financial aid for unauthorized immigrant students
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Integration_Policies_Data", sheet("State financial aid (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Integration_Policies_Data", sheet("State financial aid (0,1)") firstrow clear
 
 local dim "int_state_finaid"
 local dim2 "`dim'_"
@@ -1039,7 +1039,7 @@ save "Data\Cleaned 1\cleaned_22.dta", replace
 
 **23. Ban from higher education for unauthorized immigrant students
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Integration_Policies_Data", sheet("Ban from higher educ (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Integration_Policies_Data", sheet("Ban from higher educ (0,1)") firstrow clear
 
 local dim "int_uni_ban"
 local dim2 "`dim'_"
@@ -1084,7 +1084,7 @@ save "Data\Cleaned 1\cleaned_23.dta", replace
 
 **24. English as official language
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Integration_Policies_Data", sheet("English as official lang (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Integration_Policies_Data", sheet("English as official lang (0,1)") firstrow clear
 
 local dim "int_official_eng"
 local dim2 "`dim'_"
@@ -1129,7 +1129,7 @@ save "Data\Cleaned 1\cleaned_24.dta", replace
 
 **25. State driver's license for unauthorized immigrant students
 *Import Excel workbook
-import excel using "Data\Original data\Updated_Integration_Policies_Data", sheet("Driver's Licenses (0,1)") firstrow clear
+import excel using "Data\Original data\Urban Institute data\Updated_Integration_Policies_Data", sheet("Driver's Licenses (0,1)") firstrow clear
 
 local dim "int_drivers_license"
 local dim2 "`dim'_"
@@ -1199,17 +1199,8 @@ label var state ""
 
 **Saving/cleaning directory 
 
-*Save data
+*Save data as .dta
 save "Data\Final data\State immigration policies", replace
-
-*Optional recode of ternary variables
-/*
-foreach var of varlist enf* {
-	fsum `var'
-	replace `var' = 1 if `var' == 2
-	fsum `var'
-}
-*/
 
 *Saving as a .csv
 export delimited using "Data\Final data\State immigration policies.csv", replace
