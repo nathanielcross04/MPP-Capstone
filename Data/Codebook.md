@@ -67,4 +67,4 @@ enf_everify|E-Verify mandate|State has a policy to mandate that some or all empl
 
 ---
 
-> Note: Some definitions were originally drafted as part of the Urban Institute dataset publication found [here](https://www.urban.org/data-tools/state-immigration-policy-resource)
+> Note: Some definitions were originally drafted as part of the Urban Institute dataset publication found [here](https://www.urban.org/data-tools/state-immigration-policy-resource).
