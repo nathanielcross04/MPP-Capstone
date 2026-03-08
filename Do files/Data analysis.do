@@ -10,17 +10,44 @@ cd "C:\Users\ndmcr\Desktop\MPP Capstone"
 set more off
 clear all
 
-**#***DATASET INVESTIGATION***
+**#***CLEANING/VARIABLE MANIPULATION***
 
 *Load data
 use "Data\Final data\State immigration policies.dta", clear
+
+**Standardizing ternary variables
+
+*Identify ternary variables
+sum *
+/*
+enf_tas~287g |      1,071    .1176471    .4484412          0          2
+enf_war~287g |      1,071    .0046685     .080748          0          2
+enf_jai~287g |      1,071     .210084     .518563          0          2
+enf_lim_co~s |      1,019    .2816487    .6470174          0          2
+ enf_everify |        867     .254902    .5793469          0          2
+*/
+
+*Create macro of variables needing standarization
+global standardize_vars enf_task_force_287g enf_warrant_287g enf_jail_287g enf_lim_coop_detainers enf_everify
+
+*Run standardization loop
+foreach var of varlist $standardize_vars {
+	tab `var'
+	replace `var' = `var' / 2
+	tab `var'
+}
+
+
+
+**#***DATASET INVESTIGATION***
+
 
 codebook
 
 *Investigating missingness
 missings report
 
-
+*Descriptive statistics
 
 
 
