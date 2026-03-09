@@ -285,19 +285,79 @@ drop pub_medicaid_lprkids pub_medicaid_lprpreg
 gen int_unauth_residents = (int_instate_tuition + int_state_finaid + int_drivers_license) / 3
 drop int_instate_tuition int_state_finaid int_drivers_license
 
+order state id year enf* pub* int*
+
+**Rerun collapse to chach again for variables to drop
+
+*Create macro for policy variables
+global policy_vars enf_task_force_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers pub_tanf_post5 pub_cashass_during5 pub_foodass_lpradults pub_ssi_replacement pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_unauthpreg pub_medicaid_lpr_post5 pub_medicaid_vulnerablelpr int_uni_ban int_official_eng int_unauth_residents
+
+*Create directory
+mkdir "Data\Using data"
+
+*Collapse pilot variable by year to yield nationwide average
+preserve
+collapse (mean) avg_enf_everify_index = enf_everify_index, by(year)
+
+*Save data
+save "Data\Using data\avg_enf_everify_index", replace
+restore
+
+*Repeat for all variables
+foreach var of varlist $policy_vars {
+	*Collapse variable by year to yield nationwide average
+	preserve
+	collapse (mean) avg_`var' = `var', by(year)
+
+	*Save data
+	save "Data\Using data\avg_`var'", replace
+	restore
+}
+
+*Load pilot dataset
+use "Data\Using data\avg_enf_everify_index", clear
+
+*Merge all other collapsed policy variables
+foreach i in $policy_vars {
+	merge 1:1 year using "Data\Using data\avg_`i'"
+	drop _merge
+}
+
+*Clean up directory
+erase "Data\Using data\avg_enf_everify_index.dta"
+
+foreach i in $policy_vars {
+	erase "Data\Using data\avg_`i'.dta"
+}
+
+rmdir "Data\Using data"
 
 
+*Test correlations
 
+corr avg_enf*
+corr avg_enf_everify_index avg_enf_jail_287g
 
+alpha avg_enf_everify_index avg_enf_jail_287g
 
+corr avg_pub*
+corr avg_pub_foodass_lpradults avg_pub_pubins_lpradults
+corr avg_pub_pubins_unauthkids avg_pub_pubins_unauthadult
+corr avg_pub_cashass_during5 avg_pub_medicaid_vulnerablelpr 
+corr avg_pub_cashass_during5 avg_pub_medicaid_unauthpreg
 
+alpha avg_pub_cashass_during5 avg_pub_medicaid_unauthpreg
 
+*Visualizations
+tsset year
+tsline avg_enf*
+tsline avg_pub*
 
+/*Findings:
+- Drop SC
+- Potentially drop pub ins. unauth adult
 
-
-
-
-
+*/
 
 
 
