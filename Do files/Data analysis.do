@@ -182,6 +182,19 @@ tsline avg_int*
 - 
 */
 
+/*Conclusions:
+- Drop:
+	- avg_enf_warrant_287g
+	- avg_pub_foodass_lprkids
+- Consolidate:
+	- Everify & Limits Everify
+		- Invert Limits Everify --> average
+
+
+Total variables dropped: 3
+*/
+
+
 
 **#***ANALYSIS***
 
