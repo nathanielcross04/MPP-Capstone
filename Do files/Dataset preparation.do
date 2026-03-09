@@ -3,7 +3,7 @@
 		PA 594
     Capstone Project
 		  ---
-    Data Preparation
+    Dataset Preparation
 ************************/
 
 cd "C:\Users\ndmcr\Desktop\MPP Capstone"
