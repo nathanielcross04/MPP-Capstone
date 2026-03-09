@@ -37,17 +37,8 @@ foreach var of varlist $standardize_vars {
 	tab `var'
 }
 
-**#***DATASET INVESTIGATION***
-
-
-codebook
-
-*Investigate missingness
-missings report
-
-*Descriptive statistics
-
-
+*Save standardized data
+save "Data\Other data\Standardized SIPs", replace
 
 **Identify variables with limited unit variance (e.g. federal mandate)
 
@@ -123,9 +114,10 @@ corr avg_enf_everify avg_enf_limits_everify
 corr avg_enf_everify avg_enf_state_omnibus
 corr avg_enf_limits_everify avg_enf_state_omnibus
 
+corr avg_enf_task_force_287g avg_enf_warrant_287g avg_enf_jail_287g
+
 *Plot average values visually
 tsset year
-
 tsline avg_enf*
 
 /* Findings:
@@ -155,6 +147,7 @@ corr avg_pub_medicaid_lprkids avg_pub_medicaid_lprpreg
 corr avg_pub_medicaid_lprpreg avg_pub_medicaid_unauthpreg
 
 *Plot average values visually
+tsset year
 tsline avg_pub*
 
 /* Findings:
@@ -175,24 +168,193 @@ tsline avg_pub*
 *Test correlations
 corr avg_int*
 
+corr avg_int_instate_tuition avg_int_state_finaid
+
+corr avg_int_instate_tuition avg_int_state_finaid avg_int_drivers_license
+
 *Plot average values visually
+tsset year
 tsline avg_int*
 
 /*Findings:
-- 
+- Do in-state tuition and state financial aid measure the same concept?
+- Are these metrics of educational integration only driven by driver's licenses?
+>>> Are unauthorized immigrants residents of the state?
 */
+
+*Investigating whether to average specific integration metrics or keep DL only
+preserve
+use "Data\Final data\State immigration policies.dta", clear
+
+*Examining patterns in policy vars
+keep year state int_instate_tuition int_state_finaid int_drivers_license
+order state year int_drivers_license int_instate_tuition int_state_finaid
+
+//No patterns of consistently implementing in-state tuition or state financial aid directly after or correlated to enabling unauthorized immigrants to obtain state DLs
+
+restore
 
 /*Conclusions:
 - Drop:
 	- avg_enf_warrant_287g
 	- avg_pub_foodass_lprkids
+	- Secure Communities (???)
+	- State omnibus
 - Consolidate:
 	- Everify & Limits Everify
 		- Invert Limits Everify --> average
+	- Medicaid LPR kids & Medicaid pregnant LPR
+		- Average --> Medicaid vulnerable LPRs
+	- In-state tuition, state finaid, and state DL
+		--> Are unauth residents?
+			- Keep only DL - no
+			- Average all  - yes
 
-
-Total variables dropped: 3
+Total variables dropped: 7
 */
+
+*Saving collapsed dataset
+save "Data\Other data\Collapsed policies by year", replace
+
+**Variable transformations 
+
+*Load data
+use "Data\Other data\Standardized SIPs", clear
+
+*Drop policy variables
+drop enf_warrant_287g
+drop enf_state_omnibus
+drop pub_foodass_lprkids
+
+**Index variables
+
+**Everify variables
+//Everify started in 2006, limitations to Everify in 2007
+
+list state year enf_everify enf_limits_everify if enf_limits_everify == 1 & enf_everify == 0 
+/*
+      +-----------------------------------------+
+      |      state   year   enf_ev~y   enf_li~y |
+      |-----------------------------------------|
+  96. | California   2011          0          1 |
+  97. | California   2012          0          1 |
+  98. | California   2013          0          1 |
+  99. | California   2014          0          1 |
+ 100. | California   2015          0          1 |
+      |-----------------------------------------|
+ 101. | California   2016          0          1 |
+ 281. |   Illinois   2007          0          1 |
+ 282. |   Illinois   2008          0          1 |
+ 283. |   Illinois   2009          0          1 |
+ 284. |   Illinois   2010          0          1 |
+      |-----------------------------------------|
+ 285. |   Illinois   2011          0          1 |
+ 286. |   Illinois   2012          0          1 |
+ 287. |   Illinois   2013          0          1 |
+ 288. |   Illinois   2014          0          1 |
+ 289. |   Illinois   2015          0          1 |
+      |-----------------------------------------|
+ 290. |   Illinois   2016          0          1 |
+      +-----------------------------------------+
+*/
+
+list state year enf_everify enf_limits_everify if year < 2012 & id == "CA"
+//CA and IL limited Everify before any local Everify mandates were implemented
+
+*Create inverted Limits Everify variable to identify states that could have limited Everify but did not
+gen inverted_enf_limits_everify = .
+replace inverted_enf_limits_everify = 0 if enf_everify != .
+replace inverted_enf_limits_everify = 1 - enf_limits_everify if year >= 2007
+replace inverted_enf_limits_everify = . if enf_everify == .
+
+order state id year enf_everify enf_limits_everify inverted_enf_limits_everify
+
+*Create Everify index
+gen enf_everify_index = (enf_everify + inverted_enf_limits_everify) / 2
+
+order state id year enf_everify enf_limits_everify inverted_enf_limits_everify enf_everify_index
+
+*Dropping temporary and original variables
+drop enf_everify enf_limits_everify inverted_enf_limits_everify
+
+**Medicaid for vulnerable LPRs
+gen pub_medicaid_vulnerablelpr = (pub_medicaid_lprkids + pub_medicaid_lprpreg) / 2
+drop pub_medicaid_lprkids pub_medicaid_lprpreg
+
+**Resident status for unauthorized immigrants
+gen int_unauth_residents = (int_instate_tuition + int_state_finaid + int_drivers_license) / 3
+drop int_instate_tuition int_state_finaid int_drivers_license
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**#***DATASET INVESTIGATION***
+
+
+
+
+
+
+codebook
+
+*Investigate missingness
+missings report
+
+*Descriptive statistics
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
