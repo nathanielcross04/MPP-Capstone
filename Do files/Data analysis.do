@@ -352,6 +352,7 @@ alpha avg_pub_cashass_during5 avg_pub_medicaid_unauthpreg
 tsset year
 tsline avg_enf*
 tsline avg_pub*
+tsline avg_int*
 
 /*Findings:
 - Drop SC
