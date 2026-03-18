@@ -198,7 +198,7 @@ restore
 - Drop:
 	- avg_enf_warrant_287g
 	- avg_pub_foodass_lprkids
-	- Secure Communities (???)
+	- Secure Communities
 	- State omnibus
 - Consolidate:
 	- Everify & Limits Everify
@@ -210,7 +210,8 @@ restore
 			- Keep only DL - no
 			- Average all  - yes
 
-Total variables dropped: 7
+Total variables dropped: 8
+Total policy variables remaining: 17
 */
 
 *Saving collapsed dataset
@@ -223,6 +224,7 @@ use "Data\Other data\Standardized SIPs", clear
 
 *Drop policy variables
 drop enf_warrant_287g
+drop enf_secure_comms
 drop enf_state_omnibus
 drop pub_foodass_lprkids
 
@@ -287,81 +289,6 @@ drop int_instate_tuition int_state_finaid int_drivers_license
 
 order state id year enf* pub* int*
 
-**Rerun collapse to chach again for variables to drop
-
-*Create macro for policy variables
-global policy_vars enf_task_force_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers pub_tanf_post5 pub_cashass_during5 pub_foodass_lpradults pub_ssi_replacement pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_unauthpreg pub_medicaid_lpr_post5 pub_medicaid_vulnerablelpr int_uni_ban int_official_eng int_unauth_residents
-
-*Create directory
-mkdir "Data\Using data"
-
-*Collapse pilot variable by year to yield nationwide average
-preserve
-collapse (mean) avg_enf_everify_index = enf_everify_index, by(year)
-
-*Save data
-save "Data\Using data\avg_enf_everify_index", replace
-restore
-
-*Repeat for all variables
-foreach var of varlist $policy_vars {
-	*Collapse variable by year to yield nationwide average
-	preserve
-	collapse (mean) avg_`var' = `var', by(year)
-
-	*Save data
-	save "Data\Using data\avg_`var'", replace
-	restore
-}
-
-*Load pilot dataset
-use "Data\Using data\avg_enf_everify_index", clear
-
-*Merge all other collapsed policy variables
-foreach i in $policy_vars {
-	merge 1:1 year using "Data\Using data\avg_`i'"
-	drop _merge
-}
-
-*Clean up directory
-erase "Data\Using data\avg_enf_everify_index.dta"
-
-foreach i in $policy_vars {
-	erase "Data\Using data\avg_`i'.dta"
-}
-
-rmdir "Data\Using data"
-
-
-*Test correlations
-
-corr avg_enf*
-corr avg_enf_everify_index avg_enf_jail_287g
-
-alpha avg_enf_everify_index avg_enf_jail_287g
-
-corr avg_pub*
-corr avg_pub_foodass_lpradults avg_pub_pubins_lpradults
-corr avg_pub_pubins_unauthkids avg_pub_pubins_unauthadult
-corr avg_pub_cashass_during5 avg_pub_medicaid_vulnerablelpr 
-corr avg_pub_cashass_during5 avg_pub_medicaid_unauthpreg
-
-alpha avg_pub_cashass_during5 avg_pub_medicaid_unauthpreg
-
-*Visualizations
-tsset year
-tsline avg_enf*
-tsline avg_pub*
-tsline avg_int*
-
-/*Findings:
-- Drop SC
-- Potentially drop pub ins. unauth adult
-
-*/
-
-
-
 
 
 
@@ -425,43 +352,54 @@ missings report
 
 
 
+**Summary statistics of variables
 
-keep if year == 2000
+*Correlation matrix
+corr enf_everify_index-int_unauth_residents
 
-global varlist enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_medicaid_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license
+*Skewness and kurtosis
+tabstat enf_everify_index-int_unauth_residents, stat(mean sd skew kurt) col(stat)
+//Looking for: centered means, some variation, skewness < 2, kurtosis <7/8
+//Check histograms for high skewness/kurtosis
 
-corr $varlist
+**EFA
 
-*Principal-component analysis
-pca $varlist
-	
-*Scree plots
-screeplot, yline(1)
+*Check eigenvalues
+factor enf_everify_index-int_unauth_residents, pcf
+scree
+//parallel analysis
 
-*PCA
-pca $varlist, mineigen(1)
-pca $varlist, comp(4)
+*Extract factors using IPF for six factors
+factor enf_everify_index-int_unauth_residents, ipf factors(6)
 
-pca $varlist, mineigen(1) blanks(0.3)
+*Apply rotation
+rotate, promax blanks(0.30)
 
-*Rotations
-rotate, varimax
-rotate, varimax blanks(0.3)
-rotate, clear
 
-rotate, promax
-rotate, promax blanks(0.3)
-rotate, clear
 
-*Plots
-loadingplot
-scoreplot, mlabel(state)
+*Extract factors using IPF for six factors
+factor enf_everify_index-int_unauth_residents, ipf factors(5)
 
-*Loadings/scores of the components
-estat loadings
-predict pc1 pc2 pc3 pc4 pc5, score
+*Apply rotation
+rotate, promax blanks(0.30)
 
-*KMO measure of sampling adequacy
-estat kmo
+
+*Extract factors using IPF for six factors
+factor enf_everify_index-int_unauth_residents, ipf factors(4)
+
+*Apply rotation
+rotate, promax blanks(0.30)
+
+
+
+
+
+
+
+
+
+
+
+
 
 **#END
