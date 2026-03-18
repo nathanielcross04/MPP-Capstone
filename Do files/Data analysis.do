@@ -118,7 +118,7 @@ corr avg_enf_task_force_287g avg_enf_warrant_287g avg_enf_jail_287g
 
 *Plot average values visually
 tsset year
-tsline avg_enf*
+quietly tsline avg_enf*
 
 /* Findings:
 - High correlations:
@@ -148,7 +148,7 @@ corr avg_pub_medicaid_lprpreg avg_pub_medicaid_unauthpreg
 
 *Plot average values visually
 tsset year
-tsline avg_pub*
+quietly tsline avg_pub*
 
 /* Findings:
 - High correlations:
@@ -174,12 +174,13 @@ corr avg_int_instate_tuition avg_int_state_finaid avg_int_drivers_license
 
 *Plot average values visually
 tsset year
-tsline avg_int*
+quietly tsline avg_int*
 
 /*Findings:
 - Do in-state tuition and state financial aid measure the same concept?
 - Are these metrics of educational integration only driven by driver's licenses?
 >>> Are unauthorized immigrants residents of the state?
+- Drop university ban -- only adopted by 3 states, lacking variation
 */
 
 *Investigating whether to average specific integration metrics or keep DL only
@@ -200,6 +201,7 @@ restore
 	- avg_pub_foodass_lprkids
 	- Secure Communities
 	- State omnibus
+	- Uni ban
 - Consolidate:
 	- Everify & Limits Everify
 		- Invert Limits Everify --> average
@@ -210,8 +212,9 @@ restore
 			- Keep only DL - no
 			- Average all  - yes
 
-Total variables dropped: 8
-Total policy variables remaining: 17
+Total variables dropped: 5 + 7
+Variables created: 3
+Total policy variables remaining: 16
 */
 
 *Saving collapsed dataset
@@ -227,6 +230,7 @@ drop enf_warrant_287g
 drop enf_secure_comms
 drop enf_state_omnibus
 drop pub_foodass_lprkids
+drop int_uni_ban
 
 **Index variables
 
@@ -289,21 +293,14 @@ drop int_instate_tuition int_state_finaid int_drivers_license
 
 order state id year enf* pub* int*
 
-
-
-
-
-
-
+**Save final dataset
+save "Data\Final data\SIPs final", replace
 
 
 
 
 
 **#***DATASET INVESTIGATION***
-
-
-
 
 
 
@@ -318,39 +315,16 @@ missings report
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 **#***ANALYSIS***
+
+**Load data
+use "Data\Final data\SIPs final", clear
+ds, varwidth(32)
 
 **Prepare for analysis
 
-
+*Subset time variable
+keep if year == 2000
 
 **Summary statistics of variables
 
@@ -370,24 +344,14 @@ scree
 //parallel analysis
 
 *Extract factors using IPF for six factors
-factor enf_everify_index-int_unauth_residents, ipf factors(6)
-
-*Apply rotation
-rotate, promax blanks(0.30)
-
-
-
-*Extract factors using IPF for six factors
-factor enf_everify_index-int_unauth_residents, ipf factors(5)
-
-*Apply rotation
-rotate, promax blanks(0.30)
-
-
-*Extract factors using IPF for six factors
 factor enf_everify_index-int_unauth_residents, ipf factors(4)
+factor enf_everify_index-int_unauth_residents, factors(4)
+
 
 *Apply rotation
+rotate, promax blanks(0.30)
+
+factor enf_everify_index-int_unauth_residents, factors(2)
 rotate, promax blanks(0.30)
 
 
@@ -400,6 +364,73 @@ rotate, promax blanks(0.30)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**Load data
+use "Data\Final data\SIPs final", clear
+ds, varwidth(32)
+
+**Prepare for analysis
+
+*Subset time variable
+keep if year == 2020
+
+*Eliminating variables with no variance (including all missings)
+dropmiss, force
+
+findname, all(@ == 0) varwidth(32)
+drop enf_task_force_287g
+
+findname, all(@ == 1) varwidth(32)
+//Not applicable
+
+**Summary statistics of variables
+
+*Correlation matrix
+corr enf* pub* int*
+
+*Skewness and kurtosis
+tabstat enf* pub* int*, stat(mean sd skew kurt) col(stat)
+//Looking for: centered means, some variation, skewness < 2, kurtosis <7/8
+//Check histograms for high skewness/kurtosis
+
+
+	
+**EFA
+
+*Check number of factors to extract
+factor enf* pub* int* , pcf //indicates 4 factors
+scree //indicates 3 factors
+paran enf* pub* int*, n(51) centile(95) iteration(1000) seed(80504) graph
+fapara, pca reps(10000) //indicates 3 factors
+
+*Extract factors
+factor enf* pub* int*, ipf factors(3)
+
+*Apply rotation
+rotate, promax blanks(0.30)
+
+*Show variable names in full
+ds, varwidth(32)
+
+*Predict factor scores
+predict fact1 fact2 fact3
 
 
 **#END
