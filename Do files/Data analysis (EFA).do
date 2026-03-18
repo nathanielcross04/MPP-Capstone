@@ -3,7 +3,8 @@
 		PA 594
     Capstone Project
 		  ---
-     Data Analysis
+    Data Analysis:
+         EFA
 ************************/
 
 cd "C:\Users\ndmcr\Desktop\MPP Capstone"
@@ -410,8 +411,7 @@ tabstat enf* pub* int*, stat(mean sd skew kurt) col(stat)
 //Looking for: centered means, some variation, skewness < 2, kurtosis <7/8
 //Check histograms for high skewness/kurtosis
 
-
-	
+ 
 **EFA
 
 *Check number of factors to extract
