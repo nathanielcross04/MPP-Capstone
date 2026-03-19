@@ -8,7 +8,7 @@
 ## Setup
 
 # Set working directory
-knitr::opts_knit$set(root.dir = "C:/Users/ndmcr/Desktop/MPP Capstone")
+setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
 getwd()
 file.exists("../Data/Final data/State immigration policies.dta")
 
