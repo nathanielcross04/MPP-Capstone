@@ -52,4 +52,5 @@ sip00 <- sip00 |>
 dim(sip00)
 
 # Check for missings
-colSums(is.na(sip00))            # No missings for this year
+colSums(is.na(sip00))                   # No missings for year == 2000
+
