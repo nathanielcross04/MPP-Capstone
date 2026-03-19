@@ -100,7 +100,7 @@ dim(sip00_scaled)
 # Check for missings
 colSums(is.na(sip00_scaled))                # No missings for year == 2000
 
-
+## Calculate distances between vectors
 
 
 
