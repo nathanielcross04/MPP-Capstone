@@ -5,12 +5,15 @@
 # Data analysis:
 # Cluster analysis
 
-## Setup
+
+#=======#
+# Setup #
+#=======#
 
 # Set working directory
 setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
 getwd()
-file.exists("../Data/Final data/State immigration policies.dta")
+file.exists("Data/Final data/State immigration policies.dta")
 
 # Load packages
 library(tidyverse)
@@ -18,7 +21,7 @@ library(janitor)
 library(haven)
 
 # Load data
-sip_unabridged <- read_stata("../Data/Final data/State immigration policies.dta")
+sip_unabridged <- read_stata("Data/Final data/State immigration policies.dta")
 
 ## Explore dataset
 
@@ -34,23 +37,72 @@ str(sip_unabridged)
 # Summary statistics
 summary(sip_unabridged)
 
-## Matrix construction
 
-# Dataset prep
-sip00 <- sip_unabridged |>
-  filter(year == "2000") |>             # Filter by year (keep 2000 obs)
-  column_to_rownames(var = "id") |>     # Move state names to row names
-  select(-c(state, year)) |>            # Drop state and year vars
-  clean_names() |>                      # Standardize column names
-  glimpse()
+#=====================#
+# Matrix construction #
+#=====================#
+
+## Rescale ternary vars to 0-1
+
+# Detect unique values per column to classify variable type
+unique_vals <- sapply(sip_unabridged, function(x) sort(unique(na.omit(x))))
+
+# Identify binary vars
+binary_vars <- names(unique_vals)[sapply(unique_vals, function(v) setequal(v, c(0, 1)))]
+
+# Identify ternary vars
+ternary_vars <- names(unique_vals)[sapply(unique_vals, function(v) setequal(v, c(0, 1, 2)))]
+
+# Inspect classifications
+cat("Binary variables (", length(binary_vars), "):\n"); print(binary_vars)
+cat("\nTernary variables (", length(ternary_vars), "):\n"); print(ternary_vars)
+
+# Flag any variables that are neither binary nor ternary
+other_vars <- setdiff(names(sip_unabridged), c(binary_vars, ternary_vars))
+cat("\nUnclassified variables (", length(other_vars), "):\n"); print(other_vars)
+
+# Scale ternary vars
+sip_scaled <- sip_unabridged %>%
+  mutate(across(
+    all_of(ternary_vars),
+    ~ . / 2,                                # Maps 0 > 0, 1 > 0.5, 2 > 1
+    .names = "{.col}"                       # Overwrites in place
+  ))
+
+# Verify scaling — each ternary var should now only contain 0, 0.5, 1
+sapply(sip_scaled[ternary_vars], function(x) sort(unique(na.omit(x))))
+
+# Verify binary vars are untouched — should still only contain 0, 1
+sapply(sip_scaled[binary_vars], function(x) sort(unique(na.omit(x))))
+
+# Clean environment
+rm(unique_vals)
+rm(binary_vars)
+rm(other_vars)
+rm(ternary_vars)
+
+## Other dataset cleaning
+
+# Filtering to year == 2000 and renaming rows to state IDs
+sip00_scaled <- sip_scaled |>
+  filter(year == "2000") |>                 # Filter by year (keep 2000 obs)
+  column_to_rownames(var = "id") |>         # Move state names to row names
+  select(-c(state, year)) |>                # Drop state and year vars
+  clean_names()                             # Standardize column names
 
 # Ensure retention of only numeric policy variables
-sip00 <- sip00 |>
+sip00_scaled <- sip00_scaled |>
   select(where(is.numeric))
 
 # Check dimensions
-dim(sip00)
+dim(sip00_scaled)
 
 # Check for missings
-colSums(is.na(sip00))                   # No missings for year == 2000
+colSums(is.na(sip00_scaled))                # No missings for year == 2000
+
+
+
+
+
+
 
