@@ -1,26 +1,40 @@
 ---
-title: "Data analysis (Cluster)"
+title: "Data analysis: Cluster analysis"
+author: "Nathaniel Cross"
+institute: |
+  PA 594
+  
+  Capstone Project
 format: html
 editor: visual
 ---
 
-## Quarto
+## Setup
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+```{r setup}
 
-## Running Code
+# Set working directory
+knitr::opts_knit$set(root.dir = "C:/Users/ndmcr/Desktop/MPP Capstone")
+getwd()
+file.exists("../Data/Final data/State immigration policies.dta")
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
 
-```{r}
-1 + 1
+# Load packages
+library(tidyverse)
+library(haven)
+
+# Load data
+sip_unabridged <- read_stata("../Data/Final data/State immigration policies.dta")
 ```
 
-You can add options to executable code like this
+## Explore dataset
 
-```{r}
-#| echo: false
-2 * 2
+```{r descriptive stats}
+
+head(sip_unabridged)        # first 6 rows
+str(sip_unabridged)         # structure and data types
+summary(sip_unabridged)     # summary statistics
+dim(sip_unabridged)         # rows and columns
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## 
