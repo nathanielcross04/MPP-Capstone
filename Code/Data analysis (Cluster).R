@@ -53,10 +53,3 @@ dim(sip00)
 
 # Check for missings
 colSums(is.na(sip00))            # No missings for this year
-
-# Standardizing policy variables (z-score standardization)
-sip00_std <- sip00 |>
-  mutate(across(everything(), scale))
-
-# Check success of standardization
-colMeans(sip00_std)
