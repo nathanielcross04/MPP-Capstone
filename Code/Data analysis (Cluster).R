@@ -21,7 +21,7 @@ library(janitor)
 library(haven)
 
 # Load data
-sip_unabridged <- read_stata("Data/Final data/State immigration policies.dta")
+sip_unabridged <- read_csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Final%20data/State%20immigration%20policies.csv")
 
 ## Explore dataset
 
