@@ -101,6 +101,41 @@ dim(sip00_scaled)
 colSums(is.na(sip00_scaled))                # No missings for year == 2000
 
 ## Calculate distances between vectors
+vectors_00 <- dist(sip00_scaled, method = "euclidean")
+matrix_00 <- as.matrix(vectors_00)
+
+# Clean up
+rm(vectors_00)
+
+# Verify structure
+dim(matrix_00)                              # 51 x 51
+matrix_00[1:5, 1:5]
+all(diag(matrix_00) == 0)                   # TRUE
+isSymmetric(matrix_00)                      # TRUE
+
+# Inspect matrix
+distinct_values <- matrix_00[upper.tri(matrix_00)]
+summary(distinct_values)
+
+diag(matrix_00) <- NA
+min_dist <- which(matrix_00 == min(matrix_00, na.rm = TRUE), arr.ind = TRUE)
+cat("Most similar states:\n"); print(rownames(matrix_00)[min_dist[1, ]])
+
+max_dist <- which(matrix_00 == max(matrix_00, na.rm = TRUE), arr.ind = TRUE)
+cat("Most dissimilar states:\n"); print(rownames(matrix_00)[max_dist[1, ]])
+
+diag(matrix_00) <- 0
+
+# Clean up environment
+rm(max_dist)
+rm(min_dist)
+rm(distinct_values)
+
+# Export matrix
+write.csv(
+  matrix_00, 
+  file = "Data/Other data/SIP distance matrix 2000.csv", 
+  row.names = TRUE)
 
 
 
