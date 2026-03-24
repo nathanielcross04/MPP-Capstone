@@ -62,7 +62,7 @@ other_vars <- setdiff(names(sip_unabridged), c(binary_vars, ternary_vars))
 cat("\nUnclassified variables (", length(other_vars), "):\n"); print(other_vars)
 
 # Scale ternary vars
-sip_scaled <- sip_unabridged %>%
+sip_scaled <- sip_unabridged |>
   mutate(across(
     all_of(ternary_vars),
     ~ . / 2,                                # Maps 0 > 0, 1 > 0.5, 2 > 1
@@ -100,7 +100,9 @@ dim(sip00_scaled)
 # Check for missings
 colSums(is.na(sip00_scaled))                # No missings for year == 2000
 
-## Calculate distances between vectors
+## Create matrix
+
+# Create distance vectors using Euclidean distance calculations
 vectors_00 <- dist(sip00_scaled, method = "euclidean")
 matrix_00 <- as.matrix(vectors_00)
 
@@ -136,8 +138,6 @@ write.csv(
   matrix_00, 
   file = "Data/Other data/SIP distance matrix 2000.csv", 
   row.names = TRUE)
-
-
 
 
 
