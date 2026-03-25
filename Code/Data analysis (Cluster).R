@@ -364,7 +364,7 @@ GetDistanceMatrix <- function(year, states)
 } #end GetDistanceMatrix
 
 # Test matrix construction
-TargetYear <- 2019
+TargetYear <- 2000
 TargetStates <- c("CA","NY","MA","DC","WA")
 GetDistanceMatrix(TargetYear, TargetStates)
 
@@ -372,13 +372,9 @@ GetDistanceMatrix(TargetYear, TargetStates)
 AllStates <- sip_unabridged |> distinct(id) |> pull(id)
 
 # Visualize
-net <- GetDistanceMatrix(TargetYear, AllStates)
-identical(matrix_00, net)
-Visualize_Network(net, FALSE) ## Would still need to show scaling according to the distance.
-
-
-
-
+adh_matrix_00 <- GetDistanceMatrix(TargetYear, AllStates)
+identical(matrix_00, adh_matrix_00)
+# Visualize_Network(net, FALSE) ## Would still need to show scaling according to the distance.
 
 
 
