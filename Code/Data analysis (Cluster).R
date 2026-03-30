@@ -186,16 +186,62 @@ sapply(sip_list, function(df) {
 # - Code 2017+ values with LLM
 # - Some combination of the above options
 
+## Deal with missingness
 
+# Drop year == 2020 (too 5 vars. missing)
+sip_list$sip20_scaled <- NULL
 
+# Sustain E-Verify values from 2016 through 2019
+everify16 <- sip_list$sip16_scaled$enf_everify
 
+sip_list$sip17_scaled$enf_everify <- everify16
+view(sip_list$sip17_scaled)
 
+sip_list$sip18_scaled$enf_everify <- everify16
+sip_list$sip19_scaled$enf_everify <- everify16
 
+sapply(sip_list, function(df) {
+  df <- as.data.frame(df)
+  na_counts <- colSums(is.na(df))
+  na_counts[na_counts > 0]
+})
 
+rm(everify16)
 
+# Set all omnibus values 2017-2019 to 0
+sip_list$sip16_scaled |>
+  select(enf_state_omnibus) |>
+  rownames_to_column()
 
+sip_list$sip17_scaled <- sip_list$sip17_scaled |>
+  mutate(enf_state_omnibus = 0)
+sip_list$sip18_scaled <- sip_list$sip18_scaled |>
+  mutate(enf_state_omnibus = 0)
+sip_list$sip19_scaled <- sip_list$sip19_scaled |>
+  mutate(enf_state_omnibus = 0)
 
+sapply(sip_list, function(df) {
+  df <- as.data.frame(df)
+  na_counts <- colSums(is.na(df))
+  na_counts[na_counts > 0]
+})
 
+# Investigating last missing value
+sip_list$sip19_scaled |>
+  filter(is.na(enf_lim_coop_detainers)) |>
+  select(enf_lim_coop_detainers) |>
+  rownames_to_column()                      # Delaware
+
+sip_list$sip19_scaled <- sip_list$sip19_scaled |>
+  filter(is.na(enf_lim_coop_detainers)) |>
+  mutate(enf_lim_coop_detainers = 0.5) |>
+  rownames_to_column()
+
+sapply(sip_list, function(df) {
+  df <- as.data.frame(df)
+  na_counts <- colSums(is.na(df))
+  na_counts[na_counts > 0]
+})
 
 
 
