@@ -81,68 +81,8 @@ rm(binary_vars)
 rm(other_vars)
 rm(ternary_vars)
 
-## Other dataset cleaning
-
-# Filtering to year == 2000 and renaming rows to state IDs
-sip00_scaled <- sip_scaled |>
-  filter(year == "2000") |>                 # Filter by year (keep 2000 obs)
-  column_to_rownames(var = "id") |>         # Move state names to row names
-  select(-c(state, year)) |>                # Drop state and year vars
-  clean_names()                             # Standardize column names
-
-# Ensure retention of only numeric policy variables
-sip00_scaled <- sip00_scaled |>
-  select(where(is.numeric))
-
-# Check dimensions
-dim(sip00_scaled)
-
-# Check for missings
-colSums(is.na(sip00_scaled))                # No missings for year == 2000
-
-## Create matrix
-
-# Create distance vectors using Euclidean distance calculations
-vectors_00 <- dist(sip00_scaled, method = "euclidean")
-matrix_00 <- as.matrix(vectors_00)
-
-# Clean up
-rm(vectors_00)
-
-# Verify structure
-dim(matrix_00)                              # 51 x 51
-matrix_00[1:5, 1:5]
-all(diag(matrix_00) == 0)                   # TRUE
-isSymmetric(matrix_00)                      # TRUE
-
-# Inspect matrix
-distinct_values <- matrix_00[upper.tri(matrix_00)]
-summary(distinct_values)
-
-diag(matrix_00) <- NA
-min_dist <- which(matrix_00 == min(matrix_00, na.rm = TRUE), arr.ind = TRUE)
-cat("Most similar states:\n"); print(rownames(matrix_00)[min_dist[1, ]])
-
-max_dist <- which(matrix_00 == max(matrix_00, na.rm = TRUE), arr.ind = TRUE)
-cat("Most dissimilar states:\n"); print(rownames(matrix_00)[max_dist[1, ]])
-
-diag(matrix_00) <- 0
-
-# Clean up environment
-rm(max_dist)
-rm(min_dist)
-rm(distinct_values)
-
-# Export matrix
-write.csv(
-  matrix_00, 
-  file = "Data/Other data/SIP distance matrix 2000.csv", 
-  row.names = TRUE)
 
 ## Create frames for each year
-
-# Clean environment
-rm(sip00_scaled)
 
 # Create vector of all years
 years <- 2000:2020
@@ -186,6 +126,7 @@ sapply(sip_list, function(df) {
 # - Code 2017+ values with LLM
 # - Some combination of the above options
 
+
 ## Deal with missingness
 
 # Drop year == 2020 (too 5 vars. missing)
@@ -195,7 +136,6 @@ sip_list$sip20_scaled <- NULL
 everify16 <- sip_list$sip16_scaled$enf_everify
 
 sip_list$sip17_scaled$enf_everify <- everify16
-view(sip_list$sip17_scaled)
 
 sip_list$sip18_scaled$enf_everify <- everify16
 sip_list$sip19_scaled$enf_everify <- everify16
@@ -244,59 +184,7 @@ sapply(sip_list, function(df) {
 })
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Henry code
+## Create distance matrices 
 
 # Set working directory and verify file location
 setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
@@ -308,7 +196,6 @@ load("Code/hru_v2024_12_27.RData" )
 library(sna)
 
 # Create function to pull state and year policy vectors
-
 GetPolicy <- function(state, year)
 {
   # Get all rows (as TRUE versus FALSE) for the chosen state and year
@@ -348,26 +235,7 @@ GetPolicy <- function(state, year)
   return(result)
 } #end GetPolicy
 
-# Test created function
-GetPolicy("AZ", 2010)
-GetPolicy("AZ", 2015)
-GetPolicy("AZ", 2020)
-GetPolicy("AZ", 2050)
-  
-# Comparison of Arizona and California
-PolicyCA <- GetPolicy("CA", 2000)
-PolicyAZ <- GetPolicy("AZ", 2000)
-
-PolicyCA <- as.numeric(PolicyCA)
-PolicyAZ <- as.numeric(PolicyAZ)
-
-Euclidean_Distance(PolicyCA, PolicyAZ)
-
-# Clean environment
-rm(PolicyCA)
-rm(PolicyAZ)
-
-# Create distance matrix
+# Create function to create distance matrices
 GetDistanceMatrix <- function(year, states)
 {
   # Create data shell:
@@ -409,18 +277,223 @@ GetDistanceMatrix <- function(year, states)
   return(dist_net)
 } #end GetDistanceMatrix
 
-# Test matrix construction
-TargetYear <- 2000
-TargetStates <- c("CA","NY","MA","DC","WA")
-GetDistanceMatrix(TargetYear, TargetStates)
-
-# Get vector of all states
+# Prep for matrix construction
 AllStates <- sip_unabridged |> distinct(id) |> pull(id)
+sip_matrix <- list()
 
-# Visualize
-adh_matrix_00 <- GetDistanceMatrix(TargetYear, AllStates)
-identical(matrix_00, adh_matrix_00)
-# Visualize_Network(net, FALSE) ## Would still need to show scaling according to the distance.
+# Run loop to create distance matrices
+for (t in 2000:2019) {
+  print(t)
+  sip_matrix[[paste0("sip_matrix_", t)]] <- GetDistanceMatrix(t, AllStates)
+}
+
+#for (t in 2000:2019) {
+#  print(t)
+#  df <- as.data.frame(GetDistanceMatrix(t, AllStates))
+#  sip_matrix[[paste0("sip_matrix_", t)]] <- df
+#  rm(df)
+#}
+
+# Verify structure
+for (t in seq_along(sip_matrix)) {
+  cat(names(sip_matrix)[t], ":", dim(sip_matrix[[t]]), ":", isSymmetric(sip_matrix[[t]]), ":", all(diag(sip_matrix[[t]]) == 0), "\n")
+} 
+
+#==================#
+# Cluster analysis #
+#==================#
+
+# Year == 2000
+matrix_2000 <- sip_matrix$sip_matrix_2000
+
+distances_2000 <- as.dist(matrix_2000)
+
+cluster_2000 <- hclust(distances_2000, method = "ward.D2")
+
+par(mar = c(4, 4, 3, 1))  # tighten margins
+plot(cluster_2000,
+     main  = "Hierarchical Clustering of State Policy Distances (2000)",
+     xlab  = "State",
+     ylab  = "Ward Distance",
+     sub   = "",
+     cex   = 0.75,       # shrink state labels so they don't overlap
+     hang  = -1)         # hang = -1 drops all leaves to the same baseline
+
+# Cut tree
+k <- 4
+clusters_2000 <- cutree(cluster_2000, k = k)
+
+rect.hclust(cluster_2000, k = k, border = 2:(k + 1))
+rect.hclust(cluster_2000, k = 6, border = 2:(k + 1))
+
+
+# Inspect clusters
+print(sort(clusters_2000))
+
+table(clusters_2000)
+
+# Silhouette scores
+library(cluster)
+
+sil_scores <- sapply(2:10, function(k) {
+  cut   <- cutree(cluster_2000, k = k)
+  s     <- silhouette(cut, distances_2000)
+  mean(s[, "sil_width"])
+})
+
+# Plot silhouette scores across candidate k values
+plot(2:10, sil_scores,
+     type  = "b",
+     pch   = 19,
+     xlab  = "Number of clusters (k)",
+     ylab  = "Mean silhouette width",
+     main  = "Silhouette scores — 2000")
+abline(v = which.max(sil_scores) + 1, lty = 2, col = "firebrick")
+
+
+
+
+
+
+## Compare all years
+
+# Create faceted dendrograms
+years <- 2000:2019
+
+# Set 4x5 grid
+par(mfrow = c(5, 4),
+    mar   = c(3, 2, 2, 1),
+    oma   = c(1, 1, 3, 1))
+
+# Run loop to create dendros
+for (yr in years) {
+  mat  <- sip_matrix[[paste0("sip_matrix_", yr)]]
+  dist <- as.dist(mat)
+  hc   <- hclust(dist, method = "ward.D2")
+  
+  plot(hc,
+       main  = as.character(yr),
+       xlab  = "",
+       ylab  = "",
+       sub   = "",
+       cex   = 0.4,    # state label size — reduce if labels overlap
+       hang  = -1)
+}
+
+# Shared outer title
+mtext("Hierarchical Clustering of State Policy Distances (2000–2019)",
+      outer = TRUE,
+      cex   = 1.1,
+      font  = 2,       # bold
+      line  = 1)
+
+# Reset graphics parameters after
+par(mfrow = c(1, 1), mar = c(5, 4, 4, 2), oma = c(0, 0, 0, 0))
+
+# Save plot
+png("C:/Users/ndmcr/Desktop/MPP Capstone/Figures/dendrograms_2000_2019.png", 
+    width = 2550, 
+    height = 3300, 
+    res = 300)
+
+par(mfrow = c(5, 4),
+    mar   = c(3, 2, 2, 1),
+    oma   = c(1, 1, 3, 1))
+
+for (yr in years) {
+  mat  <- sip_matrix[[paste0("sip_matrix_", yr)]]
+  hc   <- hclust(as.dist(mat), method = "ward.D2")
+  plot(hc, main = as.character(yr), xlab = "", ylab = "",
+       sub = "", cex = 0.4, hang = -1)
+}
+
+mtext("Hierarchical Clustering of State Policy Distances (2000–2019)",
+      outer = TRUE, cex = 1.1, font = 2, line = 1)
+
+dev.off()
+
+
+## Create faceted silhouette plots
+
+# Find the global min and max across all years before plotting
+all_scores <- sapply(years, function(yr) {
+  mat  <- sip_matrix[[paste0("sip_matrix_", yr)]]
+  dist <- as.dist(mat)
+  hc   <- hclust(dist, method = "ward.D2")
+  sapply(2:10, function(k) {
+    s <- silhouette(cutree(hc, k = k), dist)
+    mean(s[, "sil_width"])
+  })
+})
+
+global_min <- floor(min(all_scores) * 20) / 20    # round down to nearest 0.05
+global_max <- ceiling(max(all_scores) * 20) / 20  # round up to nearest 0.05
+
+cat("Suggested ylim: c(",global_min, ",", global_max,")\n")
+
+# Plot
+library(cluster)
+
+years <- 2000:2019
+
+png("C:/Users/ndmcr/Desktop/MPP Capstone/Figures/silhouette_scores_2000_2019.png",
+    width  = 2550,   # 8.5 * 300
+    height = 3300,   # 11 * 300
+    res    = 300)
+
+par(mfrow = c(5, 4),
+    mar   = c(4, 4, 3, 1),
+    oma   = c(1, 1, 3, 1))
+
+for (yr in years) {
+  mat  <- sip_matrix[[paste0("sip_matrix_", yr)]]
+  dist <- as.dist(mat)
+  hc   <- hclust(dist, method = "ward.D2")
+  
+  # Compute mean silhouette width for k = 2 to 10
+  sil_scores <- sapply(2:10, function(k) {
+    cut <- cutree(hc, k = k)
+    s   <- silhouette(cut, dist)
+    mean(s[, "sil_width"])
+  })
+  
+  # Find optimal k
+  best_k <- which.max(sil_scores) + 1  # +1 because index 1 = k=2
+  
+  plot(2:10, sil_scores,
+       type  = "b",
+       pch   = 19,
+       cex   = 0.6,
+       xlab  = "Number of clusters (k)",
+       ylab  = "Mean silhouette width",
+       main  = as.character(yr),
+       ylim  = c(0.1 , 0.45),   # fixed y axis so panels are comparable across years
+       cex.main = 0.9,
+       cex.lab  = 0.7,
+       cex.axis = 0.65)
+  
+  # Mark the optimal k with a dashed vertical line
+  abline(v = best_k, lty = 2, col = "firebrick", lwd = 0.8)
+  
+  # Annotate optimal k value in the panel
+  text(x      = best_k,
+       y      = max(sil_scores) - 0.02,
+       labels = paste0("k=", best_k),
+       cex    = 0.6,
+       col    = "firebrick",
+       pos    = 4)   # pos=4 places text to the right of the point
+}
+
+mtext("Silhouette Scores by Year (2000–2019)",
+      outer = TRUE,
+      cex   = 1.1,
+      font  = 2,
+      line  = 1)
+
+dev.off()
+
+# Reset graphics parameters
+par(mfrow = c(1, 1), mar = c(5, 4, 4, 2), oma = c(0, 0, 0, 0))
 
 
 
