@@ -308,10 +308,10 @@ matrix_2000 <- sip_matrix$sip_matrix_2000
 
 distances_2000 <- as.dist(matrix_2000)
 
-cluster_2000 <- hclust(distances_2000, method = "ward.D2")
+hc_2000 <- hclust(distances_2000, method = "ward.D2")
 
 par(mar = c(4, 4, 3, 1))  # tighten margins
-plot(cluster_2000,
+plot(hc_2000,
      main  = "Hierarchical Clustering of State Policy Distances (2000)",
      xlab  = "State",
      ylab  = "Ward Distance",
@@ -319,24 +319,27 @@ plot(cluster_2000,
      cex   = 0.75,       # shrink state labels so they don't overlap
      hang  = -1)         # hang = -1 drops all leaves to the same baseline
 
+# Check out alt. ks
+k <- 2
+rect.hclust(hc_2000, k = k, border = 2:(k + 1))
+k <- 4
+rect.hclust(hc_2000, k = k, border = 2:(k + 1))
+k <- 6
+rect.hclust(hc_2000, k = k, border = 2:(k + 1))
+
 # Cut tree
 k <- 4
-clusters_2000 <- cutree(cluster_2000, k = k)
-
-rect.hclust(cluster_2000, k = k, border = 2:(k + 1))
-rect.hclust(cluster_2000, k = 6, border = 2:(k + 1))
-
+clusters_2000 <- cutree(hc_2000, k = k)
 
 # Inspect clusters
 print(sort(clusters_2000))
-
 table(clusters_2000)
 
 # Silhouette scores
 library(cluster)
 
 sil_scores <- sapply(2:10, function(k) {
-  cut   <- cutree(cluster_2000, k = k)
+  cut   <- cutree(hc_2000, k = k)
   s     <- silhouette(cut, distances_2000)
   mean(s[, "sil_width"])
 })
@@ -349,6 +352,80 @@ plot(2:10, sil_scores,
      ylab  = "Mean silhouette width",
      main  = "Silhouette scores — 2000")
 abline(v = which.max(sil_scores) + 1, lty = 2, col = "firebrick")
+
+
+## Compute centroids
+
+# Create centroid calculation function
+compute_centroids <- function(clusters, feature_matrix) {
+  cluster_ids <- sort(unique(clusters))
+  
+  centroid_list <- lapply(cluster_ids, function(cid) {
+    # Identify which states belong to this cluster
+    members <- names(clusters[clusters == cid])
+    
+    # Sanity check: confirm all members exist in the feature matrix
+    missing <- setdiff(members, rownames(feature_matrix))
+    if (length(missing) > 0) {
+      warning("States in cluster but not in feature matrix: ",
+              paste(missing, collapse = ", "))
+    }
+    
+    # Column means across member states = centroid
+    colMeans(feature_matrix[members, , drop = FALSE], na.rm = TRUE)
+  })
+  
+  # Stack into a matrix: rows = clusters, cols = policy variables
+  centroid_matrix <- do.call(rbind, centroid_list)
+  rownames(centroid_matrix) <- paste0("cluster_", cluster_ids)
+  return(centroid_matrix)
+}
+
+# Calculate centroids
+centroids_2000 <- compute_centroids(clusters_2000, sip_list$sip00_scaled)
+
+print(round(centroids_2000, 3))
+
+# Number of states per cluster
+cluster_sizes <- table(clusters_2000) %>%
+  as.data.frame() %>%
+  rename(cluster_id = clusters_2000, n_states = Freq) %>%
+  mutate(cluster_id = as.integer(as.character(cluster_id)))
+
+# Distance of each state from its cluster centroid
+# (Euclidean distance in the policy feature space)
+dist_from_centroid <- sapply(names(clusters_2000), function(state) {
+  cid      <- clusters_2000[state]
+  centroid <- centroids_2000[paste0("cluster_", cid), ]
+  state_vec <- as.numeric(sip_list$sip00_scaled[state, ])
+  sqrt(sum((state_vec - centroid)^2, na.rm = TRUE))
+})
+
+# Final summary data frame
+results_2000 <- data.frame(
+  state              = names(clusters_2000),
+  cluster            = clusters_2000,
+  dist_from_centroid = dist_from_centroid,
+  row.names          = NULL
+) %>%
+  left_join(cluster_sizes, by = c("cluster" = "cluster_id")) %>%
+  arrange(cluster, dist_from_centroid)
+
+print(results_2000)
+
+# Identify medoids
+medoids_2000 <- results_2000 %>%
+  group_by(cluster) %>%
+  slice_min(dist_from_centroid, n = 1) %>%
+  select(cluster, medoid = state, dist_from_centroid)
+
+print(medoids_2000)
+
+
+
+
+
+
 
 
 
@@ -494,6 +571,52 @@ dev.off()
 
 # Reset graphics parameters
 par(mfrow = c(1, 1), mar = c(5, 4, 4, 2), oma = c(0, 0, 0, 0))
+
+
+## Baker's Gamma line for dendro stability
+
+library(dendextend)
+
+years <- 2000:2019
+
+# Load dendrogram creation function
+make_dendro <- function(yr) {
+  mat <- sip_matrix[[paste0("sip_matrix_", yr)]]
+  hclust(as.dist(mat), method = "ward.D2") |> as.dendrogram()
+}
+
+# Build all dendrograms
+dends <- lapply(years, make_dendro)  # using make_dend from above
+names(dends) <- years
+
+# Compute year-over-year Baker's Gamma between consecutive years
+gamma_yoy <- sapply(2:length(dends), function(i) {
+  cor_bakers_gamma(dends[[i - 1]], dends[[i]])
+})
+
+# Plot as time series
+plot(years[-1], gamma_yoy,
+     type  = "b",
+     pch   = 19,
+     ylim  = c(0, 1),
+     xlab  = "Year",
+     ylab  = "Baker's Gamma (vs. prior year)",
+     main  = "Year-over-year dendrogram stability",
+     xaxt  = "n")  # suppress default x axis
+
+axis(1, at = years[-1], labels = FALSE)
+
+text(x      = years[-1],
+     y      = par("usr")[3] - 0.04,  # just below the plot area
+     labels = years[-1],
+     srt    = 45,          # 45 degree angle
+     adj    = 1,
+     xpd    = TRUE,
+     cex    = 0.8)
+
+abline(h = 0.8, lty = 2, col = "firebrick")
+
+
 
 
 
