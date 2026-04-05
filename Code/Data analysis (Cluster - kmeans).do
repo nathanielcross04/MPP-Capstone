@@ -191,6 +191,18 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 
 
+*Begin analysis
+use "Data\Other data\Clusters"
+
+keep if cluster_solutions == 1
+
+tsset year
+tsline enf*
+tsline pub*
+tsline int*
+
+*Identify medoids
+
 
 
 
