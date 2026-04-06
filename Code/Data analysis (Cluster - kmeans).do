@@ -192,27 +192,143 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 
 *Begin analysis
-use "Data\Other data\Clusters"
+use "Data\Other data\Clusters", clear
 
 keep if cluster_solutions == 1
 
 tsset year
+
+/*
 tsline enf*
 tsline pub*
 tsline int*
+*/
 
-*Identify medoids
+**Identify medoids
 
+*One cluster solution
 
+*Load data
+use "Data\Other data\Policy vectors (std) (nomiss)", clear
 
+*Setup
+keep if year == 2000
+cluster kmeans $policies, k(1) name(state_cluster_id)
+order state_cluster_id
 
+*Gen mean of each policy as a column
+foreach var of varlist $policies {
+	sum `var' if state_cluster_id == 1
+	gen cm_`var' = `r(mean)' if state_cluster_id == 1
+}
 
+*Take difference between each state's policies and mean policy scores
+foreach var of varlist $policies {
+	gen diff_`var' = abs(`var' - cm_`var')
+	drop `var'
+	drop cm_`var'
+}
 
+*Sum rows across to identify most central and outlier states
+egen total_distance = rowtotal(diff*)
 
+*Rank states
+egen medoid_rank = rank(total_distance)
+extremes medoid_rank id total_distance, n(5)
 
+/* Suggests two cluster solution:
+  +---------------------------------+
+  | obs:   medoid~k   id   total_~e |
+  |---------------------------------|
+  |   3.        4.5   AZ   2.705882 |
+  |   9.        4.5   DC   2.705882 |
+  |  16.        4.5   IA   2.705882 |
+  |  17.        4.5   KS   2.705882 |
+  |  23.        4.5   MI   2.705882 |
+  +---------------------------------+
 
+  +---------------------------------+
+  |  20.         47   ME   6.294118 |
+  |  28.         48   NE   6.313726 |
+  |   5.         49   CA   7.039217 |
+  |  22.         50   MA   7.117648 |
+  |  48.         51   WA   8.058825 |
+  +---------------------------------+
+*/
 
+*Two cluster solution
 
+*Make temp directory
+mkdir "Data\Other data\Medoids temp"
+
+forvalues t = 2000(1)2019 {
+	*Load data
+	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+
+	*Setup
+	keep if year == `t'
+	cluster kmeans $policies, k(2) name(state_cluster_id)
+	order state_cluster_id
+
+	*Gen mean of each policy as a column
+	foreach var of varlist $policies {
+		gen cm_`var' = .
+		sum `var' if state_cluster_id == 1
+		replace cm_`var' = `r(mean)' if state_cluster_id == 1
+		sum `var' if state_cluster_id == 2
+		replace cm_`var' = `r(mean)' if state_cluster_id == 2
+	}
+
+	*Take difference between each state's policies and mean policy scores
+	foreach var of varlist $policies {
+		gen diff_`var' = abs(`var' - cm_`var')
+		drop `var'
+		drop cm_`var'
+	}
+
+	*Sum rows across to identify most central and outlier states
+	egen total_distance = rowtotal(diff*)
+
+	*Rank states
+	egen medoid_rank1 = rank(total_distance) if state_cluster_id == 1
+	egen medoid_rank2 = rank(total_distance) if state_cluster_id == 2
+
+	*Keep needed vars
+	keep state_cluster_id id_no state id year total_distance medoid_rank1 medoid_rank2
+
+	*Save data
+	save "Data\Other data\Medoids temp\medoids_`t'", replace
+}
+
+*Merge all sets together
+use "Data\Other data\Medoids temp\medoids_2000", clear
+	
+forvalues t = 2001(1)2019 {
+	append using "Data\Other data\Medoids temp\medoids_`t'"
+}
+
+sort year state
+
+tab state_cluster_id year
+
+*Aligning clusters year over year
+foreach t of numlist 2004 2005 2009 2010 2011 2013 2014 2016 2017 {
+	replace state_cluster_id = state_cluster_id - 1 if year == `t'
+	replace state_cluster_id = 2 if state_cluster_id == 0 & year == `t'
+}
+
+tab state_cluster_id year
+
+*Cleaning wd
+forvalues t = 2000(1)2019 {
+	erase "Data\Other data\Medoids temp\medoids_`t'.dta"
+}
+
+rmdir "Data\Other data\Medoids temp"
+
+*Export data
+save "Data\Other data\Medoids", replace
+export delimited "Data\Other data\Medoids.csv", replace
 
 
 
