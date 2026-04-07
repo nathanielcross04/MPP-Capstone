@@ -22,166 +22,158 @@ library(haven)
 
 # Load data
 
-
 # ============================================================
-# Cluster 1 Medoid Animation: State Proximity Over Time
-# 2000–2019 | Animated US Choropleth using gganimate
+# State Cluster Map — animation-ready
+#
+# Usage:
+#   Single frame:  render_map(year = 2000)
+#   All frames:    render_all_years()
+#   GIF animation: render_animation()   # needs gganimate + gifski
 # ============================================================
-# Required packages:
-   install.packages(c("ggplot2", "dplyr", "maps", "gganimate", "gifski", "transformr"))
 
 library(ggplot2)
 library(dplyr)
 library(maps)
-library(gganimate)
-library(gifski)
-library(transformr)
-library(tidyverse)
+library(mapproj)
+library(grid)
+library(scales)
 
-# ── 1. Load Data ─────────────────────────────────────────────
-df <- read_csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Other%20data/Medoids.csv")
+# ── 0. CONFIG ────────────────────────────────────────────────
+DATA_PATH  <- read.csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Other%20data/Medoids%20(prep%20for%20viz).csv")
+OUTPUT_DIR <- "C:/Users/ndmcr/Desktop/MPP Capstone/Figures"
+dir.create(OUTPUT_DIR, showWarnings = FALSE)
 
-# ── 2. Filter to Cluster 1 only ──────────────────────────────
-cl1 <- df %>%
-  filter(state_cluster_id == 1) %>%
-  select(state, id, year, total_distance, medoid_rank1)
+# Cluster color palettes: rich (close to medoid) to pale (far from medoid)
+CLUSTER_COLORS <- list(
+  "1" = list(rich = "#1A7A6E", pale = "#C2EBE6"),  # teal
+  "2" = list(rich = "#C46B00", pale = "#FAE0BB")   # amber
+)
+NEUTRAL_COLOR <- "#D0D0D0"
 
-# ── 3. Per-year: identify medoid and top-5 closest states ────
-# The medoid is rank == 1 (or tied at rank 1). 
-# We want to highlight: the medoid (rank 1) + 4 next closest by distance.
-# "If more than 5 states share the medoid score, all are shown."
-# Coloring is by total_distance (lower = more saturated), not rank.
+# ── 1. LOAD & PREP DATA ──────────────────────────────────────
+raw <- DATA_PATH
 
-cl1_highlighted <- cl1 %>%
-  group_by(year) %>%
-  arrange(total_distance, .by_group = TRUE) %>%
+prepped <- raw %>%
+  group_by(year, state_cluster_id) %>%
   mutate(
-    is_medoid = medoid_rank1 == 1,
-    # rank all states in cluster 1 by distance ascending
-    dist_rank = rank(total_distance, ties.method = "min"),
-    # how many states share the minimum distance (medoid tie)
-    n_medoid_ties = sum(is_medoid, na.rm = TRUE),
-    # include: all medoid-tied states + enough next-closest to reach top 5
-    #   if ties >= 5, show all ties; otherwise show ties + fill up to 5
-    top5_cutoff = pmax(5, n_medoid_ties),
-    highlight = dist_rank <= top5_cutoff
-  ) %>%
-  ungroup()
-
-# ── 4. Build color/saturation variable ───────────────────────
-# For highlighted states: rescale total_distance within [0,1] per year,
-# where 0 = medoid (most saturated) and 1 = least saturated among top-5.
-# Non-highlighted states get NA (mapped to a neutral grey).
-
-cl1_highlighted <- cl1_highlighted %>%
-  group_by(year) %>%
-  mutate(
-    # only scale within the highlighted group
-    dist_min  = min(total_distance[highlight]),
-    dist_max  = max(total_distance[highlight]),
-    # 0 = closest (medoid), 1 = farthest in the highlight set
+    dist_min  = min(distance_map, na.rm = TRUE),
+    dist_max  = max(distance_map, na.rm = TRUE),
     dist_norm = ifelse(
-      highlight,
-      (total_distance - dist_min) / pmax(dist_max - dist_min, 1e-9),
+      !is.na(distance_map) & !is.na(include) & include == 1,
+      (distance_map - dist_min) / pmax(dist_max - dist_min, 1e-9),
       NA_real_
     )
   ) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(state_lower = tolower(state))
 
-# ── 5. Join to US map polygons ───────────────────────────────
-states_map <- map_data("state")
+# ── 2. COLOR HELPERS ─────────────────────────────────────────
+blend_hex <- function(hex1, hex2, t) {
+  c1 <- col2rgb(hex1)
+  c2 <- col2rgb(hex2)
+  r  <- round(c1 + t * (c2 - c1))
+  rgb(r[1], r[2], r[3], maxColorValue = 255)
+}
 
-# Standardise state names to lowercase for joining
-cl1_highlighted <- cl1_highlighted %>%
-  mutate(region = tolower(state))
+compute_fills <- function(cluster_id, dist_norm, include_flag) {
+  n   <- length(cluster_id)
+  out <- rep(NEUTRAL_COLOR, n)
+  for (i in seq_len(n)) {
+    if (!is.na(include_flag[i]) && include_flag[i] == 1) {
+      pal <- CLUSTER_COLORS[[as.character(cluster_id[i])]]
+      if (!is.null(pal)) {
+        t_val  <- if (is.na(dist_norm[i])) 0 else dist_norm[i]
+        out[i] <- blend_hex(pal$rich, pal$pale, t_val)
+      }
+    }
+  }
+  out
+}
 
-# Note: "District of Columbia" is "district of columbia" in map_data
-map_df <- states_map %>%
-  left_join(cl1_highlighted, by = "region")
+# ── 3. MAP GEOMETRIES ────────────────────────────────────────
+cont48 <- map_data("state")
 
-# ── 6. Define a saturated-to-muted colour scale ──────────────
-# Medoid (dist_norm = 0): deep crimson/scarlet  → most saturated
-# 4th/5th closest (dist_norm ≈ 1): pale pink    → least saturated
-# Non-highlighted: medium grey
-MEDOID_COLOR   <- "#C1121F"   # vivid red
-NEAR_COLOR     <- "#FFCCD0"   # very pale pink
-GREY_COLOR     <- "#D9D9D9"   # neutral grey for non-highlighted
-BORDER_COLOR   <- "#FFFFFF"
-BACKGROUND     <- "#1A1A2E"
-LAND_BASE      <- "#2E2E4A"
-
-# ── 7. Build the base map ────────────────────────────────────
-# We create a "fill_val" that smoothly encodes distance:
-# highlighted states → dist_norm in [0,1]; others → NA (grey)
-
-p <- ggplot(map_df, aes(x = long, y = lat, group = group, fill = dist_norm)) +
-  geom_polygon(color = BORDER_COLOR, linewidth = 0.25) +
-  # Continuous fill for highlighted states
-  scale_fill_gradient(
-    low      = MEDOID_COLOR,
-    high     = NEAR_COLOR,
-    na.value = GREY_COLOR,
-    limits   = c(0, 1),
-    name     = "Proximity\n(0 = medoid)",
-    guide    = guide_colorbar(
-      title.position = "top",
-      barwidth       = unit(0.4, "cm"),
-      barheight      = unit(4, "cm"),
-      ticks.colour   = "white",
-      frame.colour   = "white"
-    )
-  ) +
-  coord_fixed(1.3, xlim = c(-125, -66), ylim = c(24, 50)) +
-  # ── year label ──────────────────────────────────────────────
-  labs(
-    title    = "Cluster 1 — State Proximity to Medoid",
-    subtitle = "Year: {round(frame_time)}",
-    caption  = "Color intensity reflects distance to cluster centroid.\nMost saturated = medoid | Grey = outside top-5 closest"
-  ) +
-  theme_void(base_family = "sans") +
-  theme(
-    plot.background    = element_rect(fill = BACKGROUND, color = NA),
-    panel.background   = element_rect(fill = BACKGROUND, color = NA),
-    plot.title         = element_text(color = "white", size = 18,
-                                      face = "bold",  hjust = 0.5,
-                                      margin = margin(t = 12, b = 4)),
-    plot.subtitle      = element_text(color = "#AAAACC", size = 14,
-                                      hjust = 0.5,
-                                      margin = margin(b = 8)),
-    plot.caption       = element_text(color = "#777799", size = 8,
-                                      hjust = 0.5,
-                                      margin = margin(t = 8, b = 8)),
-    legend.position    = c(0.92, 0.30),
-    legend.title       = element_text(color = "white", size = 9),
-    legend.text        = element_text(color = "#AAAACC", size = 8),
-    plot.margin        = margin(10, 10, 10, 10)
+# Alaska: clip Aleutians at -180 before transforming to eliminate stretch.
+# After clipping, bbox is roughly long [-180, -130], lat [51, 72].
+# Inset target (bottom-left of plot): long [-124, -112], lat [23, 31].
+# Use rescale() on each axis independently — shapes stay true because the
+# source and target boxes share the same aspect ratio (10:8 lon x lat degrees
+# vs 12:21 source, so a small amount of distortion remains but is minimal
+# compared to the original fold-and-scale approach).
+ak_raw <- map_data("world", region = "USA") %>%
+  filter(subregion == "Alaska") %>%
+  mutate(long = ifelse(long > 0, long - 360, long)) %>%
+  filter(long >= -180) %>%
+  mutate(
+    long = rescale(long, to = c(-124, -113.5), from = c(-180, -130)),
+    lat  = rescale(lat,  to = c(23,   31),   from = c(51,   72))
   )
 
-# ── 8. Animate ───────────────────────────────────────────────
-# transition_time() interpolates continuously between years.
-# ease_aes('cubic-in-out') gives a smooth easing between frames.
-anim <- p +
-  transition_time(year) +
-  ease_aes("cubic-in-out")
+# Hawaii: source bbox long [-160.5, -154.5], lat [18.9, 22.2].
+# Inset target: long [-112, -105], lat [23, 27].
+hi_raw <- map_data("world", region = "USA") %>%
+  filter(subregion == "Hawaii") %>%
+  mutate(
+    long = rescale(long, to = c(-112, -105), from = c(-160.5, -154.5)),
+    lat  = rescale(lat,  to = c(23,   27),   from = c(18.9,   22.2))
+  )
 
-# ── 9. Render ────────────────────────────────────────────────
-# fps=20 with 200ms per year transition gives ~20 real frames per year.
-# nframes: 20 years × 20 frames = 400 frames; increase for smoother output.
-animate(
-  anim,
-  nframes   = 400,      # total frames (≈ 20 per year)
-  fps       = 20,       # playback speed
-  width     = 900,
-  height    = 560,
-  renderer  = gifski_renderer("cluster1_medoid_animation.gif"),
-  end_pause = 30        # hold on final year for 1.5 s
-)
+# ── 4. ATTACH FILLS FOR ONE YEAR ─────────────────────────────
+attach_fills <- function(geom_df, region_col, yr_data) {
+  geom_df %>%
+    left_join(
+      yr_data %>% select(state_lower, state_cluster_id, include, dist_norm),
+      by = setNames("state_lower", region_col)
+    ) %>%
+    mutate(fill_col = compute_fills(state_cluster_id, dist_norm, include))
+}
 
-message("✓ Animation saved to: cluster1_medoid_animation.gif")
+# ── 5. SINGLE-YEAR RENDER ────────────────────────────────────
+render_map <- function(year_val,
+                       save    = TRUE,
+                       outfile = file.path(OUTPUT_DIR,
+                                           sprintf("cluster_map_%d.png", year_val))) {
+  
+  yr   <- prepped %>% filter(year == year_val)
+  df48 <- attach_fills(cont48,                               "region", yr)
+  dfak <- attach_fills(ak_raw %>% mutate(region = "alaska"), "region", yr)
+  dfhi <- attach_fills(hi_raw %>% mutate(region = "hawaii"), "region", yr)
+  
+  p <- ggplot() +
+    geom_polygon(data = df48,
+                 aes(x = long, y = lat, group = group, fill = fill_col),
+                 color = "white", linewidth = 0.25) +
+    geom_polygon(data = dfak,
+                 aes(x = long, y = lat, group = group, fill = fill_col),
+                 color = "white", linewidth = 0.2) +
+    geom_polygon(data = dfhi,
+                 aes(x = long, y = lat, group = group, fill = fill_col),
+                 color = "white", linewidth = 0.2) +
+    scale_fill_identity() +
+    coord_map("albers", lat0 = 29.5, lat1 = 45.5,
+              xlim = c(-124, -66), ylim = c(23, 50)) +
+    labs(
+      title    = sprintf("State Cluster Membership, %d", year_val),
+      subtitle = "Highlighted states: include = 1  \u00b7  Darker = closer to medoid"
+    ) +
+    theme_void(base_family = "sans") +
+    theme(
+      plot.title      = element_text(size = 15, face = "bold",  hjust = 0.5,
+                                     margin = margin(b = 3)),
+      plot.subtitle   = element_text(size =  8, color = "#555555", hjust = 0.5,
+                                     margin = margin(b = 5)),
+      plot.caption    = element_text(size =  7, color = "#777777", hjust = 0.5,
+                                     margin = margin(t = 5)),
+      plot.background = element_rect(fill = "white", color = NA),
+      plot.margin     = margin(10, 10, 10, 10)
+    )
+  
+  if (save) {
+    ggsave(outfile, plot = p, width = 10, height = 4.5, dpi = 180, bg = "white")
+    message("Saved: ", outfile)
+  }
+  
+  p
+}
 
-
-
-
-
-
-
+p <- render_map(2000)
