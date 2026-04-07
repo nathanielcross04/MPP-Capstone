@@ -47,14 +47,6 @@ sum enf_everify if year == 2019
 
 missings report *
 
-/*Create year frames
-forvalues t = 2000(1)2019 {
-	preserve
-	keep if year == `t'
-	save "Data\Other data\Policy vectors by year\policy_vectors_`t'", replace
-	restore
-} */
-
 *Save data
 save "Data\Other data\Policy vectors (std) (nomiss)", replace
 
@@ -191,72 +183,184 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 
 
-*Begin analysis
+**#***ANALYSIS
+
+**Radar plot
 use "Data\Other data\Clusters", clear
 
 keep if cluster_solutions == 1
 
-tsset year
+*Clean dataset
+drop cluster_solutions state_cluster_id cluster_wss tss between_ss r2
 
-/*
-tsline enf*
-tsline pub*
-tsline int*
-*/
+*Create index vars
+gen index_enf_anti = enf_task_force_287g + enf_warrant_287g + enf_jail_287g + enf_secure_comms + enf_everify + enf_state_omnibus
+gen index_enf_pro = enf_lim_coop_detainers + enf_limits_everify
+
+gen index_pub_pro = pub_tanf_post5 + pub_cashass_during5 + pub_foodass_lprkids + pub_foodass_lpradults + pub_ssi_replacement + pub_medicaid_lprkids + pub_pubins_unauthkids + pub_pubins_lpradults + pub_pubins_unauthadult + pub_medicaid_lprpreg + pub_medicaid_unauthpreg + pub_medicaid_lpr_post5
+
+gen index_int_pro = int_instate_tuition + int_state_finaid + int_drivers_license
+gen index_int_anti = int_uni_ban + int_official_eng
+
+*Clean 
+drop enf* pub* int*
+
+*Export data
+export delimited "Data\Other data\Radar plot centroids.csv", replace
+
+
+
+
+
+
+
+
+
+
+
+
+
+**#***MEDOIDS & PREP FOR VIZ
 
 **Identify medoids
 
 *One cluster solution
 
+*Make temp dir
+mkdir "Data\Other data\OneCSmed_temp"
+
+forvalues t = 2000/2019 {
+	*Load data
+	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+
+	*Setup
+	keep if year == `t'
+	cluster kmeans $policies, k(1) name(state_cluster_id) start(krandom(80504))
+	order state_cluster_id
+
+	*Gen mean of each policy as a column
+	foreach var of varlist $policies {
+		sum `var' if state_cluster_id == 1
+		gen cm_`var' = `r(mean)' if state_cluster_id == 1
+	}
+
+	*Take difference between each state's policies and mean policy scores
+	foreach var of varlist $policies {
+		gen diff_`var' = abs(`var' - cm_`var')
+		drop `var'
+		drop cm_`var'
+	}
+
+	*Sum rows across to identify most central and outlier states
+	egen total_distance = rowtotal(diff*)
+
+	*Rank states
+	egen medoid_rank = rank(total_distance)
+	extremes medoid_rank id total_distance, n(5)
+
+	*Keep medoid and outliers of the year
+	egen min_dist = min(total_distance)
+	egen max_dist = max(total_distance)
+	keep if total_distance == min_dist | total_distance == max_dist
+	gen medoid_type = 1 if total_distance == min_dist
+	replace medoid_type = 2 if total_distance == max_dist
+
+	*Save data
+	save "Data\Other data\OneCSmed_temp\medoids_`t'", replace
+}
+
+*Append all sets together
+use "Data\Other data\OneCSmed_temp\medoids_2000", clear
+
+forvalues t = 2001/2019 {
+	append using "Data\Other data\OneCSmed_temp\medoids_`t'"
+}
+
+*Clean wd
+forvalues t = 2000/2019 {
+	erase "Data\Other data\OneCSmed_temp\medoids_`t'.dta"
+}
+
+rmdir "Data\Other data\OneCSmed_temp"
+
+*Save data
+save "Data\Other data\Medoids_1CS", replace
+
+**Analysis
+
 *Load data
-use "Data\Other data\Policy vectors (std) (nomiss)", clear
+use "Data\Other data\Medoids_1CS", clear
 
-*Setup
-keep if year == 2000
-cluster kmeans $policies, k(1) name(state_cluster_id) start(krandom(80504))
-order state_cluster_id
+keep if medoid_type == 1
 
-*Gen mean of each policy as a column
-foreach var of varlist $policies {
-	sum `var' if state_cluster_id == 1
-	gen cm_`var' = `r(mean)' if state_cluster_id == 1
+tab year
+
+preserve
+contract year, freq(n_obs)
+twoway connected n_obs year, /// Number of medoids decreases over time
+    title("Observations per year") ///
+    ytitle("Number of observations") ///
+    xtitle("Year") ///
+    xlabel(, angle(45))
+restore
+
+tsset year
+tsline min_dist //Distance of medoid to centroid inc. over time
+
+forvalues t = 2000/2019 {
+	list state if year == `t'
 }
 
-*Take difference between each state's policies and mean policy scores
-foreach var of varlist $policies {
-	gen diff_`var' = abs(`var' - cm_`var')
-	drop `var'
-	drop cm_`var'
-}
 
-*Sum rows across to identify most central and outlier states
-egen total_distance = rowtotal(diff*)
 
-*Rank states
-egen medoid_rank = rank(total_distance)
-extremes medoid_rank id total_distance, n(5)
 
-/* Suggests two cluster solution:
-  +---------------------------------+
-  | obs:   medoid~k   id   total_~e |
-  |---------------------------------|
-  |   3.        4.5   AZ   2.705882 |
-  |   9.        4.5   DC   2.705882 |
-  |  16.        4.5   IA   2.705882 |
-  |  17.        4.5   KS   2.705882 |
-  |  23.        4.5   MI   2.705882 |
-  +---------------------------------+
 
-  +---------------------------------+
-  |  20.         47   ME   6.294118 |
-  |  28.         48   NE   6.313726 |
-  |   5.         49   CA   7.039217 |
-  |  22.         50   MA   7.117648 |
-  |  48.         51   WA   8.058825 |
-  +---------------------------------+
-*/
+*Load data
+use "Data\Other data\Medoids_1CS", clear
 
-*Two cluster solution
+*Subset
+keep if medoid_type == 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**Two cluster solution
 
 *Make temp directory
 mkdir "Data\Other data\Medoids temp"
