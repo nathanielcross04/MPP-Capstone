@@ -75,7 +75,7 @@ forvalues t = 2000(1)2019 {
 
 	*Setup
 	keep if year == `t'
-	cluster kmeans $policies, k(2) name(state_cluster_id)
+	cluster kmeans $policies, k(2) name(state_cluster_id) start(krandom(80504))
 
 	*Within-cluster variance (lower = tighter clusters)
 	foreach v of varlist $policies {
@@ -121,7 +121,7 @@ forvalues t = 2000(1)2019 {
 
 	*Setup
 	keep if year == `t'
-	cluster kmeans $policies, k(1) name(state_cluster_id)
+	cluster kmeans $policies, k(1) name(state_cluster_id) start(krandom(80504))
 
 	*Within-cluster variance (lower = tighter clusters)
 	foreach v of varlist $policies {
@@ -213,7 +213,7 @@ use "Data\Other data\Policy vectors (std) (nomiss)", clear
 
 *Setup
 keep if year == 2000
-cluster kmeans $policies, k(1) name(state_cluster_id)
+cluster kmeans $policies, k(1) name(state_cluster_id) start(krandom(80504))
 order state_cluster_id
 
 *Gen mean of each policy as a column
@@ -267,7 +267,7 @@ forvalues t = 2000(1)2019 {
 
 	*Setup
 	keep if year == `t'
-	cluster kmeans $policies, k(2) name(state_cluster_id)
+	cluster kmeans $policies, k(2) name(state_cluster_id) start(krandom(80504))
 	order state_cluster_id
 
 	*Gen mean of each policy as a column
@@ -307,18 +307,6 @@ forvalues t = 2001(1)2019 {
 	append using "Data\Other data\Medoids temp\medoids_`t'"
 }
 
-sort year state
-
-tab state_cluster_id year
-
-*Aligning clusters year over year
-foreach t of numlist 2004 2005 2009 2010 2011 2013 2014 2016 2017 {
-	replace state_cluster_id = state_cluster_id - 1 if year == `t'
-	replace state_cluster_id = 2 if state_cluster_id == 0 & year == `t'
-}
-
-tab state_cluster_id year
-
 *Cleaning wd
 forvalues t = 2000(1)2019 {
 	erase "Data\Other data\Medoids temp\medoids_`t'.dta"
@@ -326,20 +314,240 @@ forvalues t = 2000(1)2019 {
 
 rmdir "Data\Other data\Medoids temp"
 
+**Align clusters
+
+tab state_cluster_id year
+
+*Generate lagged cluster id
+bysort state (year): gen lag_cluster = state_cluster_id[_n-1]
+order state_cluster_id lag_cluster
+
+*Generate switch indicator
+bysort year: gen noswitch = cond(state_cluster_id == lag_cluster, 1, 0)
+bysort year: gen switched = cond(state_cluster_id != lag_cluster, 1, 0)
+replace noswitch = 1 if year == 2000
+replace switched = 0 if year == 2000
+
+bysort year: egen n_noswitch = total(noswitch)
+bysort year: egen n_switched = total(switched)
+
+sort year state
+
+bysort year: gen flag = cond(n_switched > n_noswitch, 1, 0)
+tab flag
+
+foreach t of numlist 2012 2013 {
+	display `t'
+	display "Cluster 1"
+	list state if state_cluster_id == 1 & year == `t'
+	display "Cluster 2"
+	list state if state_cluster_id == 2 & year == `t'
+}
+
+tab state_cluster_id year
+
+*Clean dataset
+drop lag_cluster noswitch switched n_noswitch n_switched flag
+
 *Export data
 save "Data\Other data\Medoids", replace
-export delimited "Data\Other data\Medoids.csv", replace
+
+**Visualization prep
+
+*Load data
+use "Data\Other data\Medoids", clear
+
+*Identifing medoids
+gen mrank1_temp = medoid_rank1
+gen mrank2_temp = medoid_rank2
+
+**Medoid 1
+
+*Iteration 1
+bysort year: egen min_rank1 = min(mrank1_temp)
+
+bysort year: egen count_minrank1 = total(mrank1_temp == min_rank1)
+
+sum count_minrank1 
+
+gen include1 = .
+replace include1 = 1 if mrank1_temp == min_rank1
+
+tab include1 (year)
+
+bysort year: egen total_included = total(include1)
+
+gen continue = 1 if 5 - total_included > 0
+
+tab continue (year), m
+
+replace mrank1_temp = . if mrank1_temp == min_rank1
 
 
+*Iteration 2
+drop min_rank1 count_minrank1 total_included
 
+bysort year: egen min_rank1 = min(mrank1_temp) if continue == 1
 
+bysort year: egen count_minrank1 = total(mrank1_temp == min_rank1) if continue == 1
 
+sum count_minrank1
 
+replace include1 = 1 if mrank1_temp == min_rank1 & continue == 1
 
+tab include1 (year)
 
+drop continue
+bysort year: egen total_included = total(include1)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
 
+replace mrank1_temp = . if mrank1_temp == min_rank1
 
+*Iteration 3
+drop min_rank1 count_minrank1 total_included
 
+bysort year: egen min_rank1 = min(mrank1_temp) if continue == 1
 
+bysort year: egen count_minrank1 = total(mrank1_temp == min_rank1) if continue == 1
 
+sum count_minrank1
 
+replace include1 = 1 if mrank1_temp == min_rank1 & continue == 1
+
+tab include1 (year)
+
+drop continue
+bysort year: egen total_included = total(include1)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
+
+replace mrank1_temp = . if mrank1_temp == min_rank1
+
+*Iteration 4
+drop min_rank1 count_minrank1 total_included
+
+bysort year: egen min_rank1 = min(mrank1_temp) if continue == 1
+
+bysort year: egen count_minrank1 = total(mrank1_temp == min_rank1) if continue == 1
+
+sum count_minrank1
+
+replace include1 = 1 if mrank1_temp == min_rank1 & continue == 1
+
+tab include1 (year)
+
+drop continue min_rank1 count_minrank1 mrank1_temp
+
+**Medoid 2
+
+*Iteration 1
+bysort year: egen min_rank2 = min(mrank2_temp)
+
+bysort year: egen count_minrank2 = total(mrank2_temp == min_rank2)
+
+sum count_minrank2
+
+gen include2 = .
+replace include2 = 1 if mrank2_temp == min_rank2
+
+tab include2 (year)
+
+bysort year: egen total_included = total(include2)
+
+gen continue = 1 if 5 - total_included > 0
+
+tab continue (year), m
+
+replace mrank2_temp = . if mrank2_temp == min_rank2
+
+*Iteration 2
+drop min_rank2 count_minrank2 total_included
+
+bysort year: egen min_rank2 = min(mrank2_temp) if continue == 1
+
+bysort year: egen count_minrank2 = total(mrank2_temp == min_rank2) if continue == 1
+
+sum count_minrank2
+
+replace include2 = 1 if mrank2_temp == min_rank2 & continue == 1
+
+tab include2 (year)
+
+drop continue
+bysort year: egen total_included = total(include2)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
+
+replace mrank2_temp = . if mrank2_temp == min_rank2
+
+*Iteration 3
+drop min_rank2 count_minrank2 total_included
+
+bysort year: egen min_rank2 = min(mrank2_temp) if continue == 1
+
+bysort year: egen count_minrank2 = total(mrank2_temp == min_rank2) if continue == 1
+
+sum count_minrank2
+
+replace include2 = 1 if mrank2_temp == min_rank2 & continue == 1
+
+tab include2 (year)
+
+drop continue
+bysort year: egen total_included = total(include2)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
+
+replace mrank2_temp = . if mrank2_temp == min_rank2
+
+*Iteration 4
+drop min_rank2 count_minrank2 total_included
+
+bysort year: egen min_rank2 = min(mrank2_temp) if continue == 1
+
+bysort year: egen count_minrank2 = total(mrank2_temp == min_rank2) if continue == 1
+
+sum count_minrank2
+
+replace include2 = 1 if mrank2_temp == min_rank2 & continue == 1
+
+tab include2 (year)
+
+drop continue
+bysort year: egen total_included = total(include2)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
+
+replace mrank2_temp = . if mrank2_temp == min_rank2
+
+*Iteration 5
+drop min_rank2 count_minrank2 total_included
+
+bysort year: egen min_rank2 = min(mrank2_temp) if continue == 1
+
+bysort year: egen count_minrank2 = total(mrank2_temp == min_rank2) if continue == 1
+
+sum count_minrank2
+
+replace include2 = 1 if mrank2_temp == min_rank2 & continue == 1
+
+tab include2 (year)
+
+drop continue
+bysort year: egen total_included = total(include2)
+gen continue = 1 if 5 - total_included > 0
+tab continue (year), m
+
+replace mrank2_temp = . if mrank2_temp == min_rank2
+
+*Clean up data
+drop mrank2_temp min_rank2 count_minrank2 total_included continue
+
+*Prep for visualization
+gen distance1 = total_distance if include1 == 1
+gen distance2 = total_distance if include2 == 1
+
+*Save and export data
+save "Data\Other data\Medoids (prep for viz)", replace
+export delimited "Data\Other data\Medoids (prep for viz).csv", replace
