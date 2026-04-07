@@ -548,6 +548,12 @@ drop mrank2_temp min_rank2 count_minrank2 total_included continue
 gen distance1 = total_distance if include1 == 1
 gen distance2 = total_distance if include2 == 1
 
+*Clean up vars
+gen include = 1 if include1 == 1 | include2 == 1
+gen distance_map = .
+replace distance_map = distance1 if distance1 != .
+replace distance_map = distance2 if distance2 != .
+
 *Save and export data
 save "Data\Other data\Medoids (prep for viz)", replace
 export delimited "Data\Other data\Medoids (prep for viz).csv", replace
