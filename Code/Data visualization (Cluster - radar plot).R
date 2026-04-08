@@ -641,16 +641,3 @@ anim_obj <- animate(
 )
 
 message("GIF saved to: ", file.path(OUTPUT_DIR, "radar_plot_2CS_2000_2019.gif"))
-
-
-
-
-
-
-
-
-
-
-
-
-
