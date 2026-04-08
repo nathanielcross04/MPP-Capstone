@@ -40,11 +40,11 @@ library(gifski)
 
 # Color palette: pro spokes = teal, anti spokes = red
 SPOKE_COLORS <- c(
-  "index_enf_anti" = "#B22222",
-  "index_enf_pro"  = "#1A7A6E",
-  "index_pub_pro"  = "#1A7A6E",
-  "index_int_pro"  = "#1A7A6E",
-  "index_int_anti" = "#B22222"
+  "index_enf_anti" = "#D55E00",
+  "index_enf_pro"  = "#009E73",
+  "index_pub_pro"  = "#009E73",
+  "index_int_pro"  = "#009E73",
+  "index_int_anti" = "#D55E00"
 )
 
 # Human-readable spoke labels
