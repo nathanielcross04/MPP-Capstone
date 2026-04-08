@@ -185,7 +185,7 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 **#***ANALYSIS
 
-**Radar plot
+**Radar plot - 1CS
 use "Data\Other data\Clusters", clear
 
 keep if cluster_solutions == 1
@@ -208,8 +208,28 @@ drop enf* pub* int*
 *Export data
 export delimited "Data\Other data\Radar plot centroids.csv", replace
 
+**Radar plot - 2CS
+use "Data\Other data\Clusters", clear
 
+keep if cluster_solutions == 2
 
+*Clean dataset
+drop cluster_solutions cluster_wss tss between_ss r2
+
+*Create index vars
+gen index_enf_anti = (enf_task_force_287g + enf_warrant_287g + enf_jail_287g + enf_secure_comms + enf_everify + enf_state_omnibus) / 6
+gen index_enf_pro = (enf_lim_coop_detainers + enf_limits_everify) / 2
+
+gen index_pub_pro = (pub_tanf_post5 + pub_cashass_during5 + pub_foodass_lprkids + pub_foodass_lpradults + pub_ssi_replacement + pub_medicaid_lprkids + pub_pubins_unauthkids + pub_pubins_lpradults + pub_pubins_unauthadult + pub_medicaid_lprpreg + pub_medicaid_unauthpreg + pub_medicaid_lpr_post5) / 12
+
+gen index_int_pro = (int_instate_tuition + int_state_finaid + int_drivers_license) / 3
+gen index_int_anti = (int_uni_ban + int_official_eng) / 2
+
+*Clean 
+drop enf* pub* int*
+
+*Export data
+export delimited "Data\Other data\Radar plot centroids - 2CS.csv", replace
 
 
 
