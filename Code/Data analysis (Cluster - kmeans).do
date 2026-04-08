@@ -232,12 +232,125 @@ drop enf* pub* int*
 export delimited "Data\Other data\Radar plot centroids - 2CS.csv", replace
 
 
+**Keystone policies
+use "Data\Other data\Clusters", clear
 
+keep if cluster_solutions == 2
 
+drop cluster_solutions cluster_wss tss between_ss r2
 
+*Generating year/state_cluster_id single string var
+tostring year, replace
+forvalues t = 2000/2019 {
+	replace year = "y_`t'" if year == "`t'"
+}
+gen year_scid = year + "_" + string(state_cluster_id)
+order year_scid
+drop year state_cluster_id
 
+local policies enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license
 
+*Rename all policy vars to a common stub
+local i = 1
+foreach var of local policies {
+    rename `var' pol`i'
+    local polname`i' "`var'"
+    local i = `i' + 1
+}
 
+*Reshape long with stub
+reshape long pol, i(year_scid) j(pol_num)
+
+*Restore original policy names as a string variable
+gen policy = ""
+local i = 1
+foreach var of local policies {
+    replace policy = "`var'" if pol_num == `i'
+    local i = `i' + 1
+}
+
+drop pol_num
+rename pol value
+
+*Reshape wide
+reshape wide value, i(policy) j(year_scid) string
+
+*Take difference in cluster scores
+forvalues t = 2000/2019 {
+	gen diff_`t' = abs(valuey_`t'_1 - valuey_`t'_2)
+	drop valuey_`t'_1 valuey_`t'_2
+}
+
+*Reshape long again
+reshape long diff_, i(policy) j(year)
+
+*Reshape wide again
+reshape wide diff_, i(year) j(policy) string
+
+*Identify top 3 most influential cluster differentiators per year
+vl clear
+vl create policies = (diff_enf_everify diff_enf_jail_287g diff_enf_lim_coop_detainers diff_enf_limits_everify diff_enf_secure_comms diff_enf_state_omnibus diff_enf_task_force_287g diff_enf_warrant_287g diff_int_drivers_license diff_int_instate_tuition diff_int_official_eng diff_int_state_finaid diff_int_uni_ban diff_pub_cashass_during5 diff_pub_foodass_lpradults diff_pub_foodass_lprkids diff_pub_medicaid_lpr_post5 diff_pub_medicaid_lprkids diff_pub_medicaid_lprpreg diff_pub_medicaid_unauthpreg diff_pub_pubins_lpradults diff_pub_pubins_unauthadult diff_pub_pubins_unauthkids diff_pub_ssi_replacement diff_pub_tanf_post5)
+
+egen max_diff = rowmax($policies)
+order max_diff
+
+foreach var of varlist $policies {
+	gen temp`var' = `var'
+}
+
+foreach var of varlist $policies {
+	replace temp`var' = . if temp`var' == max_diff
+}
+
+vl create temppol = (tempdiff_enf_everify tempdiff_enf_jail_287g tempdiff_enf_lim_coop_detainers tempdiff_enf_limits_everify tempdiff_enf_secure_comms tempdiff_enf_state_omnibus tempdiff_enf_task_force_287g tempdiff_enf_warrant_287g tempdiff_int_drivers_license tempdiff_int_instate_tuition tempdiff_int_official_eng tempdiff_int_state_finaid tempdiff_int_uni_ban tempdiff_pub_cashass_during5 tempdiff_pub_foodass_lpradults tempdiff_pub_foodass_lprkids tempdiff_pub_medicaid_lpr_post5 tempdiff_pub_medicaid_lprkids tempdiff_pub_medicaid_lprpreg tempdiff_pub_medicaid_unauthpreg tempdiff_pub_pubins_lpradults tempdiff_pub_pubins_unauthadult tempdiff_pub_pubins_unauthkids tempdiff_pub_ssi_replacement tempdiff_pub_tanf_post5)
+
+egen max_diff2 = rowmax($temppol)
+order max_diff2
+
+foreach var of varlist $policies {
+	replace temp`var' = . if temp`var' == max_diff2
+}
+
+egen max_diff3 = rowmax($temppol)
+order max_diff3
+
+drop temp*
+
+*Identifying greatest influence policies
+sum $policies
+
+foreach var of varlist $policies {
+	replace `var' = 1 if `var' == max_diff
+	replace `var' = 2 if `var' == max_diff2
+	replace `var' = 3 if `var' == max_diff3
+	replace `var' = . if `var' < 1
+}
+
+*Drop any vars with all .
+foreach var of varlist _all {
+    capture assert missing(`var')
+    if !_rc drop `var'
+}
+
+*Gen ranks and raw
+foreach var of varlist diff* {
+	gen rk`var' = `var'
+}
+
+foreach var of varlist diff*{
+	replace `var' = max_diff if `var' == 1
+	replace `var' = max_diff2 if `var' == 2
+	replace `var' = max_diff3 if `var' == 3
+}
+
+drop max*
+
+foreach var of varlist _all {
+	replace `var' = 0 if `var' == .
+}
+
+*Export data
+export delimited "Data\Other data\Imp policies ranked.csv", replace
 
 
 **#***MEDOIDS & PREP FOR VIZ
