@@ -1197,13 +1197,63 @@ order state id year
 *Cleaning labels
 label var state ""
 
+**Standardize ternary variables
+
+*Identify ternary variables
+sum *
+/*
+enf_tas~287g |      1,071    .1176471    .4484412          0          2
+enf_war~287g |      1,071    .0046685     .080748          0          2
+enf_jai~287g |      1,071     .210084     .518563          0          2
+enf_lim_co~s |      1,019    .2816487    .6470174          0          2
+ enf_everify |        867     .254902    .5793469          0          2
+*/
+
+*Create macro of variables needing standarization
+global standardize_vars enf_task_force_287g enf_warrant_287g enf_jail_287g enf_lim_coop_detainers enf_everify
+
+*Run standardization loop
+foreach var of varlist $standardize_vars {
+	tab `var'
+	replace `var' = `var' / 2
+	tab `var'
+}
+
+**Clean missings
+drop if year == 2020
+missings report *
+
+replace enf_lim_coop_detainers = 0.5 if enf_lim_coop_detainers == .
+missings report *
+
+replace enf_state_omnibus = 0 if enf_state_omnibus == .
+missings report *
+
+egen id_no = group(state)
+sum id_no
+order id_no
+sort id_no year
+
+xtset id_no year
+
+sum enf_everify if year == 2016
+
+sum enf_everify if year == 2017
+replace enf_everify = enf_everify[_n-1] if year == 2017
+sum enf_everify if year == 2017
+
+sum enf_everify if year == 2018
+replace enf_everify = enf_everify[_n-2] if year == 2018
+sum enf_everify if year == 2018
+
+sum enf_everify if year == 2019
+replace enf_everify = enf_everify[_n-3] if year == 2019
+sum enf_everify if year == 2019
+
+missings report *
+
 **Saving/cleaning directory 
-
-*Save data as .dta
-save "Data\Final data\State immigration policies", replace
-
-*Saving as a .csv
-export delimited using "Data\Final data\State immigration policies.csv", replace
+save "Data\Final data\Policy vectors (std) (nomiss)", replace
 
 *Erasing unneeded files
 forvalues i = 1(1)25 {
