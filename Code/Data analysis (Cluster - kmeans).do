@@ -589,7 +589,13 @@ drop lag_cluster noswitch switched n_noswitch n_switched flag
 *Export data
 save "Data\Other data\Medoids", replace
 
-**Visualization prep
+
+
+
+
+
+
+**Map prep
 
 *Load data
 use "Data\Other data\Medoids", clear
