@@ -39,7 +39,16 @@ library(gifski)
 
 
 # Color palette: pro spokes = teal, anti spokes = red
+# Color palette: pro spokes = teal, anti spokes = red/orange
 SPOKE_COLORS <- c(
+  "index_enf_anti" = "black",
+  "index_enf_pro"  = "black",
+  "index_pub_pro"  = "black",
+  "index_int_pro"  = "black",
+  "index_int_anti" = "black"
+)
+
+SPOKE_LABEL_COLORS <- c(
   "index_enf_anti" = "#D55E00",
   "index_enf_pro"  = "#009E73",
   "index_pub_pro"  = "#009E73",
@@ -132,7 +141,7 @@ build_labels <- function(label_radius = 1.35) {
     y        = label_radius * cos(SPOKE_ANGLES),
     variable = SPOKES,
     label    = unname(SPOKE_LABELS),
-    color    = unname(SPOKE_COLORS),
+    color    = unname(SPOKE_LABEL_COLORS),
     stringsAsFactors = FALSE
   )
 }
