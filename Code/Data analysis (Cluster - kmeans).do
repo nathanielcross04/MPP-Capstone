@@ -12,50 +12,9 @@ set more off
 clear all
 
 **#***DATASET PREP
-use "Data\Other data\Standardized SIPs", clear
-
-*Clean missings
-drop if year == 2020
-missings report *
-
-replace enf_lim_coop_detainers = 0.5 if enf_lim_coop_detainers == .
-missings report *
-
-replace enf_state_omnibus = 0 if enf_state_omnibus == .
-missings report *
-
-egen id_no = group(state)
-sum id_no
-order id_no
-sort id_no year
-
-xtset id_no year
-
-sum enf_everify if year == 2016
-
-sum enf_everify if year == 2017
-replace enf_everify = enf_everify[_n-1] if year == 2017
-sum enf_everify if year == 2017
-
-sum enf_everify if year == 2018
-replace enf_everify = enf_everify[_n-2] if year == 2018
-sum enf_everify if year == 2018
-
-sum enf_everify if year == 2019
-replace enf_everify = enf_everify[_n-3] if year == 2019
-sum enf_everify if year == 2019
-
-missings report *
-
-*Save data
-save "Data\Other data\Policy vectors (std) (nomiss)", replace
 
 *Make temporary directory for merges
 mkdir "Data\Other data\Cluster solutions (temp)"
-
-*Create vector of policy vars
-vl clear
-vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
 
 *Run loop to find cluster solutions and identify centroids of each year
 forvalues t = 2000(1)2019 {
@@ -63,7 +22,11 @@ forvalues t = 2000(1)2019 {
 	**Two cluster solution
 
 	*Load data
-	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
+	
+	*Create vector of policy vars
+	vl clear
+	vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
 
 	*Setup
 	keep if year == `t'
@@ -109,7 +72,7 @@ forvalues t = 2000(1)2019 {
 	**One cluster solution
 
 	*Load data
-	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
 
 	*Setup
 	keep if year == `t'
@@ -364,7 +327,11 @@ mkdir "Data\Other data\OneCSmed_temp"
 
 forvalues t = 2000/2019 {
 	*Load data
-	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
+
+	*Define policy vector
+	vl clear
+	vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
 
 	*Setup
 	keep if year == `t'
@@ -421,6 +388,9 @@ save "Data\Other data\Medoids_1CS", replace
 
 **Analysis
 
+
+**Plotting policy profile individualization over time
+
 *Load data
 use "Data\Other data\Medoids_1CS", clear
 
@@ -428,21 +398,16 @@ keep if medoid_type == 1
 
 tab year
 
-preserve
-contract year, freq(n_obs)
-twoway connected n_obs year, /// Number of medoids decreases over time
-    title("Observations per year") ///
-    ytitle("Number of observations") ///
-    xtitle("Year") ///
-    xlabel(, angle(45))
-restore
+bysort year: egen n_medoids = sum(medoid_type)
+
+collapse (mean) n_medoids min_dist, by(year)
 
 tsset year
-tsline min_dist //Distance of medoid to centroid inc. over time
+//tsline n_medoids
+//tsline min_dist //Distance of medoid to centroid inc. over time
 
-forvalues t = 2000/2019 {
-	list state if year == `t'
-}
+*Export data for graphing
+export delimited "Data\Other data\line_indiv.csv", replace
 
 
 
@@ -500,7 +465,7 @@ mkdir "Data\Other data\Medoids temp"
 
 forvalues t = 2000(1)2019 {
 	*Load data
-	use "Data\Other data\Policy vectors (std) (nomiss)", clear
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
 
 	*Setup
 	keep if year == `t'
