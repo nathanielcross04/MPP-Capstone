@@ -3,43 +3,44 @@
 # Capstone Project
 #
 # Data analysis:
-# Cluster analysis - radar plot
+# Cluster analysis - radar plots
 
 
-#=======#
-# Setup #
-#=======#
+#==============================================================================#
+# 1CS RADAR PLOT                                                               #
+#==============================================================================#
 
-# Set working directory
-setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
-getwd()
-file.exists("Data/Other data/Radar plot centroids.csv")
 
-library(showtext)
 
-font_add_google("Lato", "lato")
-showtext_auto()
+
+
+
+
+
 
 # ── 0. CONFIG ────────────────────────────────────────────────
+# Set working directory
+setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
+
+# Load data
 DATA_PATH  <- read.csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Other%20data/Radar%20plot%20centroids.csv")
 OUTPUT_DIR <- "C:/Users/ndmcr/Desktop/MPP Capstone/Figures"
 dir.create(OUTPUT_DIR, showWarnings = FALSE)
 
-# ============================================================
-# Radar Plot — Animated GIF (2000–2019)
-# Requires: ggplot2, dplyr, tidyr, scales, gganimate, gifski
-# ============================================================
-
+# Load dependencies
 library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(scales)
 library(gganimate)
 library(gifski)
+library(showtext)
 
+# Import font
+font_add_google("Lato", "lato")
+showtext_auto()
 
-# Color palette: pro spokes = teal, anti spokes = red
-# Color palette: pro spokes = teal, anti spokes = red/orange
+# Set color palette
 SPOKE_COLORS <- c(
   "index_enf_anti" = "black",
   "index_enf_pro"  = "black",
@@ -56,7 +57,7 @@ SPOKE_LABEL_COLORS <- c(
   "index_int_anti" = "#D55E00"
 )
 
-# Human-readable spoke labels
+# Relabel spoke labels
 SPOKE_LABELS <- c(
   "index_enf_anti" = "Anti-immigrant\nenforcement policies",
   "index_enf_pro"  = "Pro-immigrant\nenforcement policies",
@@ -65,6 +66,7 @@ SPOKE_LABELS <- c(
   "index_int_anti" = "Anti-immigrant\nintegration policies "
 )
 
+# Misc. parameters
 YEARS           <- 2000:2019
 FRAMES_PER_YEAR <- 64
 
@@ -190,7 +192,7 @@ interp_pts <- lapply(seq_along(YEARS), function(i) {
     pts  <- build_points(vals, axis_max)
     pts$frame_id    <- (i - 1) * FRAMES_PER_YEAR + si
     pts$year_label  <- as.character(yr_a)
-    pts$spoke_color <- unname(SPOKE_COLORS[pts$variable])
+    pts$spoke_color <- unname(SPOKE_LABEL_COLORS[pts$variable])
     pts
   })
 }) %>% unlist(recursive = FALSE) %>% bind_rows()
@@ -517,7 +519,7 @@ interp_pts_for_cluster <- function(cl) {
       pts$frame_id    <- (i - 1) * FRAMES_PER_YEAR + si
       pts$year_label  <- as.character(yr_a)
       pts$cluster     <- cl
-      pts$spoke_color <- unname(SPOKE_COLORS[pts$variable])
+      pts$spoke_color <- unname(SPOKE_LABEL_COLORS[pts$variable])
       pts
     })
   }) %>% unlist(recursive = FALSE) %>% bind_rows()
