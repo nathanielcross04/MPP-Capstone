@@ -534,7 +534,30 @@ drop _merge
 *Clean
 drop id_no medoid_rank1 medoid_rank2
 
-*Run probit
-probit state_cluster_id p_foreign_born p_latino p_white p_unemp leg_cont
+*Gen unit id
+sort state
+egen id_no = group(state)
+order id_no state id year
 
-xtset 
+*Prep for reg
+xtset id_no year
+replace state_cluster_id = state_cluster_id - 1
+
+
+
+**# REGRESSIONS
+
+*Run probit for group identification
+xtprobit state_cluster_id leg_cont govparty_c p_foreign_born p_latino p_white p_unemp i.year, re vce(cluster state) //Strongly predicts cluster identification
+
+margins, dydx(leg_cont govparty_c p_foreign_born p_latino p_white p_unemp)
+
+*Run reg for extremity
+preserve
+keep if state_cluster_id == 0
+xtreg total_distance p_foreign_born p_latino p_white p_unemp leg_cont i.year, re vce(cluster state) 
+restore
+preserve
+keep if state_cluster_id == 1
+xtreg total_distance p_foreign_born p_latino p_white p_unemp leg_cont i.year, re vce(cluster state) 
+restore //Cannot predict extremity of state in cluster
