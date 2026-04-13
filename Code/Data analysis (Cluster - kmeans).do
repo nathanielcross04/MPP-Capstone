@@ -275,17 +275,13 @@ foreach var in `policies' {
 	gen dupmean_`var' = .
 }
 
-local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
 foreach var in `policies' {
 	replace dupmean_`var' = 1 if sd_`var' == min_sd
-	replace dupmean_`var' = 2 if sd_`var' == min_sd2
-	replace dupmean_`var' = 3 if sd_`var' == min_sd3
+//	replace dupmean_`var' = 2 if sd_`var' == min_sd2
+//	replace dupmean_`var' = 3 if sd_`var' == min_sd3
 }
 
-
-
 *Gen ranks and raw
-local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
 foreach var in `policies' {
 	rename dupmean_`var' rk_`var'
 }
@@ -296,7 +292,20 @@ foreach var in `policies' {
 	replace sd_`var' = . if rk_`var' == .
 }
 
+*Drop any vars with all .
+foreach var of varlist _all {
+    capture assert missing(`var')
+    if !_rc drop `var'
+}
 
+*Drop unneeded vars
+drop sd*
+drop min*
+drop rk*
+
+*Frame dataset by cluster
+preserve
+keep if state_cluster_id == 1
 
 *Drop any vars with all .
 foreach var of varlist _all {
@@ -304,10 +313,20 @@ foreach var of varlist _all {
     if !_rc drop `var'
 }
 
+*Save data
+export delimited "Data\Other data\Cluster1_policies.csv", replace
+restore
+
+keep if state_cluster_id == 2
+
+*Drop any vars with all .
 foreach var of varlist _all {
-	replace `var' = 0 if `var' == .
+    capture assert missing(`var')
+    if !_rc drop `var'
 }
 
+*Save data
+export delimited "Data\Other data\Cluster2_policies.csv", replace
 
 
 
