@@ -146,6 +146,7 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 
 
+**# Describe cluster policies
 
 mkdir "Data\Other data\Cluster_mean_sd"
 
@@ -327,8 +328,6 @@ foreach var of varlist _all {
 
 *Save data
 export delimited "Data\Other data\Cluster2_policies.csv", replace
-
-
 
 
 **Differentiator policies
