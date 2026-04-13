@@ -1,0 +1,401 @@
+﻿state,year,leg_cont,govparty_c
+Alabama,2016,0,0
+Alaska,2016,0,0.5
+Arizona,2016,0,0
+Arkansas,2016,0,0
+California,2016,1,1
+Colorado,2016,0.5,1
+Connecticut,2016,1,1
+Delaware,2016,1,1
+Florida,2016,0,0
+Georgia,2016,0,0
+Hawaii,2016,1,1
+Idaho,2016,0,0
+Illinois,2016,1,0
+Indiana,2016,0,0
+Iowa,2016,0.5,0
+Kansas,2016,0,0
+Kentucky,2016,0.5,0
+Louisiana,2016,0,1
+Maine,2016,0.5,0
+Maryland,2016,1,0
+Massachusetts,2016,1,0
+Michigan,2016,0,0
+Minnesota,2016,0.5,1
+Mississippi,2016,0,0
+Missouri,2016,0,1
+Montana,2016,0,1
+Nebraska,2016,.,0
+Nevada,2016,0,0
+New Hampshire,2016,0,1
+New Jersey,2016,1,0
+New Mexico,2016,0.5,0
+New York,2016,0.5,1
+North Carolina,2016,0,0
+North Dakota,2016,0,0
+Ohio,2016,0,0
+Oklahoma,2016,0,0
+Oregon,2016,1,1
+Pennsylvania,2016,0,1
+Rhode Island,2016,1,1
+South Carolina,2016,0,0
+South Dakota,2016,0,0
+Tennessee,2016,0,0
+Texas,2016,0,0
+Utah,2016,0,0
+Vermont,2016,1,1
+Virginia,2016,0,1
+Washington,2016,0.5,1
+West Virginia,2016,0,1
+Wisconsin,2016,0,0
+Wyoming,2016,0,0
+Alabama,2017,0,0
+Alaska,2017,0,0.5
+Arizona,2017,0,0
+Arkansas,2017,0,0
+California,2017,1,1
+Colorado,2017,0.5,1
+Connecticut,2017,0.5,1
+Delaware,2017,1,1
+Florida,2017,0,0
+Georgia,2017,0,0
+Hawaii,2017,1,1
+Idaho,2017,0,0
+Illinois,2017,1,0
+Indiana,2017,0,0
+Iowa,2017,0,0
+Kansas,2017,0,0
+Kentucky,2017,0,0
+Louisiana,2017,0,1
+Maine,2017,0.5,0
+Maryland,2017,1,0
+Massachusetts,2017,1,0
+Michigan,2017,0,0
+Minnesota,2017,0,1
+Mississippi,2017,0,0
+Missouri,2017,0,0
+Montana,2017,0,1
+Nebraska,2017,.,0
+Nevada,2017,1,0
+New Hampshire,2017,0,0
+New Jersey,2017,1,0
+New Mexico,2017,1,0
+New York,2017,1,1
+North Carolina,2017,0,1
+North Dakota,2017,0,0
+Ohio,2017,0,0
+Oklahoma,2017,0,0
+Oregon,2017,1,1
+Pennsylvania,2017,0,1
+Rhode Island,2017,1,1
+South Carolina,2017,0,0
+South Dakota,2017,0,0
+Tennessee,2017,0,0
+Texas,2017,0,0
+Utah,2017,0,0
+Vermont,2017,1,0
+Virginia,2017,0,1
+Washington,2017,1,1
+West Virginia,2017,0,1
+Wisconsin,2017,0,0
+Wyoming,2017,0,0
+Alabama,2018,0,0
+Alaska,2018,0,0.5
+Arizona,2018,0,0
+Arkansas,2018,0,0
+California,2018,1,1
+Colorado,2018,0.5,1
+Connecticut,2018,0.5,1
+Delaware,2018,1,1
+Florida,2018,0,0
+Georgia,2018,0,0
+Hawaii,2018,1,1
+Idaho,2018,0,0
+Illinois,2018,1,0
+Indiana,2018,0,0
+Iowa,2018,0,0
+Kansas,2018,0,0
+Kentucky,2018,0,0
+Louisiana,2018,0,1
+Maine,2018,0.5,0
+Maryland,2018,1,0
+Massachusetts,2018,1,0
+Michigan,2018,0,0
+Minnesota,2018,0,1
+Mississippi,2018,0,0
+Missouri,2018,0,0
+Montana,2018,0,1
+Nebraska,2018,.,0
+Nevada,2018,0.5,0
+New Hampshire,2018,0,0
+New Jersey,2018,1,1
+New Mexico,2018,1,0
+New York,2018,0.5,1
+North Carolina,2018,0,1
+North Dakota,2018,0,0
+Ohio,2018,0,0
+Oklahoma,2018,0,0
+Oregon,2018,1,1
+Pennsylvania,2018,0,1
+Rhode Island,2018,1,1
+South Carolina,2018,0,0
+South Dakota,2018,0,0
+Tennessee,2018,0,0
+Texas,2018,0,0
+Utah,2018,0,0
+Vermont,2018,1,0
+Virginia,2018,0,1
+Washington,2018,1,1
+West Virginia,2018,0,0
+Wisconsin,2018,0,0
+Wyoming,2018,0,0
+Alabama,2019,0,0
+Alaska,2019,0,0
+Arizona,2019,0.5,0
+Arkansas,2019,0,0
+California,2019,1,1
+Colorado,2019,1,1
+Connecticut,2019,1,1
+Delaware,2019,1,1
+Florida,2019,0,0
+Georgia,2019,0,0
+Hawaii,2019,1,1
+Idaho,2019,0,0
+Illinois,2019,1,1
+Indiana,2019,0,0
+Iowa,2019,0,0
+Kansas,2019,0,1
+Kentucky,2019,0,0
+Louisiana,2019,0,1
+Maine,2019,1,1
+Maryland,2019,1,0
+Massachusetts,2019,1,0
+Michigan,2019,0,1
+Minnesota,2019,0.5,1
+Mississippi,2019,0,0
+Missouri,2019,0,0
+Montana,2019,0,1
+Nebraska,2019,.,0
+Nevada,2019,1,1
+New Hampshire,2019,1,0
+New Jersey,2019,1,1
+New Mexico,2019,1,1
+New York,2019,1,1
+North Carolina,2019,0,1
+North Dakota,2019,0,0
+Ohio,2019,0,0
+Oklahoma,2019,0,0
+Oregon,2019,1,1
+Pennsylvania,2019,0,1
+Rhode Island,2019,1,1
+South Carolina,2019,0,0
+South Dakota,2019,0,0
+Tennessee,2019,0,0
+Texas,2019,0,0
+Utah,2019,0,0
+Vermont,2019,1,0
+Virginia,2019,0,1
+Washington,2019,1,1
+West Virginia,2019,0,0
+Wisconsin,2019,0,1
+Wyoming,2019,0,0
+Alabama,2012,0,0
+Alaska,2012,0.5,0
+Arizona,2012,0,0
+Arkansas,2012,1,1
+California,2012,1,1
+Colorado,2012,0.5,1
+Connecticut,2012,1,1
+Delaware,2012,1,1
+Florida,2012,0,0
+Georgia,2012,0,0
+Hawaii,2012,1,1
+Idaho,2012,0,0
+Illinois,2012,1,1
+Indiana,2012,0,0
+Iowa,2012,0.5,0
+Kansas,2012,0,0
+Kentucky,2012,0.5,1
+Louisiana,2012,0,0
+Maine,2012,0,0
+Maryland,2012,1,1
+Massachusetts,2012,1,1
+Michigan,2012,0,0
+Minnesota,2012,0,1
+Mississippi,2012,0,0
+Missouri,2012,0,1
+Montana,2012,0,1
+Nebraska,2012,.,0
+Nevada,2012,1,0
+New Hampshire,2012,0,1
+New Jersey,2012,1,0
+New Mexico,2012,1,0
+New York,2012,0.5,1
+North Carolina,2012,0,1
+North Dakota,2012,0,0
+Ohio,2012,0,0
+Oklahoma,2012,0,0
+Oregon,2012,0.5,1
+Pennsylvania,2012,0,0
+Rhode Island,2012,1,0.5
+South Carolina,2012,0,0
+South Dakota,2012,0,0
+Tennessee,2012,0,0
+Texas,2012,0,0
+Utah,2012,0,0
+Vermont,2012,1,1
+Virginia,2012,0.5,0
+Washington,2012,1,1
+West Virginia,2012,1,1
+Wisconsin,2012,0,0
+Wyoming,2012,0,0
+Alabama,2013,0,0
+Alaska,2013,0,0
+Arizona,2013,0,0
+Arkansas,2013,0,1
+California,2013,1,1
+Colorado,2013,1,1
+Connecticut,2013,1,1
+Delaware,2013,1,1
+Florida,2013,0,0
+Georgia,2013,0,0
+Hawaii,2013,1,1
+Idaho,2013,0,0
+Illinois,2013,1,1
+Indiana,2013,0,0
+Iowa,2013,0.5,0
+Kansas,2013,0,0
+Kentucky,2013,0.5,1
+Louisiana,2013,0,0
+Maine,2013,1,0
+Maryland,2013,1,1
+Massachusetts,2013,1,1
+Michigan,2013,0,0
+Minnesota,2013,1,1
+Mississippi,2013,0,0
+Missouri,2013,0,1
+Montana,2013,0,1
+Nebraska,2013,.,0
+Nevada,2013,1,0
+New Hampshire,2013,0.5,1
+New Jersey,2013,1,0
+New Mexico,2013,1,0
+New York,2013,1,1
+North Carolina,2013,0,0
+North Dakota,2013,0,0
+Ohio,2013,0,0
+Oklahoma,2013,0,0
+Oregon,2013,1,1
+Pennsylvania,2013,0,0
+Rhode Island,2013,1,0.5
+South Carolina,2013,0,0
+South Dakota,2013,0,0
+Tennessee,2013,0,0
+Texas,2013,0,0
+Utah,2013,0,0
+Vermont,2013,1,1
+Virginia,2013,0.5,0
+Washington,2013,1,1
+West Virginia,2013,1,1
+Wisconsin,2013,0,0
+Wyoming,2013,0,0
+Alabama,2014,0,0
+Alaska,2014,0,0
+Arizona,2014,0,0
+Arkansas,2014,0,1
+California,2014,1,1
+Colorado,2014,1,1
+Connecticut,2014,1,1
+Delaware,2014,1,1
+Florida,2014,0,0
+Georgia,2014,0,0
+Hawaii,2014,1,1
+Idaho,2014,0,0
+Illinois,2014,1,1
+Indiana,2014,0,0
+Iowa,2014,0.5,0
+Kansas,2014,0,0
+Kentucky,2014,0.5,1
+Louisiana,2014,0,0
+Maine,2014,1,0
+Maryland,2014,1,1
+Massachusetts,2014,1,1
+Michigan,2014,0,0
+Minnesota,2014,1,1
+Mississippi,2014,0,0
+Missouri,2014,0,1
+Montana,2014,0,1
+Nebraska,2014,.,0
+Nevada,2014,1,0
+New Hampshire,2014,0.5,1
+New Jersey,2014,1,0
+New Mexico,2014,1,0
+New York,2014,1,1
+North Carolina,2014,0,0
+North Dakota,2014,0,0
+Ohio,2014,0,0
+Oklahoma,2014,0,0
+Oregon,2014,1,1
+Pennsylvania,2014,0,0
+Rhode Island,2014,1,1
+South Carolina,2014,0,0
+South Dakota,2014,0,0
+Tennessee,2014,0,0
+Texas,2014,0,0
+Utah,2014,0,0
+Vermont,2014,1,1
+Virginia,2014,0.5,1
+Washington,2014,1,1
+West Virginia,2014,1,1
+Wisconsin,2014,0,0
+Wyoming,2014,0,0
+Alabama,2015,0,0
+Alaska,2015,0,0.5
+Arizona,2015,0,0
+Arkansas,2015,0,0
+California,2015,1,1
+Colorado,2015,0.5,1
+Connecticut,2015,1,1
+Delaware,2015,1,1
+Florida,2015,0,0
+Georgia,2015,0,0
+Hawaii,2015,1,1
+Idaho,2015,0,0
+Illinois,2015,1,0
+Indiana,2015,0,0
+Iowa,2015,0.5,0
+Kansas,2015,0,0
+Kentucky,2015,0.5,1
+Louisiana,2015,0,0
+Maine,2015,0.5,0
+Maryland,2015,1,0
+Massachusetts,2015,1,0
+Michigan,2015,0,0
+Minnesota,2015,0.5,1
+Mississippi,2015,0,0
+Missouri,2015,0,1
+Montana,2015,0,1
+Nebraska,2015,.,0
+Nevada,2015,0,0
+New Hampshire,2015,0,1
+New Jersey,2015,1,0
+New Mexico,2015,0.5,0
+New York,2015,0.5,1
+North Carolina,2015,0,0
+North Dakota,2015,0,0
+Ohio,2015,0,0
+Oklahoma,2015,0,0
+Oregon,2015,1,1
+Pennsylvania,2015,0,1
+Rhode Island,2015,1,1
+South Carolina,2015,0,0
+South Dakota,2015,0,0
+Tennessee,2015,0,0
+Texas,2015,0,0
+Utah,2015,0,0
+Vermont,2015,1,1
+Virginia,2015,0,1
+Washington,2015,0.5,1
+West Virginia,2015,0,1
+Wisconsin,2015,0,0
+Wyoming,2015,0,0

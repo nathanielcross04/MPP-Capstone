@@ -358,19 +358,160 @@ tab id
 tab state
 drop if state == "Puerto Rico"
 
+*Create 2006 frame for imputation
+preserve
+keep if year == 2006
+save "Data\Other data\ACS2006temp.dta", replace
+restore
+
 *Save data
 save "Data\Other data\Partisanship_ACS.dta", replace
 
+**Load 2000 census data
+infile using "Data\Original data\ACS\C2000_R50135804.dct", using("Data\Original data\ACS\R50135804_SL040.txt") clear
+
+*Drop unneeded vars
+drop Geo_QName Geo_AREALAND Geo_AREAWATR Geo_SUMLEV Geo_GEOCOMP Geo_REGION Geo_DIVISION Geo_FIPS Geo_STATE
+
+drop SE*
+
+keep Geo_NAME PCT_SE_T015_010 PCT_SE_T201_003 PCT_SE_T014_002 PCT_SE_T073_003
+
+*Rename vars
+rename (Geo_NAME PCT_SE_T015_010 PCT_SE_T201_003 PCT_SE_T014_002 PCT_SE_T073_003) (state p_latino2000 p_foreign_born2000 p_white2000 p_unemp2000)
+
+*Resize columns
+recol
+
+*Add year identifier
+gen year = 2000
+
+*Order data
+order state year 
+
+*Merge data
+merge 1:1 state using "Data\Other data\ACS2006temp"
+drop if state == "Puerto Rico"
+drop _merge
+
+*Order data
+order state id year
+
+*Impute proportions for each year 2001-2005
+forvalues t = 2001/2005 {
+	local steps = `t' - 2000
+	gen p_latino`t' = p_latino2000 + (`steps' * ((p_latino - p_latino2000) / 6))
+	gen p_foreign_born`t' = p_foreign_born2000 + (`steps' * ((p_foreign_born - p_foreign_born2000) / 6))
+	gen p_unemp`t' = p_unemp2000 + (`steps' * ((p_unemp - p_unemp2000) / 6))
+	gen p_white`t' = p_white2000 + (`steps' * ((p_white - p_white2000) / 6))
+}
+
+order state id year p_foreign_born* p_latino* p_white* p_unemp*
+drop p_foreign_born p_latino p_white p_unemp
+drop year
+
+*Reshape data long
+reshape long p_foreign_born p_latino p_white p_unemp, i(state) j(year)
+
+*Sort data
+sort year state
+
+*Save data
+save "Data\Other data\Census2000-05", replace
+
+*Clean up wd
+erase "Data\Other data\ACS2006temp.dta"
+
 **# PARTISANSHIP DATA
+
+*Convert data to append to .dta
+import delimited "Data\Original data\Partisanship_extended", varnames(1) clear
+save "Data\Original data\Partisanship_extended.dta", replace
 
 *Load data
 import delimited "Data\Original data\Partisan_balance", varnames(1) clear
 
 *Drop unneeded vars
-keep year state sen_dem_in_sess sen_rep_in_sess hs_dem_in_sess hs_rep_in_sess govparty_c leg_cont government_cont
+keep year state sen_dem_in_sess sen_rep_in_sess hs_dem_in_sess hs_rep_in_sess govparty_c leg_cont government_cont sen_tot_in_sess hs_tot_in_sess
+
+/*
+leg_cont
+	Additive scale of Democratic power in the legislature.  
+	1 = Democratic control of both chambers, 0 = Republican control of both chambers, .5 = Democrats control one chamber, Republicans the other, .25 = Republican control of one chamber, split control of the other, .75 = Democratic control of one chamber, split control of the other.  
+
+government_cont
+	Additive scale of Democratic control of three institutions: each chamber of the state legislature and the governor's office.  
+	1 = Democratic control of all three institutions, 0 = Republican control of all three institutions, .33 = Democratic control of one institution, Republican control of the other two, etc.  
+*/
 
 *Sort
 sort year state
 tab year
 keep if year >= 2000
 tab year
+
+*Recode splits
+tab leg_cont
+replace leg_cont = 0.5 if leg_cont > 0 & leg_cont < 1
+tab leg_cont
+
+*Missings
+tab govparty_c, m
+tab leg_cont, m
+drop if govparty_c == .
+tab govparty_c, m
+tab leg_cont, m
+
+*Append 2015-2019 data
+append using "Data\Original data\Partisanship_extended.dta"
+
+*Clean dataset
+keep state year leg_cont govparty_c
+
+*Calculate total state government control
+tab govparty_c, m
+gen govt_cont = ((leg_cont * 2) + govparty_c) / 3 if govparty_c != 0.5
+tab govt_cont
+replace govt_cont = 0.33333333 if govparty_c == 0.5 & leg_cont == 0
+replace govt_cont = 0.66666667 if govparty_c == 0.5 & leg_cont == 1
+replace govt_cont = 0.5  	   if govparty_c == 0.5 & leg_cont == 0.5
+tab govt_cont, m
+
+list state if govt_cont == . //Only Nebraska, non-partisan legislature
+
+*Order data
+order year state leg_cont govparty_c
+
+*Save data
+save "Data\Other data\partisan_balance.dta", replace
+
+
+
+**# ALL DATA TOGETHER!!
+
+*Load data
+use "Data\Other data\Partisanship_ACS", clear
+
+*Append missing demo data for 2000-2005
+append using "Data\Other data\Census2000-05"
+
+sort year state
+tab state
+tab year
+
+erase "Data\Other data\Census2000-05.dta"
+
+*Merge partisanship data
+merge 1:1 state year using "Data\Other data\partisan_balance"
+
+list state year if _merge == 1
+drop if state == "District of Columbia"
+
+tab _merge
+drop _merge
+
+*Save data
+save "Data\Other data\Partisanship_all", replace
+erase "Data\Other data\Partisanship_ACS.dta"
+erase "Data\Other data\partisan_balance.dta"
+
