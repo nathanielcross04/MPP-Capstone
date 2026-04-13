@@ -147,9 +147,172 @@ rmdir "Data\Other data\Cluster solutions (temp)"
 
 
 
+mkdir "Data\Other data\Cluster_mean_sd"
+
+forvalues t = 2000/2019 {
+
+	**Two cluster solution
+
+	*Load data
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
+	
+	*Create vector of policy vars
+	vl clear
+	vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
+
+	*Setup
+	keep if year == `t'
+	cluster kmeans $policies, k(2) name(state_cluster_id) start(krandom(80504))
+
+	*Calculate mean and SD of each policy collapse
+	preserve
+		collapse (mean) $policies, by(state_cluster_id)
+		rename ($policies) (mean_=)
+		tempfile means
+		save `means'
+	restore
+
+	collapse (sd) $policies, by(state_cluster_id)
+	rename ($policies) (sd_=)
+
+	merge 1:1 state_cluster_id using `means', nogen
+
+	*Gen year id
+	gen year = `t'
+
+	*Save data
+	save "Data\Other data\Cluster_mean_sd\centroids`t'.dta"
+
+}
+
+*Append all sets
+use "Data\Other data\Cluster_mean_sd\centroids2000"
+
+forvalues t = 2001/2019 {
+	append using "Data\Other data\Cluster_mean_sd\centroids`t'"
+	erase "Data\Other data\Cluster_mean_sd\centroids`t'.dta"
+}
+
+*Clean wd
+erase "Data\Other data\Cluster_mean_sd\centroids2000.dta"
+rmdir "Data\Other data\Cluster_mean_sd"
+
+*Clean set
+order state_cluster_id year mean* sd*
+sort state_cluster_id year
+
+*Identify null year/policy combos
+vl clear
+vl create policies = (mean_enf_task_force_287g mean_enf_warrant_287g mean_enf_jail_287g mean_enf_secure_comms mean_enf_lim_coop_detainers mean_enf_everify mean_enf_limits_everify mean_enf_state_omnibus mean_pub_tanf_post5 mean_pub_cashass_during5 mean_pub_foodass_lprkids mean_pub_foodass_lpradults mean_pub_ssi_replacement mean_pub_medicaid_lprkids mean_pub_pubins_unauthkids mean_pub_pubins_lpradults mean_pub_pubins_unauthadult mean_pub_medicaid_lprpreg mean_pub_medicaid_unauthpreg mean_pub_medicaid_lpr_post5 mean_int_instate_tuition mean_int_state_finaid mean_int_uni_ban mean_int_official_eng mean_int_drivers_license)
+
+foreach v of varlist $policies {
+	gen i`v' = .
+}
+
+forvalues t = 2000/2019 {
+	
+	foreach v of varlist $policies {
+		
+		*Check if policy == 0 in year t for BOTH clusters
+		quietly count if `v' == 0 & year == `t' & state_cluster_id == 1
+		local cond1 = r(N) > 0
+		
+		quietly count if `v' == 0 & year == `t' & state_cluster_id == 2
+		local cond2 = r(N) > 0
+		
+		*Only flag if BOTH conditions are met
+		if `cond1' & `cond2' {
+			replace i`v' = 1 if year == `t' & inlist(state_cluster_id, 1, 2)
+		}
+	}
+}
+
+foreach v of varlist $policies {
+	replace `v' = . if i`v' == 1
+}
+
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+
+foreach v in `policies' {
+	replace sd_`v' = . if imean_`v' == 1
+}
+
+drop i*
+
+*Identify vars with least SDs
+vl clear
+vl create policies = (sd_enf_task_force_287g sd_enf_warrant_287g sd_enf_jail_287g sd_enf_secure_comms sd_enf_lim_coop_detainers sd_enf_everify sd_enf_limits_everify sd_enf_state_omnibus sd_pub_tanf_post5 sd_pub_cashass_during5 sd_pub_foodass_lprkids sd_pub_foodass_lpradults sd_pub_ssi_replacement sd_pub_medicaid_lprkids sd_pub_pubins_unauthkids sd_pub_pubins_lpradults sd_pub_pubins_unauthadult sd_pub_medicaid_lprpreg sd_pub_medicaid_unauthpreg sd_pub_medicaid_lpr_post5 sd_int_instate_tuition sd_int_state_finaid sd_int_uni_ban sd_int_official_eng sd_int_drivers_license)
+
+egen min_sd = rowmin($policies)
+order min_sd
+
+foreach var of varlist $policies {
+	gen temp`var' = `var'
+}
+
+foreach var of varlist $policies {
+	replace temp`var' = . if temp`var' == min_sd
+}
+
+vl create temppol = (tempsd_enf_task_force_287g tempsd_enf_warrant_287g tempsd_enf_jail_287g tempsd_enf_secure_comms tempsd_enf_lim_coop_detainers tempsd_enf_everify tempsd_enf_limits_everify tempsd_enf_state_omnibus tempsd_pub_tanf_post5 tempsd_pub_cashass_during5 tempsd_pub_foodass_lprkids tempsd_pub_foodass_lpradults tempsd_pub_ssi_replacement tempsd_pub_medicaid_lprkids tempsd_pub_pubins_unauthkids tempsd_pub_pubins_lpradults tempsd_pub_pubins_unauthadult tempsd_pub_medicaid_lprpreg tempsd_pub_medicaid_unauthpreg tempsd_pub_medicaid_lpr_post5 tempsd_int_instate_tuition tempsd_int_state_finaid tempsd_int_uni_ban tempsd_int_official_eng tempsd_int_drivers_license)
+
+egen min_sd2 = rowmin($temppol)
+order min_sd2
+
+foreach var of varlist $policies {
+	replace temp`var' = . if temp`var' == min_sd2
+}
+
+egen min_sd3 = rowmin($temppol)
+order min_sd3
+
+drop temp*
+
+*Identifying greatest influence policies
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+
+foreach var in `policies' {
+	gen dupmean_`var' = .
+}
+
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+foreach var in `policies' {
+	replace dupmean_`var' = 1 if sd_`var' == min_sd
+	replace dupmean_`var' = 2 if sd_`var' == min_sd2
+	replace dupmean_`var' = 3 if sd_`var' == min_sd3
+}
 
 
-**Keystone policies
+
+*Gen ranks and raw
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+foreach var in `policies' {
+	rename dupmean_`var' rk_`var'
+}
+
+*Blank out SDs and means of unimportant vars
+foreach var in `policies' {
+	replace mean_`var' = . if rk_`var' == .
+	replace sd_`var' = . if rk_`var' == .
+}
+
+
+
+*Drop any vars with all .
+foreach var of varlist _all {
+    capture assert missing(`var')
+    if !_rc drop `var'
+}
+
+foreach var of varlist _all {
+	replace `var' = 0 if `var' == .
+}
+
+
+
+
+
+**Differentiator policies
 use "Data\Other data\Clusters", clear
 
 keep if cluster_solutions == 2
@@ -268,6 +431,26 @@ foreach var of varlist _all {
 
 *Export data
 export delimited "Data\Other data\Imp policies ranked.csv", replace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 **#***MEDOIDS & PREP FOR VIZ
