@@ -515,3 +515,26 @@ save "Data\Other data\Partisanship_all", replace
 erase "Data\Other data\Partisanship_ACS.dta"
 erase "Data\Other data\partisan_balance.dta"
 
+
+
+**# MERGE CLUSTER IDS
+
+*Load data
+use "Data\Other data\Partisanship_all", clear
+
+*Merge 
+merge 1:1 state year using "Data\Other data\Medoids"
+
+list state if _merge == 2
+drop if state == "District of Columbia"
+
+tab _merge
+drop _merge
+
+*Clean
+drop id_no medoid_rank1 medoid_rank2
+
+*Run probit
+probit state_cluster_id p_foreign_born p_latino p_white p_unemp leg_cont
+
+xtset 
