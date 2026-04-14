@@ -11,7 +11,7 @@ cd "C:\Users\ndmcr\Desktop\MPP Capstone"
 set more off
 clear all
 
-**#***DATASET PREP
+**# Identify clusters
 
 *Make temporary directory for merges
 mkdir "Data\Other data\Cluster solutions (temp)"
@@ -452,28 +452,7 @@ export delimited "Data\Other data\Imp policies ranked.csv", replace
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**#***MEDOIDS & PREP FOR VIZ
-
-**Identify medoids
+**# Identify medoids
 
 *One cluster solution
 
@@ -540,78 +519,6 @@ rmdir "Data\Other data\OneCSmed_temp"
 
 *Save data
 save "Data\Other data\Medoids_1CS", replace
-
-**Analysis
-
-
-**Plotting policy profile individualization over time
-
-*Load data
-use "Data\Other data\Medoids_1CS", clear
-
-keep if medoid_type == 1
-
-tab year
-
-bysort year: egen n_medoids = sum(medoid_type)
-
-collapse (mean) n_medoids min_dist, by(year)
-
-tsset year
-//tsline n_medoids
-//tsline min_dist //Distance of medoid to centroid inc. over time
-
-*Export data for graphing
-export delimited "Data\Other data\line_indiv.csv", replace
-
-
-
-
-
-*Load data
-use "Data\Other data\Medoids_1CS", clear
-
-*Subset
-keep if medoid_type == 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 **Two cluster solution
 
@@ -711,26 +618,7 @@ save "Data\Other data\Medoids", replace
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**# VISUALIZATIONS
+**# Visualizations
 
 **Radar plot - 1CS
 use "Data\Other data\Clusters", clear
@@ -984,3 +872,24 @@ replace distance_map = distance2 if distance2 != .
 
 *Save and export data
 export delimited "Data\Other data\Medoids (prep for viz).csv", replace
+
+
+**Plotting policy profile individualization over time
+
+*Load data
+use "Data\Other data\Medoids_1CS", clear
+
+keep if medoid_type == 1
+
+tab year
+
+bysort year: egen n_medoids = sum(medoid_type)
+
+collapse (mean) n_medoids min_dist, by(year)
+
+tsset year
+//tsline n_medoids
+//tsline min_dist //Distance of medoid to centroid inc. over time
+
+*Export data for graphing
+export delimited "Data\Other data\line_indiv.csv", replace
