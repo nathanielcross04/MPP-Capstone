@@ -618,6 +618,192 @@ save "Data\Other data\Medoids", replace
 
 
 
+**# Tables (i = state)
+
+
+**Distance to global centroid
+
+*Load data
+use "Data\Final data\Policy vectors (std) (nomiss)", clear
+
+*Create policy vector
+vl clear
+vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
+
+*Create output shell (one row per state)
+preserve
+    bysort state (year): keep if _n == 1
+    keep state
+    forvalues t = 2000/2019 {
+        gen dist_`t' = .
+    }
+    tempfile output_shell
+    save `output_shell'
+restore
+
+*Loop over years
+forvalues t = 2000/2019 {
+    preserve
+        keep if year == `t'
+        
+        *Calculate centroid
+        gen _sq_dist = 0
+        foreach v of varlist $policies {
+            quietly summarize `v'
+            gen _diff = (`v' - r(mean))^2
+            replace _sq_dist = _sq_dist + _diff
+            drop _diff
+        }
+        gen dist_`t' = sqrt(_sq_dist)
+        drop _sq_dist
+        
+        keep state dist_`t'
+        tempfile dist_`t'
+        save `dist_`t''
+    restore
+}
+
+*Merge all years into output shell
+use `output_shell', clear
+forvalues t = 2000/2019 {
+    merge 1:1 state using `dist_`t'', nogenerate update
+}
+
+*Label and save
+forvalues t = 2000/2019 {
+    label variable dist_`t' "Euclidean distance from centroid, `t'"
+}
+
+sort state
+save "Data\Other data\distances_1CS", replace
+
+
+**Distance to respective centroids, 2CS
+
+*Load data
+use "Data\Final data\Policy vectors (std) (nomiss)", clear
+
+*Loop over years
+forvalues t = 2000/2019 {
+    preserve
+        keep if year == `t'
+        
+        *Run kmeans with fixed seed
+        cluster kmeans $policies, k(2) name(state_cluster_id) start(krandom(80504))
+        
+        *Compute distance to each cluster's centroid for every state
+        forvalues c = 1/2 {
+            gen _sq_dist_`c' = 0
+            foreach v of varlist $policies {
+                quietly summarize `v' if state_cluster_id == `c'
+                gen _diff = (`v' - r(mean))^2
+                replace _sq_dist_`c' = _sq_dist_`c' + _diff
+                drop _diff
+            }
+            gen dist_centroid_`c' = sqrt(_sq_dist_`c')
+            drop _sq_dist_`c'
+        }
+        
+        *Assign distance to own and other centroid based on cluster membership
+        gen dist_`t' = .
+        gen dist_other_`t' = .
+        replace dist_`t'       = dist_centroid_1 if state_cluster_id == 1
+        replace dist_`t'       = dist_centroid_2 if state_cluster_id == 2
+        replace dist_other_`t' = dist_centroid_2 if state_cluster_id == 1
+        replace dist_other_`t' = dist_centroid_1 if state_cluster_id == 2
+        drop dist_centroid_1 dist_centroid_2
+        
+        *Extremity score: product of distance to own and other centroid
+        gen extremity_`t' = dist_`t' * dist_other_`t'
+        
+        rename state_cluster_id cluster_`t'
+        keep state dist_`t' dist_other_`t' extremity_`t' cluster_`t'
+        
+        tempfile year_`t'
+        save `year_`t''
+    restore
+}
+
+*Merge all years
+use `year_2000', clear
+forvalues t = 2001/2019 {
+    merge 1:1 state using `year_`t'', nogenerate
+}
+
+*Label and save
+forvalues t = 2000/2019 {
+    label variable cluster_`t'    "Cluster membership (1 or 2), `t'"
+    label variable dist_`t'       "Distance to own cluster centroid, `t'"
+    label variable dist_other_`t' "Distance to other cluster centroid, `t'"
+    label variable extremity_`t'  "Extremity score (own x other centroid distance), `t'"
+}
+
+*Rename own-cluster distance for merging
+forvalues t = 2000/2019 {
+	rename dist_`t' dist_own_`t'
+}
+
+sort state
+save "Data\Other data\distances_2CS", replace
+
+**Merge all distances together
+use "Data\Other data\distances_1CS", clear
+
+forvalues t = 2000/2019 {
+	rename dist_`t' dist_1cs_`t'
+}
+
+merge 1:1 state using "Data\Other data\distances_2CS"
+drop _merge
+
+forvalues t = 2000/2019 {
+    order cluster_`t' dist_1cs_`t' dist_own_`t' dist_other_`t' extremity_`t', last
+}
+
+*Clean up
+drop dist_other*
+
+*Save data
+save "Data\Other data\state_distances", replace
+
+**Calculate year over year deltas
+forvalues t = 2001/2019 {
+	local past_year = `t' - 1
+	gen dist_1cs_delta_`t' = dist_1cs_`t' - dist_1cs_`past_year'
+	gen dist_own_delta_`t' = dist_own_`t' - dist_own_`past_year'
+	gen extremity_delta_`t' = extremity_`t' - extremity_`past_year'
+}
+
+forvalues t = 2000/2019 {
+	drop dist_1cs_`t' dist_own_`t' extremity_`t'
+}
+
+forvalues t = 2001/2019 {
+	order cluster_`t' dist_1cs_delta_`t' dist_own_delta_`t' extremity_delta_`t', last
+}
+order state cluster_2000, first
+
+*Merge all together
+merge 1:1 state using "Data\Other data\state_distances"
+
+*Order
+forvalues t = 2001/2019 {
+	order cluster_`t' dist_1cs_`t' dist_own_`t' extremity_`t' dist_1cs_delta_`t' dist_own_delta_`t' extremity_delta_`t', last
+}
+order state cluster_2000 dist_1cs_2000 dist_own_2000 extremity_2000, first
+drop _merge
+
+*Save final dataset
+save "Data\Final data\state_distances (raw and deltas)", replace
+export delimited "Data\Final data\state_distances (raw and deltas).csv", replace
+
+*Clean wd
+erase "Data\Other data\state_distances.dta"
+erase "Data\Other data\distances_2CS.dta"
+erase "Data\Other data\distances_1CS.dta"
+
+
+
 **# Visualizations
 
 **Radar plot - 1CS
