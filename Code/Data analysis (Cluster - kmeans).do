@@ -793,6 +793,25 @@ forvalues t = 2001/2019 {
 order state cluster_2000 dist_1cs_2000 dist_own_2000 extremity_2000, first
 drop _merge
 
+**Create ranks
+forvalues t = 2000/2019 {
+	egen rank_1cs_`t' = rank(dist_1cs_`t')
+	egen rank_own_`t' = rank(dist_own_`t'), by(cluster_`t')
+	egen rank_extremity_`t' = rank(extremity_`t')
+}
+
+**Create year over year deltas
+forvalues t = 2001/2019 {
+	local past_year = `t' - 1
+	gen rank_1cs_delta_`t' = rank_1cs_`t' - rank_1cs_`past_year'
+	gen rank_extremity_delta_`t' = rank_extremity_`t' - rank_extremity_`past_year'
+}
+
+forvalues t = 2001/2019 {
+	order cluster_`t' dist_1cs_`t' dist_1cs_delta_`t' rank_1cs_`t' rank_1cs_delta_`t' dist_own_`t' dist_own_delta_`t' rank_own_`t' extremity_`t' extremity_delta_`t' rank_extremity_`t' rank_extremity_delta_`t', last
+}
+order state cluster_2000 dist_1cs_2000 rank_1cs_2000 dist_own_2000 rank_own_2000 extremity_2000 rank_extremity_2000, first
+
 *Save final dataset
 save "Data\Final data\state_distances (raw and deltas)", replace
 export delimited "Data\Final data\state_distances (raw and deltas).csv", replace
