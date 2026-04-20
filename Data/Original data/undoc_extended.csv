@@ -1,0 +1,307 @@
+﻿state,year,total
+Alabama,2000,35
+Alabama,2005,65
+Alabama,2006,60
+Alabama,2007,70
+Alabama,2008,65
+Alabama,2009,80
+Alaska,2000,5
+Alaska,2005,10
+Alaska,2006,10
+Alaska,2007,10
+Alaska,2008,10
+Alaska,2009,10
+Arizona,2000,350
+Arizona,2005,450
+Arizona,2006,450
+Arizona,2007,500
+Arizona,2008,400
+Arizona,2009,350
+Arkansas,2000,45
+Arkansas,2005,55
+Arkansas,2006,60
+Arkansas,2007,70
+Arkansas,2008,60
+Arkansas,2009,65
+California,2000,2250
+California,2005,2550
+California,2006,2600
+California,2007,2800
+California,2008,2650
+California,2009,2500
+Colorado,2000,130
+Colorado,2005,210
+Colorado,2006,210
+Colorado,2007,210
+Colorado,2008,220
+Colorado,2009,210
+Connecticut,2000,50
+Connecticut,2005,120
+Connecticut,2006,120
+Connecticut,2007,130
+Connecticut,2008,130
+Connecticut,2009,130
+Delaware,2000,15
+Delaware,2005,25
+Delaware,2006,25
+Delaware,2007,25
+Delaware,2008,25
+Delaware,2009,20
+District of Columbia,2000,25
+District of Columbia,2005,25
+District of Columbia,2006,25
+District of Columbia,2007,25
+District of Columbia,2008,20
+District of Columbia,2009,20
+Florida,2000,900
+Florida,2005,925
+Florida,2006,1000
+Florida,2007,1050
+Florida,2008,950
+Florida,2009,875
+Georgia,2000,170
+Georgia,2005,375
+Georgia,2006,400
+Georgia,2007,425
+Georgia,2008,425
+Georgia,2009,425
+Hawaii,2000,30
+Hawaii,2005,40
+Hawaii,2006,35
+Hawaii,2007,35
+Hawaii,2008,35
+Hawaii,2009,40
+Idaho,2000,30
+Idaho,2005,35
+Idaho,2006,40
+Idaho,2007,40
+Idaho,2008,40
+Idaho,2009,35
+Illinois,2000,375
+Illinois,2005,475
+Illinois,2006,500
+Illinois,2007,550
+Illinois,2008,525
+Illinois,2009,500
+Indiana,2000,35
+Indiana,2005,100
+Indiana,2006,110
+Indiana,2007,100
+Indiana,2008,100
+Indiana,2009,100
+Iowa,2000,35
+Iowa,2005,40
+Iowa,2006,40
+Iowa,2007,40
+Iowa,2008,40
+Iowa,2009,45
+Kansas,2000,40
+Kansas,2005,65
+Kansas,2006,65
+Kansas,2007,70
+Kansas,2008,85
+Kansas,2009,95
+Kentucky,2000,25
+Kentucky,2005,35
+Kentucky,2006,35
+Kentucky,2007,40
+Kentucky,2008,45
+Kentucky,2009,50
+Louisiana,2000,20
+Louisiana,2005,30
+Louisiana,2006,45
+Louisiana,2007,55
+Louisiana,2008,50
+Louisiana,2009,55
+Maine,2000,.
+Maine,2005,.
+Maine,2006,.
+Maine,2007,.
+Maine,2008,.
+Maine,2009,.
+Maryland,2000,160
+Maryland,2005,230
+Maryland,2006,220
+Maryland,2007,220
+Maryland,2008,230
+Maryland,2009,230
+Massachusetts,2000,170
+Massachusetts,2005,220
+Massachusetts,2006,220
+Massachusetts,2007,220
+Massachusetts,2008,190
+Massachusetts,2009,180
+Michigan,2000,95
+Michigan,2005,130
+Michigan,2006,130
+Michigan,2007,140
+Michigan,2008,110
+Michigan,2009,110
+Minnesota,2000,65
+Minnesota,2005,85
+Minnesota,2006,85
+Minnesota,2007,85
+Minnesota,2008,85
+Minnesota,2009,90
+Mississippi,2000,10
+Mississippi,2005,15
+Mississippi,2006,20
+Mississippi,2007,25
+Mississippi,2008,35
+Mississippi,2009,30
+Missouri,2000,35
+Missouri,2005,55
+Missouri,2006,55
+Missouri,2007,60
+Missouri,2008,60
+Missouri,2009,65
+Montana,2000,.
+Montana,2005,.
+Montana,2006,.
+Montana,2007,.
+Montana,2008,.
+Montana,2009,.
+Nebraska,2000,35
+Nebraska,2005,45
+Nebraska,2006,50
+Nebraska,2007,45
+Nebraska,2008,45
+Nebraska,2009,45
+Nevada,2000,170
+Nevada,2005,210
+Nevada,2006,220
+Nevada,2007,240
+Nevada,2008,250
+Nevada,2009,230
+New Hampshire,2000,10
+New Hampshire,2005,15
+New Hampshire,2006,15
+New Hampshire,2007,10
+New Hampshire,2008,10
+New Hampshire,2009,10
+New Jersey,2000,325
+New Jersey,2005,450
+New Jersey,2006,500
+New Jersey,2007,550
+New Jersey,2008,475
+New Jersey,2009,450
+New Mexico,2000,55
+New Mexico,2005,80
+New Mexico,2006,90
+New Mexico,2007,85
+New Mexico,2008,80
+New Mexico,2009,90
+New York,2000,750
+New York,2005,850
+New York,2006,900
+New York,2007,1000
+New York,2008,870
+New York,2009,800
+North Carolina,2000,220
+North Carolina,2005,300
+North Carolina,2006,325
+North Carolina,2007,325
+North Carolina,2008,350
+North Carolina,2009,350
+North Dakota,2000,.
+North Dakota,2005,.
+North Dakota,2006,.
+North Dakota,2007,.
+North Dakota,2008,.
+North Dakota,2009,.
+Ohio,2000,60
+Ohio,2005,85
+Ohio,2006,85
+Ohio,2007,90
+Ohio,2008,100
+Ohio,2009,100
+Oklahoma,2000,45
+Oklahoma,2005,85
+Oklahoma,2006,90
+Oklahoma,2007,95
+Oklahoma,2008,95
+Oklahoma,2009,100
+Oregon,2000,100
+Oregon,2005,140
+Oregon,2006,140
+Oregon,2007,150
+Oregon,2008,140
+Oregon,2009,140
+Pennsylvania,2000,95
+Pennsylvania,2005,140
+Pennsylvania,2006,140
+Pennsylvania,2007,150
+Pennsylvania,2008,140
+Pennsylvania,2009,140
+Rhode Island,2000,25
+Rhode Island,2005,35
+Rhode Island,2006,35
+Rhode Island,2007,35
+Rhode Island,2008,35
+Rhode Island,2009,35
+South Carolina,2000,30
+South Carolina,2005,70
+South Carolina,2006,80
+South Carolina,2007,90
+South Carolina,2008,100
+South Carolina,2009,100
+South Dakota,2000,.
+South Dakota,2005,.
+South Dakota,2006,.
+South Dakota,2007,.
+South Dakota,2008,.
+South Dakota,2009,.
+Tennessee,2000,55
+Tennessee,2005,100
+Tennessee,2006,120
+Tennessee,2007,120
+Tennessee,2008,120
+Tennessee,2009,120
+Texas,2000,1050
+Texas,2005,1500
+Texas,2006,1500
+Texas,2007,1550
+Texas,2008,1550
+Texas,2009,1600
+Utah,2000,70
+Utah,2005,95
+Utah,2006,100
+Utah,2007,100
+Utah,2008,110
+Utah,2009,95
+Vermont,2000,.
+Vermont,2005,.
+Vermont,2006,.
+Vermont,2007,.
+Vermont,2008,.
+Vermont,2009,.
+Virginia,2000,200
+Virginia,2005,250
+Virginia,2006,250
+Virginia,2007,250
+Virginia,2008,275
+Virginia,2009,250
+Washington,2000,150
+Washington,2005,240
+Washington,2006,240
+Washington,2007,250
+Washington,2008,220
+Washington,2009,220
+West Virginia,2000,.
+West Virginia,2005,.
+West Virginia,2006,.
+West Virginia,2007,.
+West Virginia,2008,.
+West Virginia,2009,.
+Wisconsin,2000,55
+Wisconsin,2005,75
+Wisconsin,2006,85
+Wisconsin,2007,85
+Wisconsin,2008,80
+Wisconsin,2009,75
+Wyoming,2000,.
+Wyoming,2005,.
+Wyoming,2006,.
+Wyoming,2007,.
+Wyoming,2008,.
+Wyoming,2009,.
