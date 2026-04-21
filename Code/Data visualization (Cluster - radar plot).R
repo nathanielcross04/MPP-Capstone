@@ -369,8 +369,8 @@ SPOKE_LABEL_COLORS <- c(
 # Cluster 1: #D55E00 (burnt orange) → desaturated
 # Cluster 2: #0072B2 (blue)         → desaturated
 CLUSTER_COLORS <- c(
-  "1" = "#B5463A",   # desaturated #D55E00
-  "2" = "#2E86B5"    # desaturated #0072B2
+  "1" = "#B5463A",
+  "2" = "#2E86B5"
 )
 
 # Human-readable spoke labels
