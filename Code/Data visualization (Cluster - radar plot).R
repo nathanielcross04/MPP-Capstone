@@ -30,7 +30,8 @@ library(gifski)
 library(showtext)
 
 # Import font
-font_add_google("Lato", "lato")
+font_add_google("Lato", "lato")           # regular weight → family name "lato"
+font_add_google("Lato", "lato-bold", regular.wt = 700)  # bold weight → family name "lato-bold"
 showtext_auto()
 
 # Set color palette
@@ -276,8 +277,11 @@ p_radar <- ggplot() +
   theme_void(base_family = "lato") +
   theme(
     plot.title.position = "plot",
-    plot.title      = element_text(size = 25, face = "bold", family = "lato", 
-                                   hjust = 0, margin = margin(t = 50, b = 8)),
+    plot.title      = element_text(size = 25, 
+                                   family = "lato-bold", 
+                                   lineheight = 1.2,
+                                   hjust = 0, 
+                                   margin = margin(t = 50, b = 15)),
     plot.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(t = 20, r = 20, b = -30, l = 20)
   ) +
@@ -321,7 +325,8 @@ rm(list = ls())
 setwd("C:/Users/ndmcr/Desktop/MPP Capstone")
 
 library(showtext)
-font_add_google("Lato", "lato")
+font_add_google("Lato", "lato")           # regular weight → family name "lato"
+font_add_google("Lato", "lato-bold", regular.wt = 700)  # bold weight → family name "lato-bold"
 showtext_auto()
 
 # ── 0. CONFIG ────────────────────────────────────────────────
@@ -618,8 +623,9 @@ p_radar <- ggplot() +
   theme_void(base_family = "lato") +
   theme(
     plot.title.position = "plot",
-    plot.title      = element_text(size = 25, face = "bold", family = "lato",
-                                   hjust = 0, margin = margin(t = 50, b = 8)),
+    plot.title      = element_text(size = 25, family = "lato-bold",
+                                   hjust = 0, lineheight = 1.2, 
+                                   margin = margin(t = 50, b = 15)),
     plot.background = element_rect(fill = "white", color = NA),
     plot.margin     = margin(t = 20, r = 20, b = -30, l = 20)
   ) +
