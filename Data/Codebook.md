@@ -24,7 +24,7 @@ enf_everify|E-Verify mandate|State has a policy to mandate that some or all empl
 >
 >\*** E-Verify is an electronic verification system that confirms the employment eligibility of workers. Most states with this mandate require either public employers and state contractors, or all employers with at least a certain number of employees, to use E-Verify.
 >
->^ Ternary values are recorded through a three-part coding mechanism: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.
+>^ Ternary values are recorded through a three-part coding mechanism: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy).
 
 ### Dimensions of immigrant public benefits policy
 | Variable | Name | Description | Value type |
