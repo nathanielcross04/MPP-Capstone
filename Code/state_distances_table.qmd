@@ -2,447 +2,486 @@
 title: "State Distances"
 format:
   html:
-    self-contained: true
+    embed-resources: true
     page-layout: full
     echo: false
     warning: false
     message: false
+execute:
+  eval: true
+knitr:
+  opts_knit:
+    root.dir: "C:/Users/ndmcr/Desktop/MPP Capstone"
 ---
 
 ```{r setup}
-library(DT)
 library(dplyr)
-library(tidyr)
-library(htmltools)
 library(jsonlite)
 
-# ── Data ──────────────────────────────────────────────────────────────────────
-df <- read.csv("state_distances__raw_and_deltas_.csv", check.names = FALSE)
+# ── Load data ─────────────────────────────────────────────────────────────────
+df <- read.csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Final%20data/state_distances%20(raw%20and%20deltas).csv", check.names = FALSE)
 
-# ── Constants ─────────────────────────────────────────────────────────────────
 YEARS       <- 2000:2019
 DELTA_YEARS <- 2001:2019
 
-CLUSTER_COLORS <- c("1" = "#B5463A", "2" = "#2E86B5")
-
-# Desaturated versions of cluster colors (for "Colored clusters" fill)
-desat_hex <- function(hex, sat_scale = 0.25) {
-  rgb_vals <- col2rgb(hex) / 255
-  lum      <- 0.2126 * rgb_vals[1] + 0.7152 * rgb_vals[2] + 0.0722 * rgb_vals[3]
-  desat    <- lum + sat_scale * (rgb_vals - lum)
-  desat    <- pmax(0, pmin(1, desat))
-  rgb(desat[1], desat[2], desat[3])
-}
-
-CLUSTER_DESAT <- c("1" = desat_hex(CLUSTER_COLORS["1"]),
-                   "2" = desat_hex(CLUSTER_COLORS["2"]))
-
-# Bright/light versions for Top-1 bubble
-lighten_hex <- function(hex, amount = 0.55) {
-  rgb_vals <- col2rgb(hex) / 255
-  light    <- rgb_vals + amount * (1 - rgb_vals)
-  light    <- pmax(0, pmin(1, light))
-  rgb(light[1], light[2], light[3])
-}
-
-EXTREMES_CLOSE   <- "#009E73"
-EXTREMES_FAR     <- "#D55E00"
-EXTREMES_CLOSE_L <- lighten_hex(EXTREMES_CLOSE)
-EXTREMES_FAR_L   <- lighten_hex(EXTREMES_FAR)
-
-# ── Helper: extract wide table (states × years) for a given variable prefix ──
-extract_wide <- function(prefix, years) {
-  cols      <- paste0(prefix, "_", years)
-  present   <- cols[cols %in% names(df)]
-  out       <- df[, c("state", present), drop = FALSE]
-  colnames(out) <- c("State", as.character(years[paste0(prefix, "_", years) %in% names(df)]))
-  out
-}
-
-# ── Helper: extract cluster assignments wide (state × year) ──────────────────
-cluster_wide <- function(years) {
-  cols <- paste0("cluster_", years)
+# ── Extract a named list: state → vector of values across years ───────────────
+extract_series <- function(prefix, years) {
+  cols    <- paste0(prefix, "_", years)
   present <- cols[cols %in% names(df)]
-  out  <- df[, c("state", present), drop = FALSE]
-  colnames(out) <- c("State", as.character(years[paste0("cluster_", years) %in% names(df)]))
-  out
-}
-
-# ── Helper: build cell-level HTML with coloring ──────────────────────────────
-#
-# color_mode : "none" | "extremes" | "clusters" | "extremes_top1" |
-#              "clusters_top1" | "top1"
-# measure    : "global" | "own" | "extremity"
-# is_delta   : logical — affects which direction "extreme" means
-#
-apply_colors <- function(tbl, clust_tbl, color_mode, measure, is_delta, n_top = 3) {
-
-  year_cols <- setdiff(names(tbl), "State")
-
-  # For each year column, compute which rows are "top" / "bottom" / "cluster-top"
-  result <- tbl
-
-  for (yr in year_cols) {
-    vals    <- tbl[[yr]]
-    clust_yr <- if (yr %in% names(clust_tbl)) clust_tbl[[yr]] else NULL
-
-    # ── Determine highlight indices ────────────────────────────────────────────
-    # "closest" == smallest value for distances; "most stable delta" == smallest |delta|
-    # "furthest" / "most unstable" == largest
-    # For ranked cols: smallest rank == closest/best; largest == furthest/worst
-    # For extremity: largest == most extreme (furthest), smallest == least extreme
-
-    is_rank <- grepl("^rank_", yr) # not used here but kept for clarity
-
-    if (measure == "own") {
-      # Only show closest N per cluster (no "far" side)
-      close_idx <- integer(0)
-      if (!is.null(clust_yr)) {
-        for (cl in unique(na.omit(clust_yr))) {
-          in_cl   <- which(clust_yr == cl & !is.na(vals))
-          if (length(in_cl) == 0) next
-          ranked  <- in_cl[order(vals[in_cl])[seq_len(min(n_top, length(in_cl)))]]
-          close_idx <- c(close_idx, ranked)
-        }
-      }
-      far_idx <- integer(0)
-      top1_idx <- integer(0)
-      if (!is.null(clust_yr)) {
-        for (cl in unique(na.omit(clust_yr))) {
-          in_cl   <- which(clust_yr == cl & !is.na(vals))
-          if (length(in_cl) == 0) next
-          top1_idx <- c(top1_idx, in_cl[which.min(vals[in_cl])])
-        }
-      }
-
-    } else if (measure == "extremity") {
-      # "Furthest" = largest extremity value; "closest" not shown for extremes
-      # For delta: "most stable" = smallest abs delta
-      if (!is_delta) {
-        far_idx   <- order(vals, decreasing = TRUE, na.last = NA)[seq_len(n_top)]
-        close_idx <- integer(0)
-      } else {
-        far_idx   <- integer(0)
-        close_idx <- order(abs(vals), na.last = NA)[seq_len(n_top)]  # most stable
-      }
-      top1_idx  <- if (!is_delta) which.max(vals) else which.min(abs(vals))
-
-    } else {
-      # measure == "global" (dist_1cs / rank_1cs)
-      # closest (smallest) and furthest (largest) each year
-      if (!is_delta) {
-        close_idx <- order(vals, na.last = NA)[seq_len(n_top)]
-        far_idx   <- order(vals, decreasing = TRUE, na.last = NA)[seq_len(n_top)]
-      } else {
-        # delta: most stable = smallest abs delta; least stable = largest abs delta
-        close_idx <- order(abs(vals), na.last = NA)[seq_len(n_top)]
-        far_idx   <- order(abs(vals), decreasing = TRUE, na.last = NA)[seq_len(n_top)]
-      }
-      top1_idx  <- if (!is_delta) which.min(vals) else which.min(abs(vals))
-    }
-
-    # ── Build per-cell HTML ────────────────────────────────────────────────────
-    n        <- nrow(tbl)
-    raw_vals <- vals
-    disp     <- format(round(vals, 4), nsmall = 4)
-
-    cell_html <- character(n)
-    for (i in seq_len(n)) {
-      v       <- disp[i]
-      cl_i    <- if (!is.null(clust_yr)) as.character(clust_yr[i]) else NA
-
-      # Determine cell background and text-bubble colors
-      cell_bg    <- NA_character_
-      bubble_col <- NA_character_
-
-      if (color_mode %in% c("clusters", "clusters_top1")) {
-        if (!is.na(cl_i) && cl_i %in% names(CLUSTER_DESAT))
-          cell_bg <- CLUSTER_DESAT[cl_i]
-      }
-
-      if (color_mode %in% c("extremes", "extremes_top1")) {
-        if (measure == "own") {
-          # Use cluster color for close cells
-          if (i %in% close_idx && !is.na(cl_i) && cl_i %in% names(CLUSTER_COLORS))
-            cell_bg <- CLUSTER_COLORS[cl_i]
-        } else if (measure == "extremity") {
-          if (i %in% far_idx)   cell_bg <- EXTREMES_FAR
-          if (i %in% close_idx) cell_bg <- EXTREMES_CLOSE
-        } else {
-          # global
-          if (i %in% close_idx) cell_bg <- EXTREMES_CLOSE
-          if (i %in% far_idx)   cell_bg <- EXTREMES_FAR
-        }
-      }
-
-      # Top-1 bubble
-      is_top1 <- color_mode %in% c("extremes_top1", "clusters_top1", "top1") &&
-                 i %in% top1_idx
-      if (is_top1) {
-        base_bg    <- if (!is.na(cell_bg)) cell_bg else "#888888"
-        bubble_col <- lighten_hex(base_bg, 0.6)
-      }
-
-      # Assemble HTML
-      style_parts <- character(0)
-      if (!is.na(cell_bg))
-        style_parts <- c(style_parts,
-                         paste0("background-color:", cell_bg, ";"),
-                         "color:#111;")
-
-      td_style <- if (length(style_parts)) paste(style_parts, collapse = "") else ""
-
-      if (is_top1) {
-        cell_html[i] <- paste0(
-          '<div style="', td_style, 'width:100%;height:100%;padding:2px 4px;box-sizing:border-box;">',
-          '<span style="background:', bubble_col, ';border-radius:999px;',
-          'padding:1px 6px;font-weight:700;">', v, '</span></div>'
-        )
-      } else if (nchar(td_style) > 0) {
-        cell_html[i] <- paste0(
-          '<div style="', td_style,
-          'width:100%;height:100%;padding:2px 4px;box-sizing:border-box;">', v, '</div>'
-        )
-      } else {
-        cell_html[i] <- v
-      }
-    }
-
-    result[[yr]] <- cell_html
-  }
-
-  result
-}
-
-# ── Helper: render one DT ─────────────────────────────────────────────────────
-make_dt <- function(tbl) {
-  datatable(
-    tbl,
-    escape      = FALSE,
-    rownames    = FALSE,
-    extensions  = "FixedColumns",
-    options     = list(
-      pageLength  = 51,
-      dom         = "t",
-      scrollX     = TRUE,
-      fixedColumns = list(leftColumns = 1),
-      columnDefs  = list(
-        list(className = "dt-right", targets = "_all"),
-        list(className = "dt-left",  targets = 0),
-        list(width = "52px", targets = seq_len(ncol(tbl) - 1))
-      ),
-      initComplete = JS(
-        "function(settings, json) {",
-        "  $(this.api().table().node()).css('font-size','12px');",
-        "}"
-      )
-    ),
-    class = "compact hover"
+  yrs_out <- years[paste0(prefix, "_", years) %in% names(df)]
+  mat     <- df[, present, drop = FALSE]
+  list(
+    years  = as.integer(yrs_out),
+    states = df$state,
+    values = lapply(seq_len(nrow(mat)), function(i) as.numeric(mat[i, ]))
   )
 }
 
-# ── Pre-compute all 11 data slices ────────────────────────────────────────────
-# (measure × transform combos; cluster-centroid ranked-delta is invalid)
-#
-# Naming: measure ∈ {global, own, extremity}
-#         transform ∈ {raw, raw_delta, ranked, ranked_delta}
+# ── Extract cluster assignments: state → vector of clusters across years ──────
+extract_clusters <- function(years) {
+  cols    <- paste0("cluster_", years)
+  present <- cols[cols %in% names(df)]
+  yrs_out <- years[paste0("cluster_", years) %in% names(df)]
+  mat     <- df[, present, drop = FALSE]
+  list(
+    years  = as.integer(yrs_out),
+    states = df$state,
+    values = lapply(seq_len(nrow(mat)), function(i) as.integer(mat[i, ]))
+  )
+}
 
-slices <- list(
-  global_raw          = list(tbl = extract_wide("dist_1cs",          YEARS),       measure = "global",   is_delta = FALSE),
-  global_raw_delta    = list(tbl = extract_wide("dist_1cs_delta",     DELTA_YEARS), measure = "global",   is_delta = TRUE),
-  global_ranked       = list(tbl = extract_wide("rank_1cs",           YEARS),       measure = "global",   is_delta = FALSE),
-  global_ranked_delta = list(tbl = extract_wide("rank_1cs_delta",     DELTA_YEARS), measure = "global",   is_delta = TRUE),
-  own_raw             = list(tbl = extract_wide("dist_own",           YEARS),       measure = "own",      is_delta = FALSE),
-  own_raw_delta       = list(tbl = extract_wide("dist_own_delta",     DELTA_YEARS), measure = "own",      is_delta = TRUE),
-  own_ranked          = list(tbl = extract_wide("rank_own",           YEARS),       measure = "own",      is_delta = FALSE),
-  # own_ranked_delta = INVALID (no rank_own_delta in data)
-  ext_raw             = list(tbl = extract_wide("extremity",          YEARS),       measure = "extremity", is_delta = FALSE),
-  ext_raw_delta       = list(tbl = extract_wide("extremity_delta",    DELTA_YEARS), measure = "extremity", is_delta = TRUE),
-  ext_ranked          = list(tbl = extract_wide("rank_extremity",     YEARS),       measure = "extremity", is_delta = FALSE),
-  ext_ranked_delta    = list(tbl = extract_wide("rank_extremity_delta", DELTA_YEARS), measure = "extremity", is_delta = TRUE)
+# ── Build the full data payload ───────────────────────────────────────────────
+payload <- list(
+  global_raw          = extract_series("dist_1cs",            YEARS),
+  global_raw_delta    = extract_series("dist_1cs_delta",      DELTA_YEARS),
+  global_ranked       = extract_series("rank_1cs",            YEARS),
+  global_ranked_delta = extract_series("rank_1cs_delta",      DELTA_YEARS),
+  own_raw             = extract_series("dist_own",            YEARS),
+  own_raw_delta       = extract_series("dist_own_delta",      DELTA_YEARS),
+  own_ranked          = extract_series("rank_own",            YEARS),
+  # own_ranked_delta  intentionally omitted — columns don't exist
+  ext_raw             = extract_series("extremity",           YEARS),
+  ext_raw_delta       = extract_series("extremity_delta",     DELTA_YEARS),
+  ext_ranked          = extract_series("rank_extremity",      YEARS),
+  ext_ranked_delta    = extract_series("rank_extremity_delta", DELTA_YEARS),
+  clusters            = extract_clusters(YEARS)
 )
 
-clust_tbl_all <- cluster_wide(YEARS)
-
-# ── Subtitle lookup ───────────────────────────────────────────────────────────
-subtitle1 <- list(
-  global    = "Proximity to the global centroid: Euclidean distance of each state from the overall centroid across all states and years.",
-  own       = "Proximity to cluster centroid: Euclidean distance of each state from the centroid of its assigned cluster.",
-  extremity = "Extremity: How far each state sits from the centre of the full distribution — a measure of uniqueness."
-)
-
-subtitle2 <- list(
-  none           = "",
-  extremes       = "Extremes highlighted: the 3 closest and 3 furthest states each year are filled.",
-  extremes_top1  = "Extremes highlighted + Top 1: extremes filled; the single closest/most-stable state carries a text bubble.",
-  clusters       = "Cluster membership highlighted: cell fill shows each state\u2019s cluster (desaturated).",
-  clusters_top1  = "Cluster membership + Top 1: cluster fills applied; the closest state per cluster per year carries a text bubble.",
-  top1           = "Top 1: the single closest (or most stable) state each year carries a text bubble."
-)
-
-subtitle2_own <- list(
-  none           = "",
-  extremes       = "Extremes highlighted: the 3 closest states per cluster each year are filled using the cluster\u2019s color.",
-  extremes_top1  = "Extremes + Top 1: closest 3 per cluster filled; closest 1 per cluster carries a text bubble.",
-  clusters       = "Cluster membership highlighted: cell fill shows each state\u2019s cluster (desaturated).",
-  clusters_top1  = "Cluster membership + Top 1: cluster fills applied; the closest state per cluster per year carries a text bubble.",
-  top1           = "Top 1: the single closest state per cluster per year carries a text bubble."
-)
-
-subtitle2_extremity <- list(
-  none           = "",
-  extremes       = "Extremes highlighted: the 3 most extreme (furthest) states each year are filled.",
-  extremes_top1  = "Extremes + Top 1: top 3 most extreme filled; the single most extreme state carries a text bubble.",
-  clusters       = "Cluster membership highlighted: cell fill shows each state\u2019s cluster (desaturated).",
-  clusters_top1  = "Cluster membership + Top 1: cluster fills applied; the single most extreme state carries a text bubble.",
-  top1           = "Top 1: the single most extreme state each year carries a text bubble."
-)
+json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
 ```
 
-```{r ui, results='asis'}
-# ── Inline CSS ────────────────────────────────────────────────────────────────
-cat('
+```{=html}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+
 <style>
-  .ctrl-row       { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
-  .ctrl-btn       { padding:6px 16px; border:1px solid #ccc; border-radius:6px;
-                    background:#fff; color:#444; cursor:pointer; font-size:13px;
-                    font-weight:500; transition:background .15s,color .15s; }
-  .ctrl-btn:hover { background:#f0f0f0; }
-  .ctrl-btn.active{ background:#2E86B5; color:#fff; border-color:#2E86B5; }
-  .ctrl-btn.disabled{ opacity:.35; cursor:not-allowed; pointer-events:none; }
-  .ctrl-label     { font-size:11px; text-transform:uppercase; letter-spacing:.05em;
-                    color:#888; margin-bottom:3px; margin-top:8px; }
-  .sub1, .sub2    { font-size:12.5px; color:#555; margin:4px 0 2px 0;
-                    line-height:1.4; min-height:1.4em; }
-  .sub2           { color:#777; font-style:italic; }
-  #tbl-wrapper    { margin-top:10px; }
-  /* make DT cells tight */
-  table.dataTable td, table.dataTable th { padding:3px 7px !important; }
+  /* ── Controls ── */
+  .ctrl-section   { margin-bottom: 4px; }
+  .ctrl-label     { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+                    color: #888; margin-bottom: 4px; margin-top: 10px; font-weight: 600; }
+  .ctrl-row       { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ctrl-btn       { padding: 5px 14px; border: 1px solid #ccc; border-radius: 6px;
+                    background: #fff; color: #444; cursor: pointer; font-size: 12.5px;
+                    font-weight: 500; transition: background .12s, color .12s, border-color .12s; }
+  .ctrl-btn:hover { background: #f4f4f4; }
+  .ctrl-btn.active{ background: #2E86B5; color: #fff; border-color: #2E86B5; }
+  .ctrl-btn.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+
+  /* ── Subtitles ── */
+  .sub1 { font-size: 13px; color: #444; margin: 8px 0 2px 0; line-height: 1.5; min-height: 1.5em; font-weight: 500; }
+  .sub2 { font-size: 12px; color: #777; margin: 0 0 8px 0; line-height: 1.4; min-height: 1.4em; font-style: italic; }
+
+  /* ── Table wrapper ── */
+  #tbl-wrapper { overflow-x: auto; }
+
+  /* ── DataTable overrides ── */
+  table.display { border-collapse: collapse; font-size: 12px; width: 100% !important; }
+  table.display thead th {
+    background: #f7f7f7; border-bottom: 2px solid #ddd;
+    padding: 5px 8px !important; white-space: nowrap;
+    font-weight: 600; color: #333; text-align: center !important;
+  }
+  table.display tbody td {
+    padding: 0 !important;       /* padding lives inside the inner div */
+    border-bottom: 1px solid #f0f0f0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.display tbody td:first-child { text-align: left; font-weight: 500; }
+  table.display tbody tr:hover td { background: #f9f9f9 !important; }
+
+  /* cell inner div — used for background fills */
+  .cv { display: block; padding: 3px 8px; width: 100%; box-sizing: border-box; }
+  /* top-1 bubble */
+  .bubble { border-radius: 999px; padding: 1px 7px; font-weight: 700; display: inline-block; }
+
+  .dtfc-fixed-left { background: #fff; }
 </style>
-')
+```
 
-# ── Control panel HTML ────────────────────────────────────────────────────────
-cat('
+```{r inject-data, results='asis'}
+cat(sprintf('<script>const RAW_DATA = %s;</script>\n', json_payload))
+```
+
+```{=html}
+<!-- Controls -->
 <div id="controls">
-
-  <div class="ctrl-label">Measure of Distance</div>
-  <div class="ctrl-row" id="row-measure">
-    <button class="ctrl-btn active" data-measure="global"    onclick="setMeasure(this)">Proximity to Global Centroid</button>
-    <button class="ctrl-btn"        data-measure="own"       onclick="setMeasure(this)">Proximity to Cluster Centroid</button>
-    <button class="ctrl-btn"        data-measure="extremity" onclick="setMeasure(this)">Extremity</button>
+  <div class="ctrl-section">
+    <div class="ctrl-label">Measure of Distance</div>
+    <div class="ctrl-row" id="row-measure">
+      <button class="ctrl-btn active" data-val="global"    onclick="setMeasure(this)">Proximity to Global Centroid</button>
+      <button class="ctrl-btn"        data-val="own"       onclick="setMeasure(this)">Proximity to Cluster Centroid</button>
+      <button class="ctrl-btn"        data-val="extremity" onclick="setMeasure(this)">Extremity</button>
+    </div>
   </div>
 
-  <div class="ctrl-label">Variable Transformation</div>
-  <div class="ctrl-row" id="row-transform">
-    <button class="ctrl-btn active" data-transform="raw"          onclick="setTransform(this)">Raw</button>
-    <button class="ctrl-btn"        data-transform="raw_delta"    onclick="setTransform(this)">Raw Deltas</button>
-    <button class="ctrl-btn"        data-transform="ranked"       onclick="setTransform(this)">Ranked</button>
-    <button class="ctrl-btn"        data-transform="ranked_delta" onclick="setTransform(this)">Ranked Deltas</button>
+  <div class="ctrl-section">
+    <div class="ctrl-label">Variable Transformation</div>
+    <div class="ctrl-row" id="row-transform">
+      <button class="ctrl-btn active" data-val="raw"          onclick="setTransform(this)">Raw</button>
+      <button class="ctrl-btn"        data-val="raw_delta"    onclick="setTransform(this)">Raw Deltas</button>
+      <button class="ctrl-btn"        data-val="ranked"       onclick="setTransform(this)">Ranked</button>
+      <button class="ctrl-btn"        data-val="ranked_delta" onclick="setTransform(this)">Ranked Deltas</button>
+    </div>
   </div>
 
-  <div class="ctrl-label">Color Scheme</div>
-  <div class="ctrl-row" id="row-color">
-    <button class="ctrl-btn active" data-color="none"          onclick="setColor(this)">No Color</button>
-    <button class="ctrl-btn"        data-color="clusters"      onclick="setColor(this)">Colored Clusters</button>
-    <button class="ctrl-btn"        data-color="extremes"      onclick="setColor(this)">Extremes</button>
-    <button class="ctrl-btn"        data-color="top1"          onclick="setColor(this)">Top 1</button>
-    <button class="ctrl-btn"        data-color="clusters_top1" onclick="setColor(this)">Colored Clusters + Top 1</button>
-    <button class="ctrl-btn"        data-color="extremes_top1" onclick="setColor(this)">Extremes + Top 1</button>
+  <div class="ctrl-section">
+    <div class="ctrl-label">Color Scheme</div>
+    <div class="ctrl-row" id="row-color">
+      <button class="ctrl-btn active" data-val="none"          onclick="setColor(this)">No Color</button>
+      <button class="ctrl-btn"        data-val="clusters"      onclick="setColor(this)">Colored Clusters</button>
+      <button class="ctrl-btn"        data-val="extremes"      onclick="setColor(this)">Extremes</button>
+      <button class="ctrl-btn"        data-val="top1"          onclick="setColor(this)">Top 1</button>
+      <button class="ctrl-btn"        data-val="clusters_top1" onclick="setColor(this)">Colored Clusters + Top 1</button>
+      <button class="ctrl-btn"        data-val="extremes_top1" onclick="setColor(this)">Extremes + Top 1</button>
+    </div>
   </div>
-
 </div>
 
 <div class="sub1" id="sub1"></div>
 <div class="sub2" id="sub2"></div>
-<div id="tbl-wrapper"></div>
-')
-```
+<div id="tbl-wrapper"><table id="main-dt" class="display"></table></div>
 
-```{r prerender, results='asis'}
-# ── Pre-render all table HTML strings into a named JS object ──────────────────
-# Key format: "measure__transform__color"
-# This avoids any server-side R calls after page load.
+<!-- jQuery + DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
-MEASURES    <- c("global", "own", "extremity")
-TRANSFORMS  <- c("raw", "raw_delta", "ranked", "ranked_delta")
-COLOR_MODES <- c("none", "clusters", "extremes", "top1", "clusters_top1", "extremes_top1")
-
-# Invalid combo: own + ranked_delta
-is_invalid <- function(measure, transform)
-  measure == "own" && transform == "ranked_delta"
-
-slice_key <- function(measure, transform) {
-  paste(measure, transform, sep = "_")
-}
-
-# Build per-slice cluster tables aligned by state order
-build_clust_aligned <- function(tbl_states, years) {
-  # only keep years present in tbl
-  yr_cols <- intersect(as.character(years), names(clust_tbl_all))
-  ct <- clust_tbl_all[match(tbl_states, clust_tbl_all$State), c("State", yr_cols)]
-  ct
-}
-
-cat("<script>\nconst TABLES = {};\n")
-
-for (measure in MEASURES) {
-  for (transform in TRANSFORMS) {
-    if (is_invalid(measure, transform)) next
-
-    sk  <- slice_key(measure, transform)
-    sl  <- slices[[sk]]
-    if (is.null(sl)) next
-
-    tbl <- sl$tbl
-
-    # Align cluster table to this slice's state order and years
-    yr_cols <- setdiff(names(tbl), "State")
-    ct <- build_clust_aligned(tbl$State,
-                              as.integer(yr_cols[yr_cols %in% names(clust_tbl_all)]))
-
-    for (color_mode in COLOR_MODES) {
-      key <- paste(measure, transform, color_mode, sep = "__")
-
-      colored_tbl <- apply_colors(
-        tbl        = tbl,
-        clust_tbl  = ct,
-        color_mode = color_mode,
-        measure    = measure,
-        is_delta   = sl$is_delta
-      )
-
-      dt_widget   <- make_dt(colored_tbl)
-      html_str    <- as.character(tagList(dt_widget))
-      # Escape for JS string embedding
-      html_escaped <- gsub("\\\\", "\\\\\\\\", html_str)
-      html_escaped <- gsub("`",    "\\\\`",    html_escaped)
-      html_escaped <- gsub("\\$",  "\\\\$",    html_escaped)
-
-      cat(sprintf("TABLES[%s] = `%s`;\n",
-                  toJSON(key, auto_unbox = TRUE),
-                  html_escaped))
-    }
-  }
-}
-
-# Subtitles
-cat("const SUB1 = ", toJSON(subtitle1, auto_unbox = TRUE), ";\n")
-cat("const SUB2 = ", toJSON(subtitle2, auto_unbox = TRUE), ";\n")
-cat("const SUB2_OWN = ", toJSON(subtitle2_own, auto_unbox = TRUE), ";\n")
-cat("const SUB2_EXT = ", toJSON(subtitle2_extremity, auto_unbox = TRUE), ";\n")
-cat("</script>\n")
-```
-
-```{=html}
 <script>
-// ── State ────────────────────────────────────────────────────────────────────
+// ── Colour constants ──────────────────────────────────────────────────────────
+const CLUSTER_COLORS  = { "1": "#B5463A", "2": "#2E86B5" };
+const CLUSTER_DESAT   = { "1": desat("#B5463A", 0.25), "2": desat("#2E86B5", 0.25) };
+const EXTREMES_CLOSE  = "#009E73";
+const EXTREMES_FAR    = "#D55E00";
+const N_TOP           = 3;
+
+// ── Subtitle text ─────────────────────────────────────────────────────────────
+const SUB1 = {
+  global:    "Proximity to the global centroid: Euclidean distance of each state from the overall centroid across all states and years.",
+  own:       "Proximity to cluster centroid: Euclidean distance of each state from the centroid of its assigned cluster.",
+  extremity: "Extremity: How far each state sits from the centre of the full distribution — a measure of uniqueness."
+};
+
+const SUB2 = {
+  global: {
+    none:          "",
+    clusters:      "Cell fill shows each state's cluster membership (desaturated cluster colour).",
+    extremes:      "Extremes: the 3 closest (#009E73) and 3 furthest (#D55E00) states each year are filled.",
+    top1:          "Top 1: the single closest state each year is highlighted with a text bubble.",
+    clusters_top1: "Cluster fills applied; the closest state each year carries a text bubble.",
+    extremes_top1: "Extremes filled; the single closest state each year carries a text bubble."
+  },
+  own: {
+    none:          "",
+    clusters:      "Cell fill shows each state's cluster membership (desaturated cluster colour).",
+    extremes:      "Extremes: the 3 closest states per cluster each year are filled using that cluster's colour.",
+    top1:          "Top 1: the single closest state per cluster per year carries a text bubble.",
+    clusters_top1: "Cluster fills applied; the closest state per cluster per year carries a text bubble.",
+    extremes_top1: "Closest 3 per cluster filled; the single closest per cluster carries a text bubble."
+  },
+  extremity: {
+    none:          "",
+    clusters:      "Cell fill shows each state's cluster membership (desaturated cluster colour).",
+    extremes:      "Extremes: the 3 most extreme (furthest) states each year are filled in #D55E00.",
+    top1:          "Top 1: the single most extreme state each year carries a text bubble.",
+    clusters_top1: "Cluster fills applied; the single most extreme state each year carries a text bubble.",
+    extremes_top1: "Top 3 most extreme filled; the single most extreme state carries a text bubble."
+  }
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
 let curMeasure   = "global";
 let curTransform = "raw";
 let curColor     = "none";
+let dtInstance   = null;
 
-// ── Setters ──────────────────────────────────────────────────────────────────
+// ── Colour helpers ────────────────────────────────────────────────────────────
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  return [r, g, b];
+}
+function rgbToHex(r, g, b) {
+  return '#' + [r,g,b].map(v => Math.round(Math.min(1,Math.max(0,v))*255)
+    .toString(16).padStart(2,'0')).join('');
+}
+function desat(hex, scale) {
+  const [r,g,b] = hexToRgb(hex);
+  const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+  return rgbToHex(lum + scale*(r-lum), lum + scale*(g-lum), lum + scale*(b-lum));
+}
+function lighten(hex, amount) {
+  const [r,g,b] = hexToRgb(hex);
+  return rgbToHex(r + amount*(1-r), g + amount*(1-g), b + amount*(1-b));
+}
+
+// ── Index helpers ─────────────────────────────────────────────────────────────
+// Returns indices (0-based) of the N smallest values in an array
+function nSmallest(arr, n) {
+  return arr
+    .map((v,i) => ({v, i}))
+    .filter(x => x.v !== null && !isNaN(x.v))
+    .sort((a,b) => a.v - b.v)
+    .slice(0, n)
+    .map(x => x.i);
+}
+function nLargest(arr, n) {
+  return arr
+    .map((v,i) => ({v, i}))
+    .filter(x => x.v !== null && !isNaN(x.v))
+    .sort((a,b) => b.v - a.v)
+    .slice(0, n)
+    .map(x => x.i);
+}
+function nSmallestAbs(arr, n) {
+  return arr
+    .map((v,i) => ({v: Math.abs(v), i}))
+    .filter(x => x.v !== null && !isNaN(x.v))
+    .sort((a,b) => a.v - b.v)
+    .slice(0, n)
+    .map(x => x.i);
+}
+function nLargestAbs(arr, n) {
+  return arr
+    .map((v,i) => ({v: Math.abs(v), i}))
+    .filter(x => x.v !== null && !isNaN(x.v))
+    .sort((a,b) => b.v - a.v)
+    .slice(0, n)
+    .map(x => x.i);
+}
+
+// ── Compute per-column highlight sets ─────────────────────────────────────────
+// Returns, for each column index, a Map of rowIndex → {cellBg, bubbleBg|null}
+function computeHighlights(colVals, clusterColVals, measure, isDelta, colorMode) {
+  // colVals: array of values for one year-column (length = nStates)
+  // clusterColVals: array of cluster ids for the same year
+
+  const highlights = new Map(); // rowIdx → {cellBg, bubbleBg}
+
+  let closeIdx = new Set();
+  let farIdx   = new Set();
+  let top1Idx  = new Set();
+
+  if (measure === "own") {
+    // Closest N per cluster (no far side for extremes)
+    const clusters = [...new Set(clusterColVals.filter(c => c !== null))];
+    clusters.forEach(cl => {
+      const inCl = colVals
+        .map((v,i) => ({v, i}))
+        .filter(x => clusterColVals[x.i] == cl && x.v !== null && !isNaN(x.v));
+      const sorted = inCl.sort((a,b) => a.v - b.v);
+      sorted.slice(0, N_TOP).forEach(x => closeIdx.add(x.i));
+      if (sorted.length > 0) top1Idx.add(sorted[0].i);
+    });
+
+  } else if (measure === "extremity") {
+    if (!isDelta) {
+      nLargest(colVals, N_TOP).forEach(i => farIdx.add(i));
+      const t = nLargest(colVals, 1); if (t.length) top1Idx.add(t[0]);
+    } else {
+      // most stable = smallest absolute delta
+      nSmallestAbs(colVals, N_TOP).forEach(i => closeIdx.add(i));
+      const t = nSmallestAbs(colVals, 1); if (t.length) top1Idx.add(t[0]);
+    }
+
+  } else {
+    // global
+    if (!isDelta) {
+      nSmallest(colVals, N_TOP).forEach(i => closeIdx.add(i));
+      nLargest(colVals,  N_TOP).forEach(i => farIdx.add(i));
+      const t = nSmallest(colVals, 1); if (t.length) top1Idx.add(t[0]);
+    } else {
+      nSmallestAbs(colVals, N_TOP).forEach(i => closeIdx.add(i));
+      nLargestAbs(colVals,  N_TOP).forEach(i => farIdx.add(i));
+      const t = nSmallestAbs(colVals, 1); if (t.length) top1Idx.add(t[0]);
+    }
+  }
+
+  // Now assign colors per row
+  colVals.forEach((_, rowIdx) => {
+    const cl      = clusterColVals ? String(clusterColVals[rowIdx]) : null;
+    let cellBg    = null;
+    let bubbleBg  = null;
+
+    // --- cell background ---
+    if (colorMode === "clusters" || colorMode === "clusters_top1") {
+      if (cl && CLUSTER_DESAT[cl]) cellBg = CLUSTER_DESAT[cl];
+    }
+
+    if (colorMode === "extremes" || colorMode === "extremes_top1") {
+      if (measure === "own") {
+        if (closeIdx.has(rowIdx) && cl && CLUSTER_COLORS[cl])
+          cellBg = CLUSTER_COLORS[cl];
+      } else if (measure === "extremity") {
+        if (farIdx.has(rowIdx))   cellBg = EXTREMES_FAR;
+        if (closeIdx.has(rowIdx)) cellBg = EXTREMES_CLOSE; // only for delta
+      } else {
+        if (closeIdx.has(rowIdx)) cellBg = EXTREMES_CLOSE;
+        if (farIdx.has(rowIdx))   cellBg = EXTREMES_FAR;
+      }
+    }
+
+    // --- bubble ---
+    const isTop1 = (colorMode === "top1" || colorMode === "clusters_top1" ||
+                    colorMode === "extremes_top1") && top1Idx.has(rowIdx);
+    if (isTop1) {
+      const base = cellBg || (cl && CLUSTER_DESAT[cl]) || "#888888";
+      bubbleBg   = lighten(base, 0.55);
+    }
+
+    if (cellBg || bubbleBg) {
+      highlights.set(rowIdx, { cellBg, bubbleBg });
+    }
+  });
+
+  return highlights;
+}
+
+// ── Build DataTable data array ────────────────────────────────────────────────
+function buildTableData() {
+  const key = curMeasure === "extremity"
+    ? "ext_" + curTransform
+    : curMeasure + "_" + curTransform;
+
+  const slice    = RAW_DATA[key];
+  const clustDat = RAW_DATA.clusters;
+  if (!slice) return null;
+
+  const states = slice.states;
+  const years  = slice.years;
+  const isDelta = curTransform.includes("delta");
+  const isRanked = curTransform.includes("ranked");
+
+  // Build column → array of values
+  const nStates = states.length;
+  const nYears  = years.length;
+
+  // values[stateIdx][yearIdx]
+  const vals = slice.values;
+
+  // Cluster values per year: clust[stateIdx] = array over clustDat.years
+  // We need cluster for the matching year
+  const clustYearMap = {};
+  clustDat.years.forEach((yr, ci) => { clustYearMap[yr] = ci; });
+
+  // For each year-column, compute highlights
+  const colHighlights = years.map((yr, yi) => {
+    const colVals   = vals.map(row => row[yi]);
+    const clustColI = clustYearMap[yr];
+    const clustVals = (clustColI !== undefined)
+      ? clustDat.values.map(row => row[clustColI])
+      : new Array(nStates).fill(null);
+    return computeHighlights(colVals, clustVals, curMeasure, isDelta, curColor);
+  });
+
+  // Build rows: each row = [stateName, val_yr0, val_yr1, ...]
+  const rows = states.map((state, si) => {
+    const row = [state];
+    years.forEach((yr, yi) => {
+      const raw = vals[si][yi];
+      const hl  = colHighlights[yi].get(si);
+
+      // Format number
+      const disp = (raw === null || raw === undefined || isNaN(raw))
+        ? ""
+        : isRanked
+          ? (Number.isInteger(raw) ? raw : raw.toFixed(1))
+          : raw.toFixed(4);
+
+      if (!hl) {
+        row.push(`<div class="cv">${disp}</div>`);
+      } else {
+        const bgStyle = hl.cellBg
+          ? `background:${hl.cellBg};`
+          : "";
+        const textColor = hl.cellBg ? "color:#111;" : "";
+        if (hl.bubbleBg) {
+          row.push(
+            `<div class="cv" style="${bgStyle}${textColor}">` +
+            `<span class="bubble" style="background:${hl.bubbleBg};">${disp}</span>` +
+            `</div>`
+          );
+        } else {
+          row.push(`<div class="cv" style="${bgStyle}${textColor}">${disp}</div>`);
+        }
+      }
+    });
+    return row;
+  });
+
+  return { years, rows };
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  // Update subtitles
+  document.getElementById("sub1").textContent = SUB1[curMeasure] || "";
+  const s2 = (SUB2[curMeasure] || {})[curColor] || "";
+  document.getElementById("sub2").textContent = s2;
+
+  const result = buildTableData();
+  if (!result) {
+    document.getElementById("tbl-wrapper").innerHTML =
+      '<p style="color:#c00;padding:1rem;">Not available for this combination.</p>';
+    return;
+  }
+
+  const { years, rows } = result;
+  const columns = [{ title: "State" }].concat(years.map(y => ({ title: String(y) })));
+
+  // Destroy old instance
+  if (dtInstance) {
+    dtInstance.destroy();
+    document.getElementById("tbl-wrapper").innerHTML =
+      '<table id="main-dt" class="display"></table>';
+  }
+
+  dtInstance = $('#main-dt').DataTable({
+    data:       rows,
+    columns:    columns,
+    paging:     false,
+    searching:  false,
+    info:       false,
+    ordering:   true,
+    scrollX:    true,
+    fixedColumns: { leftColumns: 1 },
+    createdRow: function(row) {
+      // Remove default DT padding from td so our .cv div fills completely
+      $(row).find('td').css('padding', '0');
+    },
+    columnDefs: [
+      { targets: 0, width: "120px", className: "dt-left" },
+      { targets: "_all", className: "dt-center", width: "62px" }
+    ],
+    dom: 't'
+  });
+}
+
+// ── Button handlers ───────────────────────────────────────────────────────────
 function setMeasure(btn) {
-  curMeasure = btn.dataset.measure;
+  curMeasure = btn.dataset.val;
   document.querySelectorAll("#row-measure .ctrl-btn")
     .forEach(b => b.classList.toggle("active", b === btn));
   enforceConstraints();
@@ -451,63 +490,36 @@ function setMeasure(btn) {
 
 function setTransform(btn) {
   if (btn.classList.contains("disabled")) return;
-  curTransform = btn.dataset.transform;
+  curTransform = btn.dataset.val;
   document.querySelectorAll("#row-transform .ctrl-btn")
     .forEach(b => b.classList.toggle("active", b === btn));
   render();
 }
 
 function setColor(btn) {
-  curColor = btn.dataset.color;
+  curColor = btn.dataset.val;
   document.querySelectorAll("#row-color .ctrl-btn")
     .forEach(b => b.classList.toggle("active", b === btn));
   render();
 }
 
 // ── Constraints ───────────────────────────────────────────────────────────────
-// "own" measure cannot use "ranked_delta" transform → disable that button
 function enforceConstraints() {
-  const rdBtn = document.querySelector('[data-transform="ranked_delta"]');
+  const rdBtn = document.querySelector('[data-val="ranked_delta"]');
   if (curMeasure === "own") {
     rdBtn.classList.add("disabled");
-    // If currently on ranked_delta, fall back to raw_delta
     if (curTransform === "ranked_delta") {
       curTransform = "raw_delta";
       document.querySelectorAll("#row-transform .ctrl-btn")
-        .forEach(b => b.classList.toggle("active",
-                       b.dataset.transform === curTransform));
+        .forEach(b => b.classList.toggle("active", b.dataset.val === curTransform));
     }
   } else {
     rdBtn.classList.remove("disabled");
   }
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function render() {
-  const key = curMeasure + "__" + curTransform + "__" + curColor;
-  const html = TABLES[key];
-
-  // Subtitles
-  document.getElementById("sub1").textContent = SUB1[curMeasure] || "";
-  const s2map = curMeasure === "own"       ? SUB2_OWN :
-                curMeasure === "extremity" ? SUB2_EXT : SUB2;
-  document.getElementById("sub2").textContent = s2map[curColor] || "";
-
-  const wrapper = document.getElementById("tbl-wrapper");
-  if (!html) {
-    wrapper.innerHTML = '<p style="color:#c00;padding:1rem;">Table not available for this combination.</p>';
-    return;
-  }
-  wrapper.innerHTML = html;
-
-  // Re-initialise DataTables (DT drops its JS on first inject; re-run it)
-  if (window.HTMLWidgets) {
-    HTMLWidgets.staticRender();
-  }
-}
-
 // ── Init ──────────────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", function() {
+$(document).ready(function () {
   enforceConstraints();
   render();
 });
