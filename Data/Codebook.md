@@ -18,13 +18,13 @@ enf_everify|E-Verify mandate|State has a policy to mandate that some or all empl
 |enf_limits_everify|Prohibition of local E-Verify mandates|State has a policy to block cities, counties, or other jurisdictions from requiring employers to use E-Verify.\***|binary byte| |
 |enf_state_omnibus|State omnibus immigration bill|State has multiple enforcement-related measures on the books as a result of passing an omnibus immigration bill, such as Arizona's SB1070 and copycat bills in several states.|binary byte|
 
->\* 287(g) programs are agreements between local jurisdictions and Immigration and Cusoms Enforcement which deputize local law enforcement to perform certain functions of federal immigration officials.
+>\* 287(g) programs are agreements between local jurisdictions and Immigration and Customs Enforcement which deputize local law enforcement to perform certain functions of federal immigration officials.
 >
 >\** Secure Communities is a federal data-sharing program that ran from 2008 to 2014 and was reinstated in January 2017. Between 2014 and 2017, a different program, the Priority Enforcement Program, was in place. Participation in Secure Communities was initially voluntary but became mandatory and was active in all states by 2012.
 >
 >\*** E-Verify is an electronic verification system that confirms the employment eligibility of workers. Most states with this mandate require either public employers and state contractors, or all employers with at least a certain number of employees, to use E-Verify.
 >
->^ Ternary values are recorded through a three-part coding mechanism: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy.
+>^ Ternary values are recorded through a three-part coding mechanism: 0 (none of the counties in the state had this policy), 1 (some of the counties had this policy), 2 (all of the counties, or a statewide agency, had this policy).
 
 ### Dimensions of immigrant public benefits policy
 | Variable | Name | Description | Value type |
