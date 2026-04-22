@@ -1,0 +1,802 @@
+---
+title: "State Distances"
+format:
+  html:
+    embed-resources: true
+    page-layout: full
+    echo: false
+    warning: false
+    message: false
+execute:
+  eval: true
+knitr:
+  opts_knit:
+    root.dir: "C:/Users/ndmcr/Desktop/MPP Capstone"
+---
+
+```{r setup}
+library(dplyr)
+library(jsonlite)
+
+df <- read.csv(
+  "https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Final%20data/state_distances%20(raw%20and%20deltas).csv",
+  check.names = FALSE
+)
+
+YEARS       <- 2000:2019
+DELTA_YEARS <- 2001:2019
+
+extract_series <- function(prefix, years) {
+  cols    <- paste0(prefix, "_", years)
+  present <- cols[cols %in% names(df)]
+  yrs_out <- years[paste0(prefix, "_", years) %in% names(df)]
+  mat     <- df[, present, drop = FALSE]
+  list(years  = as.integer(yrs_out),
+       states = df$state,
+       values = lapply(seq_len(nrow(mat)), function(i) as.numeric(mat[i, ])))
+}
+
+extract_clusters <- function(years) {
+  cols    <- paste0("cluster_", years)
+  present <- cols[cols %in% names(df)]
+  yrs_out <- years[paste0("cluster_", years) %in% names(df)]
+  mat     <- df[, present, drop = FALSE]
+  list(years  = as.integer(yrs_out),
+       states = df$state,
+       values = lapply(seq_len(nrow(mat)), function(i) as.integer(mat[i, ])))
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ANNOTATIONS — three named sets, one per distance measure
+# Key format: "StateName__YYYY"   (two underscores)
+# EDIT: add, remove, or rewrite any note below.
+# ══════════════════════════════════════════════════════════════════════════════
+
+ann_global <- list(
+  # ── Benchmark / most typical states ────────────────────────────────────────
+  "Iowa__2000"                 = "Iowa is the most consistently 'typical' state in the dataset, ranking within the 5 closest to the global centroid in 16 of 20 years. Its moderate immigrant population, absence of omnibus legislation, and balanced mix of modest enforcement and modest integration provisions make it the closest approximation to a national median.",
+  "West Virginia__2016"        = "West Virginia became the single closest state to the global centroid in 2016 and held that position through 2019. Despite one of the smallest immigrant populations in the country, its combination of limited benefits, no drivers-license access, and no omnibus enforcement bill placed it at the national middle ground.",
+  "South Dakota__2000"         = "South Dakota, alongside Iowa, is among the most consistently centroid-adjacent states in the dataset. Its tiny immigrant population and stable, unremarkable policy environment keep it near the national norm year after year — not because of deliberate moderation, but because immigration policy rarely rises to political salience.",
+  "Kentucky__2017"             = "Kentucky moved to within 2 ranks of the global centroid in 2017 and stayed there through 2019 — one of the closest approaches to the centre for any state in the later period. The shift reflects a gradual shedding of early-2000s enforcement outlier status as other states adopted similar measures, normalising Kentucky's profile.",
+  # ── Post-9/11 shock (2001) ──────────────────────────────────────────────────
+  "District of Columbia__2001" = "DC surged 41 ranks from the centroid in 2001 — the single largest one-year jump in the dataset. Post-9/11 federal security directives transformed local policing in ways no state government could replicate, instantly making DC the most atypical jurisdiction in the country.",
+  "Michigan__2001"             = "Michigan jumped 24 ranks from the centroid in 2001. Heightened federal scrutiny of Arab-American communities in metropolitan Detroit pushed the state's enforcement profile sharply away from the national average — a pattern distinct from any other state in the dataset.",
+  "Texas__2001"                = "Texas moved 6 ranks further from the centroid in 2001 as post-9/11 border-security pressures intensified along the El Paso and Laredo corridors. Combined with the state's uniquely large undocumented population, this began a sustained divergence that would push Texas to rank 51st by 2008–2009.",
+  # ── Early enforcement movers 2002–2005 ────────────────────────────────────
+  "Florida__2002"              = "Florida jumped 18 ranks from the centroid in 2002 — its largest single-year movement — as the state rapidly expanded enforcement infrastructure following post-9/11 federal pressure on coastal border states. Florida's large and diverse immigrant population made its policy response unusually consequential.",
+  "Oklahoma__2003"             = "Oklahoma jumped 27 ranks in 2003 — the largest single-year rank change in the entire dataset — as the state built one of the earliest and most comprehensive enforcement portfolios outside the Southeast, including a 287(g) Task Force agreement ahead of its omnibus SB1804 in 2007.",
+  "Alabama__2003"              = "Alabama jumped 17 ranks in 2003 after signing one of the first 287(g) Task Force agreements with the Alabama Department of Public Safety. This early move foreshadowed Alabama's trajectory toward HB56 (2011), one of the most comprehensive state omnibus immigration laws ever enacted.",
+  "Kentucky__2003"             = "Kentucky jumped 13 ranks from the centroid in 2003, one of the larger early-period movements. The state's rapid adoption of enforcement measures — including early 287(g) agreements — reflected the fast-growing immigrant population in Louisville and Lexington that had drawn significant federal attention.",
+  "North Dakota__2004"         = "North Dakota jumped 16 ranks in 2004 despite having one of the smallest immigrant populations in the country. The movement reflects adoption of public-benefits restrictions and English-only provisions that were being widely diffused across low-immigration states as symbolic enforcement postures.",
+  "Arizona__2005"              = "Arizona surged 30 ranks from the centroid in 2005 — the second-largest single-year jump in the dataset. The state was rapidly expanding 287(g) agreements and mandatory E-Verify years ahead of its landmark SB1070 (2010), establishing an enforcement profile that would influence legislation nationwide.",
+  "Arkansas__2005"             = "Arkansas jumped 15 ranks in 2005, driven by one of the fastest-growing Latino populations in the South. The state rapidly adopted 287(g) agreements and early E-Verify provisions, moving it sharply from the centroid before oscillating cluster membership destabilised its trajectory from 2008 onward.",
+  "Utah__2005"                 = "Utah jumped 11 ranks in 2005 to its highest global distance rank up to that point. The state was simultaneously one of the earliest adopters of in-state tuition for undocumented students (2002) and an aggressive enforcer — a contradictory combination that kept it far from the centroid in both directions.",
+  # ── 2006–2008 enforcement expansion ───────────────────────────────────────
+  "Wisconsin__2006"            = "Wisconsin jumped 12 ranks in 2006 and permanently switched to Cluster 2, driven by rapid growth of its immigrant population in Milwaukee and the Fox Valley and the state's adoption of Secure Communities participation ahead of other Midwest peers.",
+  "Georgia__2007"              = "Georgia jumped 15 ranks in 2007 as the state dramatically expanded its enforcement posture. The Illegal Immigration Reform and Enforcement Act (2006) had already begun reshaping Georgia's profile, and 287(g) agreements signed with Cobb and Hall counties in 2007 pushed it further from the national norm.",
+  "South Carolina__2008"       = "South Carolina jumped 21 ranks in 2008 — part of a Southeast enforcement surge alongside Tennessee and North Carolina. Expanded 287(g) jail agreements and movement toward omnibus legislation drove the state from near the centroid to a distinctly enforcement-heavy profile within a single year.",
+  "Tennessee__2008"            = "Tennessee jumped 19 ranks in 2008 as the state rapidly expanded 287(g) jail agreements and passed early E-Verify legislation. Combined with fast-growing immigrant populations in Nashville and Memphis, the state diverged sharply from its historical neighbours.",
+  "North Carolina__2008"       = "North Carolina jumped 12 ranks in 2008 as 287(g) agreements spread across multiple counties. The state's rapid demographic change in the Research Triangle and Charlotte — combined with a political environment increasingly responsive to enforcement pressure — produced one of the Southeast's largest single-year movements.",
+  "Mississippi__2008"          = "Mississippi jumped 9 ranks in 2008, part of the broader Southeast enforcement wave. The state's adoption of E-Verify mandates and 287(g) agreements moved it away from the centroid despite having a relatively small immigrant population, reflecting policy diffusion rather than population-driven pressure.",
+  "Nevada__2008"               = "Nevada jumped 12 ranks from the centroid in 2008 as the state's fast-growing Las Vegas immigrant population prompted enforcement responses. Nevada had been among the closest states to the centroid before 2008; the sudden movement reflected how quickly a state's profile could shift under demographic pressure.",
+  # ── Recession convergence 2009–2012 ───────────────────────────────────────
+  "Arkansas__2008"             = "Arkansas dropped 23 ranks closer to the centroid in 2008 — the largest single-year convergence in the dataset — as the state rapidly scaled back its enforcement posture. Cluster oscillation (switching between 1 and 2 repeatedly 2008–2013) reflects genuine policy instability driven by competing economic and cultural pressures.",
+  "Rhode Island__2007"         = "Rhode Island dropped 17 ranks closer to the centroid in 2007, one of the largest single-year convergences in the dataset. The state scaled back several enforcement initiatives and its integration-oriented profile became less unusual relative to peers adopting similar measures.",
+  "Nebraska__2011"             = "Nebraska fell 17 ranks closer to the centroid in 2011 after the Great Recession curtailed enforcement ambitions. Nebraska had been among the furthest states from the centroid through the late 2000s; the rapid convergence reflects how much of its earlier divergence was driven by discretionary spending rather than structural policy commitment.",
+  "Indiana__2003"              = "Indiana dropped 14 ranks closer to the centroid in 2003 — one of the largest single-year convergences in the dataset to that point. The movement reflects a period of policy retrenchment following early enforcement expansions, as the state pulled back from several 287(g) proposals under fiscal pressure.",
+  "Idaho__2010"                = "Idaho dropped 14 ranks closer to the centroid in 2010 after a sharp enforcement expansion. The state's trajectory mirrors several other low-immigration Western states: rapid adoption of enforcement measures in the mid-2000s followed by recession-driven retrenchment that brought it back toward the national norm.",
+  "Pennsylvania__2009"         = "Pennsylvania dropped 11 ranks closer to the centroid in 2009 after a period of enforcement expansion. The state's large and geographically dispersed immigrant population created competing political pressures, and the recession gave cover to retreat from costly enforcement commitments.",
+  "Missouri__2012"             = "Missouri dropped 14 ranks closer to the centroid in 2012 — its largest single-year convergence — as fiscal pressures reversed earlier enforcement commitments. Missouri would oscillate between 1st and 5th closest to the centroid for several years, reflecting genuine policy moderation rather than inaction.",
+  # ── Sustained divergers 2010–2016 ─────────────────────────────────────────
+  "Alabama__2011"              = "Alabama enacted HB56 in 2011 — modelled on Arizona's SB1070 — which propelled it 14 ranks further from the centroid in a single year. The law's breadth across enforcement, employment, education, and benefits simultaneously made Alabama the most enforcement-extreme state in the dataset outside Arizona and DC.",
+  "South Carolina__2011"       = "South Carolina jumped 13 more ranks from the centroid in 2011, continuing the trajectory begun in 2008. The state enacted its own omnibus enforcement bill and expanded cooperation with federal immigration authorities, cementing a position among the 5 furthest states from the centroid for the remainder of the period.",
+  "Vermont__2010"              = "Vermont jumped 14 ranks away from the centroid in 2010 as the state began a decisive pivot toward integration-oriented policies, including in-state tuition for undocumented students. By 2011 Vermont had permanently switched clusters, reflecting the fastest sustained policy realignment of any small-population state in the dataset.",
+  "Colorado__2007"             = "Colorado jumped 12 ranks from the centroid in 2007 as the state aggressively expanded E-Verify requirements and passed restrictions on public benefits — temporarily making it one of the more enforcement-oriented states before its 2014 cluster switch reversed the trend entirely.",
+  "Colorado__2019"             = "Colorado jumped 14 ranks from the centroid in 2019, its largest single-year movement in over a decade. After years of converging toward the centre following its 2014 cluster switch, the state's passage of expanded integration policies under a Democratic trifecta pushed it back toward the integration pole.",
+  "Hawaii__2015"               = "Hawaii jumped 11 ranks from the centroid in 2015 — its largest single-year movement — as the state expanded healthcare access for undocumented immigrants and strengthened sanctuary-style protections. Hawaii had been converging toward the centroid since 2011; the 2015 spike reversed that trend permanently.",
+  "Delaware__2011"             = "Delaware dropped 13 ranks closer to the centroid in 2011 — one of the larger recession-era convergences among Northeastern states. The state had been far from the centroid due to early integration provisions; as peers adopted similar measures, Delaware's profile became less distinctive.",
+  "New Jersey__2012"           = "New Jersey dropped 11 ranks closer to the centroid in 2012 as the state scaled back some enforcement commitments and its integration-oriented profile became less unusual. New Jersey's large and economically important immigrant population created sustained political tension that produced frequent oscillation around the centroid.",
+  # ── Late-period divergers 2017–2019 ───────────────────────────────────────
+  "California__2013"           = "California reached rank 51 — the furthest from the global centroid any state has ever been — in 2013. The AB60 drivers-license law and the TRUST Act limiting ICE detainer compliance passed the same year, producing a policy profile more distinctive than any other state at any point in the 20-year dataset.",
+  "Illinois__2017"             = "Illinois jumped sharply away from the centroid in 2017 as the TRUST Act and expanded undocumented-children healthcare pushed its profile toward California's integration pole. By 2019 Illinois ranked 50th — second furthest from the centroid — making it the most dramatic late-period diverger in the dataset.",
+  "Montana__2019"              = "Montana jumped 17 ranks from the centroid in 2019 — the largest single-year movement in the final period. Despite one of the smallest immigrant populations in the country, adoption of E-Verify expansion and English-only provisions moved a historically neutral state sharply toward the enforcement end of the spectrum.",
+  "Virginia__2017"             = "Virginia moved 9 ranks closer to the centroid in 2017 and continued converging through 2019, reaching its closest position to the national norm since the early 2000s. Demographic change in Northern Virginia and the shift to Democratic governance produced a sustained integration-oriented realignment."
+)
+
+ann_own <- list(
+  # ── Benchmark states: consistently close to cluster centroid ───────────────
+  "South Dakota__2000"         = "South Dakota is the most consistently cluster-typical state in the dataset across all 20 years — the lowest average own-cluster distance of any jurisdiction. Its small immigrant population and absence of major policy innovation keep it at the centre of Cluster 1 in almost every year.",
+  "Iowa__2000"                 = "Iowa is consistently among the closest states to its cluster centroid throughout the dataset. Its stable, moderate policy mix — no omnibus legislation, limited enforcement expansion, and limited integration provisions — makes it the most representative Cluster 1 member in most years.",
+  "Maryland__2008"             = "Maryland reached its closest-ever position to its cluster centroid in 2008 (rank 2nd within the cluster), following a period of convergence driven by scaled-back enforcement commitments and the state's integration-oriented policies becoming more typical among Cluster 2 peers. Maryland oscillated between clusters 2005–2007, adding to the instability.",
+  # ── Post-9/11 shock (2001) ──────────────────────────────────────────────────
+  "District of Columbia__2001" = "DC's own-cluster distance surged by the largest single-year jump in the dataset in 2001 (+0.94). Post-9/11 federal mandates transformed local enforcement in ways structurally impossible for any other cluster member to replicate, making DC instantly the most atypical state within its group.",
+  "Michigan__2001"             = "Michigan's cluster distance jumped +0.86 in 2001 — the second-largest single-year own-cluster movement. Post-9/11 enforcement concentrated in metropolitan Detroit's Arab-American communities distinguished Michigan sharply from other Cluster 2 states, none of which faced comparable concentrated community-level pressure.",
+  "Texas__2001"                = "Texas's cluster distance jumped +0.51 in 2001 and the state permanently switched to Cluster 2 in 2007. Even before the switch, Texas was structurally unlike any Cluster 1 peer: its border geography, nation-leading undocumented population, and contradictory mix of enforcement and tolerance had no parallel in the group.",
+  # ── Early enforcement divergers 2002–2005 ─────────────────────────────────
+  "Florida__2002"              = "Florida's cluster distance surged +0.54 in 2002 — the fourth-largest single-year own-cluster jump in the dataset — as post-9/11 coastal enforcement pressure transformed the state's profile. Florida had been among the closest states to its cluster centroid; the 2002 spike made it one of the most atypical within Cluster 1.",
+  "Utah__2002"                 = "Utah's cluster distance spiked +0.37 in 2002, reflecting a policy profile increasingly out of step with Cluster 1 peers. Utah's early adoption of in-state tuition for undocumented students (2002) combined with significant enforcement measures created an unusual dual divergence uncommon within the cluster.",
+  "North Dakota__2002"         = "North Dakota's cluster distance jumped +0.33 in 2002 as the state adopted public-benefits restrictions and English-only provisions that moved it away from its low-immigration Cluster 1 peers. The movement is notable because it was driven by symbolic policy adoption rather than actual immigrant-population pressure.",
+  "Arizona__2005"              = "Arizona's cluster distance spiked +0.79 in 2005 — the fourth-largest own-cluster jump in the dataset — as the state rapidly expanded 287(g) agreements and mandatory E-Verify. Arizona was becoming an outlier within its own cluster years before SB1070 (2010) formalised its status as the nation's most enforcement-intensive state.",
+  "Arkansas__2005"             = "Arkansas jumped +0.68 from its cluster centroid in 2005, one of the largest own-cluster spikes in the Southeast. Rapid Latino population growth drove enforcement adoption — 287(g) agreements and early E-Verify provisions — but Arkansas's cluster oscillation from 2008 onward meant it never consolidated this divergent position.",
+  "Kentucky__2003"             = "Kentucky's cluster distance surged +0.47 in 2003, reflecting rapid enforcement adoption driven by fast-growing immigrant populations in Louisville and Lexington. Kentucky's trajectory is notable because — unlike many other early enforcement adopters — it subsequently converged back toward the cluster centroid rather than continuing to diverge.",
+  "Kansas__2004"               = "Kansas's cluster distance jumped +0.39 in 2004, driven by public-benefits restrictions and E-Verify expansion that moved it away from other low-immigration Cluster 1 peers. Kansas would subsequently stabilise near this new level rather than continuing to diverge, suggesting the 2004 movement reflected genuine policy consolidation.",
+  # ── 2007–2009 Southeast enforcement wave ──────────────────────────────────
+  "Louisiana__2007"            = "Louisiana's cluster distance surged +0.83 in 2007 — the third-largest own-cluster jump in the dataset — as post-Katrina demographic upheaval created policy pressures unlike any other Cluster 1 state. Massive inflows of Latino construction workers in the rebuilding economy had no parallel among cluster peers.",
+  "Georgia__2007"              = "Georgia's cluster distance jumped +0.28 in 2007 as the state dramatically expanded enforcement. 287(g) agreements with Cobb and Hall counties distinguished Georgia sharply from most Cluster 1 peers, beginning a sustained trajectory away from its cluster centroid that would continue through 2019.",
+  "Tennessee__2008"            = "Tennessee's cluster distance surged +0.78 in 2008 — the fifth-largest own-cluster jump in the dataset. The simultaneous expansion of 287(g) jail agreements and E-Verify legislation in a state with fast-growing immigrant populations in Nashville and Memphis distinguished it sharply from neighbouring Cluster 1 states.",
+  "South Carolina__2008"       = "South Carolina's cluster distance spiked +0.64 in 2008 — one of the largest jumps in the Southeast enforcement wave. The state's rapid pivot from one of the closest to one of the furthest states from its cluster centroid within 2 years represents one of the most dramatic within-cluster divergences in the dataset.",
+  "North Carolina__2008"       = "North Carolina's cluster distance jumped +0.50 in 2008 as 287(g) agreements spread across multiple counties. The state oscillated cluster membership four times between 2010 and 2013, reflecting genuine instability — enforcement expansion competed with integration pressure from a growing Research Triangle technology sector.",
+  "Nevada__2008"               = "Nevada's cluster distance spiked +0.37 in 2008 as enforcement responses to the fast-growing Las Vegas immigrant population diverged from Cluster 1 norms. Nevada had been one of the closest states to its cluster centroid in the early 2000s; the 2008 spike began a sustained divergence that lasted through 2019.",
+  "Pennsylvania__2008"         = "Pennsylvania's cluster distance surged +0.36 in 2008, reflecting aggressive enforcement expansion that set it apart from other Northeastern Cluster 2 peers. The state would reverse this divergence almost entirely by 2010–2011 as the recession curtailed enforcement spending, producing one of the more dramatic own-cluster round trips.",
+  # ── Recession convergence 2009–2012 ───────────────────────────────────────
+  "Wisconsin__2011"            = "Wisconsin's cluster distance dropped -0.53 in 2011 — one of the largest single-year own-cluster convergences in the dataset. Great Recession budget pressures reversed several years of enforcement expansion, and the state's profile rapidly re-aligned with other Cluster 2 members that had not pursued the same aggressive posture.",
+  "Minnesota__2012"            = "Minnesota's cluster distance fell -0.50 in 2012 after spiking to near-outlier levels in 2011. The state's posture briefly converged with cluster peers following the defeat of several enforcement bills, before diverging again toward integration policies in subsequent years — reflecting the state's contested political environment.",
+  "Arkansas__2008"             = "Arkansas's cluster distance dropped -0.31 in 2008 — part of a dramatic oscillation that saw it switch clusters five times between 2008 and 2013. The instability reflects genuine policy tension between an enforcement-oriented rural legislature and economic pragmatism driven by the state's reliance on immigrant agricultural and construction labour.",
+  "New Jersey__2012"           = "New Jersey's cluster distance dropped -0.33 in 2012 as the state scaled back enforcement commitments and its integration profile became more typical among Cluster 2 peers. New Jersey's large and economically important immigrant population created sustained political pressure that produced frequent oscillation around the cluster centroid.",
+  "Alaska__2012"               = "Alaska's cluster distance dropped -0.52 in 2012 — its largest single-year convergence — reversing a 2010–2011 enforcement expansion. Alaska's remote geography and small immigrant population meant its policy moves were driven more by symbolic adoption of nationally diffused enforcement measures than by local population pressure.",
+  "Idaho__2010"                = "Idaho's cluster distance dropped -0.39 in 2010 as recession-driven retrenchment reversed mid-2000s enforcement expansion. Idaho's pattern — rapid divergence in 2002–2007 followed by sustained convergence from 2010 onward — is among the clearest examples of recession-as-policy-reversal in the dataset.",
+  "North Dakota__2012"         = "North Dakota's cluster distance dropped -0.39 in 2012, reversing a decade-long divergence trend. The state returned close to its cluster centroid and remained there — a notable contrast to states like Georgia and South Carolina that diverged and never recovered.",
+  # ── Sustained own-cluster outliers ────────────────────────────────────────
+  "Texas__2007"                = "Texas permanently switched to Cluster 2 in 2007 and remained the state with the highest average own-cluster distance in the dataset. Texas's unique combination of the nation's largest undocumented population, extensive border enforcement, in-state tuition provisions, and mixed Sanctuary City policies makes it structurally unlike any other Cluster 2 state.",
+  "California__2011"           = "California's own-cluster distance grew consistently from 2011 onward as it adopted integration measures that no other Cluster 2 state matched. By 2016, California was not just the furthest state from the global centroid — it was also increasingly atypical within its own cluster, positioned as an outlier in every dimension.",
+  "Hawaii__2013"               = "Hawaii's cluster distance spiked +0.22 in 2013 and continued rising through 2015, reaching its highest recorded value. The state's expansion of healthcare, benefits, and sanctuary protections for undocumented residents created a profile distinct even from its Cluster 2 peers — occupying an integration extreme that no mainland state matched.",
+  "Utah__2005"                 = "Utah's own-cluster distance spiked +0.30 in 2005 and remained elevated through 2016, making it one of the most persistently atypical Cluster 1 states. The combination of the 2002 in-state tuition law (integrationist) and aggressive E-Verify and 287(g) enforcement (restrictionist) created a genuinely contradictory within-cluster position.",
+  "Maine__2010"                = "Maine's cluster distance spiked +0.22 in 2010 and then dropped sharply through 2012 as the state reversed a brief enforcement expansion. Maine is notable as one of the few states where a single gubernatorial election (LePage, 2010) produced a measurable within-cluster divergence followed by regression to the cluster mean.",
+  # ── Late-period notable movements ─────────────────────────────────────────
+  "Vermont__2010"              = "Vermont's cluster distance surged +0.42 in 2010 as the state pivoted decisively toward integration-oriented policies including in-state tuition and expanded benefits. Vermont permanently switched to Cluster 2 in 2011, representing one of the clearest and most sustained cluster realignments in the dataset.",
+  "Colorado__2014"             = "Colorado permanently switched to Cluster 2 in 2014, following years of oscillation. The state's 2013 drivers-license law for undocumented residents and expanded in-state tuition provisions created a structural realignment — though Colorado's cluster distance remained moderate, reflecting a genuinely mixed policy environment.",
+  "Illinois__2017"             = "Illinois began a sharp sustained divergence from its cluster centroid in 2017 after the TRUST Act and expanded undocumented-children healthcare passed. By 2019, Illinois had the third-highest average own-cluster distance in the entire dataset — the most dramatic late-period within-cluster divergence of any non-coastal state.",
+  "Missouri__2018"             = "Missouri's cluster distance spiked +0.56 in 2018 — its largest single-year jump — as the state adopted E-Verify mandates and public-benefits restrictions that set it apart from other Cluster 1 peers. Missouri had been consistently close to its cluster centroid for the prior decade; the 2018 spike reflects a rapid political realignment.",
+  "Oregon__2014"               = "Oregon's own-cluster distance dropped sharply -0.43 in 2014 after a sustained divergence, as the state briefly converged with Cluster 2 peers. Oregon then resumed diverging from 2015 onward, driven by increasingly expansive sanctuary policies and benefits access that distinguished it from most other Cluster 2 states.",
+  "Virginia__2017"             = "Virginia's cluster distance dropped -0.22 in 2017 and continued falling through 2019. Demographic change in Northern Virginia and a shift to Democratic governance produced a sustained convergence toward the Cluster 1 centroid — paradoxically, as Virginia adopted more integration-friendly policies that aligned it with its cluster peers.",
+  "Montana__2019"              = "Montana's own-cluster distance surged +0.49 in 2019 — its largest single-year jump — as the state adopted enforcement measures that set it apart from other Cluster 1 members. Montana had been among the closest states to its cluster centroid for most of the prior decade; the 2019 spike is one of the most sudden divergences in the final period.",
+  "Georgia__2011"              = "Georgia's cluster distance jumped +0.25 in 2011, continuing a sustained trend of divergence that began in 2007. Georgia's HB87 (2011) — its own version of Arizona-style omnibus enforcement — reinforced its status as one of the most enforcement-distinct states within Cluster 1, a position it maintained through 2019."
+)
+
+ann_extremity <- list(
+  # ── All-time extremity records ──────────────────────────────────────────────
+  "California__2016"           = "California reached an extremity score of 7.84 in 2016 — the highest value for any state in any year in the entire dataset. SB1001 banned mandatory private-employer E-Verify and SB54 (the sanctuary bill) moved through the legislature, placing California further from the national distribution than any state ever recorded.",
+  "California__2013"           = "California's extremity first crossed 7.0 in 2013, driven by AB60 (drivers licenses for undocumented immigrants) and the TRUST Act (limiting ICE detainer compliance) passing the same year. These two laws alone moved California to rank 51st in the national distribution — the first state to reach that position.",
+  "California__2011"           = "California's extremity jumped +1.85 in 2011 — its largest single-year increase — as AB131 extended financial aid to undocumented students. This began the sustained divergence that made California the dominant extremity outlier for the remainder of the period.",
+  "Washington__2000"           = "Washington ranked as the single most extreme state in the dataset from 2000 through 2007 — before California's surge displaced it. Washington's consistent position at the far integration end of the distribution reflects decades of expansive healthcare, benefits, and drivers-license policies for undocumented residents.",
+  # ── Post-9/11 shock (2001) ──────────────────────────────────────────────────
+  "District of Columbia__2001" = "DC's extremity surged +2.66 in 2001 — the single largest one-year extremity jump in the entire dataset. Post-9/11 federal security directives transformed DC's enforcement posture in ways structurally impossible for state governments to replicate, making it an immediate and unique distributional outlier.",
+  "Texas__2001"                = "Texas's extremity surged +1.99 in 2001 — the second-largest single-year jump that year — as post-9/11 border enforcement pressure combined with the state's uniquely large undocumented population. Texas's extremity reflects genuine policy contradiction: simultaneously the most enforcement-intensive and one of the most integration-tolerant large states.",
+  "Michigan__2001"             = "Michigan's extremity rank jumped 17 positions in 2001, driven by the same post-9/11 enforcement pressures that concentrated on metropolitan Detroit's Arab-American communities. Michigan's extremity reflects a distinctive enforcement profile not replicated by any other Northern state.",
+  # ── Early enforcement extremes 2002–2005 ───────────────────────────────────
+  "Florida__2002"              = "Florida's extremity surged +1.43 in 2002 — the largest single-year increase outside the 9/11 shock period up to that point. Florida's extremity reflects the state's unusual policy position: a major immigrant-destination state adopting intensive enforcement, placing it far from both the enforcement-light and integration-light poles.",
+  "Oklahoma__2003"             = "Oklahoma's extremity rank jumped 36 positions in 2003 — the largest extremity rank jump in the entire dataset — as it adopted sweeping enforcement measures years ahead of other states. This early extremity set the stage for Oklahoma's omnibus SB1804 (2007), one of the first state-level immigration enforcement laws nationwide.",
+  "Alabama__2003"              = "Alabama's extremity rank jumped 24 positions in 2003 — the second-largest single-year extremity rank jump in the dataset — following its early 287(g) Task Force agreement. Alabama's sustained high-extremity trajectory from 2003 through 2011's HB56 represents the most consistent enforcement-driven extremity arc in the data.",
+  "Utah__2002"                 = "Utah's extremity jumped +1.07 in 2002 as the state adopted in-state tuition for undocumented students (2002) while simultaneously expanding enforcement. Utah's extremity is distinctive because it is driven by policy contradictions — pushing the state toward the extreme in multiple directions simultaneously — rather than a consistent enforcement or integration stance.",
+  "New Mexico__2003"           = "New Mexico's extremity rank jumped 21 positions in 2003, driven by its 2003 drivers-license law for undocumented immigrants — one of the earliest in the nation. The state occupied a unique dual position: a border state with significant enforcement pressure but also one of the earliest and most expansive integration-policy adopters.",
+  "Montana__2002"              = "Montana's extremity jumped +1.12 in 2002 — its largest single-year increase up to that point — despite having one of the smallest immigrant populations in the country. Montana's early-period extremity reflects symbolic enforcement adoption (English-only, benefits restrictions) rather than population-driven policy pressure.",
+  "Kansas__2004"               = "Kansas's extremity rank jumped 15 positions in 2004, driven by public-benefits restrictions and early E-Verify provisions. Like North Dakota and Montana, Kansas's extremity is notable because it was adopted in the near-absence of a large immigrant population — reflecting political diffusion of enforcement norms rather than local demographic pressure.",
+  # ── Southeast enforcement wave 2007–2009 ──────────────────────────────────
+  "Georgia__2007"              = "Georgia's extremity jumped +0.86 in 2007 and its rank rose 20 positions — the largest movement in the Southeast that year. Georgia's 287(g) agreements in Cobb and Hall counties distinguished it from most Southern states and began a sustained trajectory toward the enforcement extreme that continued through 2019.",
+  "South Carolina__2008"       = "South Carolina's extremity surged +1.47 in 2008 — the largest single-year extremity jump in the Southeast enforcement wave — as the state rapidly expanded 287(g) agreements and pivoted toward omnibus-style legislation. South Carolina moved from near the distributional centre to a top-5 extremity state within two years.",
+  "Tennessee__2008"            = "Tennessee's extremity jumped +1.38 in 2008 as rapid enforcement expansion in a state with fast-growing immigrant populations created a profile distinct from the Southern norm. Tennessee's extremity reflects the particular intensity of enforcement responses in states experiencing sudden demographic change rather than gradual long-term growth.",
+  "Nevada__2008"               = "Nevada's extremity jumped +0.82 in 2008 as enforcement responses to Las Vegas's booming immigrant economy created a profile increasingly distinct from both the enforcement-heavy and integration-heavy poles. Nevada's extremity continued rising through 2016, driven by ongoing population growth and political contestation.",
+  "Minnesota__2008"            = "Minnesota's extremity jumped +1.31 in 2008 — the largest single-year increase among integration-oriented states — as the state's expanded immigrant healthcare and benefits programs created a profile unlike any other Midwestern state. Minnesota remained among the top 10 most extreme states from 2008 onward.",
+  "Pennsylvania__2008"         = "Pennsylvania's extremity jumped +0.78 in 2008, driven by aggressive enforcement expansion in a state with a large and geographically dispersed immigrant population. Pennsylvania would reverse this divergence almost entirely by 2010, producing one of the most dramatic round-trips in the extremity data.",
+  # ── Recession extremity convergence 2009–2012 ─────────────────────────────
+  "Wisconsin__2011"            = "Wisconsin recorded the largest single-year extremity drop in the dataset in 2011 (-1.65). Great Recession budget constraints rapidly reversed enforcement expansion, and the state's policy profile converged toward the distributional centre faster than almost any other state in the dataset.",
+  "Alaska__2012"               = "Alaska's extremity dropped -1.24 in 2012 — the second-largest single-year extremity convergence in the dataset — reversing a 2010–2011 enforcement spike. Alaska's extremity movements are unusually large relative to its immigrant population, suggesting that symbolic policy adoption and reversal drives its distributional position.",
+  "New Hampshire__2012"        = "New Hampshire's extremity dropped -1.07 in 2012 after a 2010–2011 enforcement expansion. The state's extremity oscillation reflects genuine political instability — New Hampshire's swing-state character in presidential elections produces unusually volatile immigration policy responses compared to its small immigrant population.",
+  "North Dakota__2012"         = "North Dakota's extremity dropped -1.16 in 2012 — reversing a decade of divergence — as the state converged back toward the distributional centre. North Dakota's extremity had been driven almost entirely by symbolic enforcement adoption; the 2012 convergence reflects a policy reversal with no parallel demographic change.",
+  "Nebraska__2011"             = "Nebraska's extremity dropped -1.50 in 2011 — the third-largest single-year convergence in the dataset — as the Great Recession reversed enforcement expansion. Nebraska had been moving toward the enforcement extreme since the mid-2000s; the 2011 reversal returned it close to the distributional centre.",
+  "Indiana__2003"              = "Indiana's extremity dropped -0.90 in 2003 — one of the largest convergences in the early period — as the state pulled back from enforcement initiatives. Indiana's pattern (expansion → recession-driven reversal → partial re-expansion 2010–2016 → convergence 2017) is among the most cyclical extremity trajectories in the dataset.",
+  "Indiana__2017"              = "Indiana's extremity dropped -0.78 in 2017 — its second-largest single-year convergence — following a period of sustained enforcement divergence. The drop reflects both recession hangover and the state's partial pivot toward pragmatic immigration policies as its manufacturing sector's reliance on immigrant labour created political tension.",
+  # ── Late-period extremity leaders ─────────────────────────────────────────
+  "Illinois__2017"             = "Illinois's extremity jumped +1.25 in 2017 — the largest single-year increase among any state in the final period — as the TRUST Act and expanded undocumented-children healthcare passed. Illinois's trajectory from moderate (rank ~40) to extreme (rank 48–50) in just three years is the fastest sustained extremity increase of any non-coastal state.",
+  "Hawaii__2015"               = "Hawaii's extremity jumped +1.14 in 2015 to its highest recorded value (5.19), reaching a consistent top-3 extremity position from 2015 onward. Hawaii's extremity reflects the state's comprehensive suite of integration policies — healthcare, drivers licenses, sanctuary protections, and in-state tuition — that collectively placed it at the far integration extreme.",
+  "New York__2010"             = "New York's extremity jumped +0.91 in 2010 as the state expanded drivers-license access and public-benefits provisions for undocumented residents. New York's sustained high extremity throughout the period reflects its position as the state with the second-largest undocumented population — scale amplifies policy distinctiveness.",
+  "Georgia__2011"              = "Georgia's extremity jumped +1.28 in 2011 following its HB87 omnibus enforcement bill, reaching rank 44 — the highest in the Southeast outside Alabama. Georgia's extremity has a distinctive character: it is driven entirely by enforcement measures in a state with a large and economically important immigrant population concentrated in the Atlanta metro.",
+  "South Carolina__2014"       = "South Carolina's extremity jumped +0.85 in 2014, reaching its peak recorded value. The state's continuous enforcement expansion — 287(g) agreements, E-Verify mandates, omnibus legislation — placed it among the top 5 most extreme states for the second half of the period, with no sign of recession-era convergence.",
+  "Oregon__2015"               = "Oregon's extremity jumped +0.79 in 2015 as the state began a sustained divergence toward the integration extreme. Oregon's drivers-license law for undocumented residents (2014), combined with expanding sanctuary policies and healthcare access, created a profile increasingly distinct from most other Cluster 2 states.",
+  "Massachusetts__2007"        = "Massachusetts's extremity jumped +1.08 in 2007 — its largest single-year increase — as the state expanded integration provisions that created a policy mix unlike any other Northeastern state. Massachusetts's sustained high extremity through 2019 reflects its position as one of the most consistently integration-oriented states outside California.",
+  "Missouri__2018"             = "Missouri's extremity jumped +1.04 in 2018 — its largest single-year increase — as the state adopted E-Verify mandates and benefits restrictions. The suddenness of Missouri's extremity increase is notable: a state near the distributional centre for most of the period became measurably atypical within a single legislative session.",
+  "Montana__2019"              = "Montana's extremity jumped +1.04 in 2019 — the largest single-year increase of any state in the final period — despite one of the smallest immigrant populations in the country. The movement reflects a rapid rightward political shift driven by nationalised immigration politics rather than local demographic change.",
+  "Vermont__2013"              = "Vermont's extremity jumped +0.63 in 2013 continuing a sustained integration-driven divergence. Vermont's extremity is particularly notable because it is one of the few states where high extremity is driven entirely by integration policies rather than enforcement — the state has no notable enforcement measures in the dataset."
+)
+
+payload <- list(
+  global_raw          = extract_series("dist_1cs",             YEARS),
+  global_raw_delta    = extract_series("dist_1cs_delta",       DELTA_YEARS),
+  global_ranked       = extract_series("rank_1cs",             YEARS),
+  global_ranked_delta = extract_series("rank_1cs_delta",       DELTA_YEARS),
+  own_raw             = extract_series("dist_own",             YEARS),
+  own_raw_delta       = extract_series("dist_own_delta",       DELTA_YEARS),
+  own_ranked          = extract_series("rank_own",             YEARS),
+  ext_raw             = extract_series("extremity",            YEARS),
+  ext_raw_delta       = extract_series("extremity_delta",      DELTA_YEARS),
+  ext_ranked          = extract_series("rank_extremity",       YEARS),
+  ext_ranked_delta    = extract_series("rank_extremity_delta", DELTA_YEARS),
+  clusters            = extract_clusters(YEARS),
+  all_dist_1cs        = extract_series("dist_1cs",             YEARS),
+  all_rank_1cs        = extract_series("rank_1cs",             YEARS),
+  all_delta_1cs       = extract_series("dist_1cs_delta",       DELTA_YEARS),
+  all_dist_own        = extract_series("dist_own",             YEARS),
+  all_rank_own        = extract_series("rank_own",             YEARS),
+  all_delta_own       = extract_series("dist_own_delta",       DELTA_YEARS),
+  all_extremity       = extract_series("extremity",            YEARS),
+  all_rank_ext        = extract_series("rank_extremity",       YEARS),
+  all_delta_ext       = extract_series("extremity_delta",      DELTA_YEARS),
+  ann_global          = ann_global,
+  ann_own             = ann_own,
+  ann_extremity       = ann_extremity
+)
+
+json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
+```
+
+```{=html}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+<style>
+  /* ── reset Quarto's default anchor icon on headings inside the table ── */
+  #tbl-outer .anchorjs-link,
+  #tbl-outer a.anchor,
+  .quarto-title-block .quarto-title-meta a,
+  h1 .anchorjs-link, h2 .anchorjs-link, h3 .anchorjs-link { display:none !important; }
+
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+
+  /* ── CONTROLS ── */
+  .ctrl-block    { margin-bottom:14px; }
+  .ctrl-label    { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:#888; margin-bottom:5px; font-weight:700; }
+  .ctrl-row      { display:flex; gap:6px; flex-wrap:wrap; }
+  .ctrl-btn      { padding:5px 14px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#444;
+                   cursor:pointer; font-size:12.5px; font-weight:500; line-height:1.4;
+                   transition:background .12s,color .12s,border-color .12s; }
+  .ctrl-btn:hover  { background:#f0f5fa; border-color:#aac4db; }
+  .ctrl-btn.active { background:#2E86B5; color:#fff; border-color:#2E86B5; }
+  .ctrl-btn.disabled { opacity:.35; cursor:not-allowed; pointer-events:none; }
+  .ctrl-subtitle { font-size:12px; color:#666; margin:5px 0 0 0; line-height:1.5; min-height:1.3em; font-style:italic; }
+
+  /* ── TABLE WRAPPER — wide with visible margins ── */
+  #tbl-outer {
+    border:1px solid #ccc; border-radius:8px; overflow:hidden; margin-top:16px;
+    /* EDIT: negative margins push table wider than content column while keeping visible border */
+    margin-left:-8vw; margin-right:-8vw;
+    box-sizing:border-box;
+  }
+  #tbl-wrapper { overflow-x:auto; width:100%; }
+
+  /* ── DATATABLE ── */
+  table.display { border-collapse:collapse; font-size:11px; width:100% !important; table-layout:fixed; }
+  table.display thead th {
+    background:#f7f7f7; border-bottom:2px solid #ddd;
+    /* EDIT: right padding leaves room for the sort arrow; increase if still overlapping */
+    padding:5px 16px 5px 4px !important;
+    white-space:nowrap; font-weight:600; color:#333;
+    text-align:center !important; position:relative; line-height:1.3;
+  }
+  table.display thead th:first-child  { text-align:left !important; padding-left:10px !important; }
+  table.display thead th:nth-child(2) { text-align:left !important; }
+  /* Pin sort arrows absolutely so they never push text */
+  /* Sort arrows: push to right edge, shrink font so ▲▼ stack without overlap */
+  table.display thead th.sorting::before,
+  table.display thead th.sorting_asc::before,
+  table.display thead th.sorting_desc::before,
+  table.display thead th.sorting::after,
+  table.display thead th.sorting_asc::after,
+  table.display thead th.sorting_desc::after {
+    position:absolute; right:2px; font-size:7px; line-height:1.1;
+  }
+  table.display thead th.sorting::before,
+  table.display thead th.sorting_asc::before,
+  table.display thead th.sorting_desc::before { bottom:55%; }
+  table.display thead th.sorting::after,
+  table.display thead th.sorting_asc::after,
+  table.display thead th.sorting_desc::after  { top:55%; }
+
+  table.display tbody td {
+    padding:0 !important; border-bottom:1px solid #f0f0f0;
+    text-align:right; white-space:nowrap; vertical-align:middle;
+    border-top:none !important;
+  }
+  table.display tbody td:first-child  { text-align:left; font-weight:500; }
+  table.display tbody td:nth-child(2) { text-align:left; }
+  table.display tbody tr:hover td,
+  table.display tbody tr:hover td.dtfc-fixed-left { background:rgba(46,134,181,.08) !important; }
+  /* Override fixed-column white bg on hover so row highlight shows through */
+  /* .dtfc-fixed-left bg handled in hover block above */
+  table.display tbody tr:hover .dtfc-fixed-left { background:rgba(46,134,181,.08) !important; }
+  table.display tbody tr:last-child td{ border-bottom:none; }
+
+  /* Remove the phantom first-row gap DataTables sometimes adds */
+  table.display tbody { border-top:none; }
+
+  /* ── CELL INNER DIV ── */
+  .cv {
+    display:flex; align-items:center; justify-content:center;
+    padding:3px 4px; min-height:30px; box-sizing:border-box;
+  }
+  table.display tbody td:first-child .cv { justify-content:flex-start; padding:4px 14px 4px 10px; }
+  table.display tbody td:nth-child(2) .cv { justify-content:flex-start; padding:2px 6px; }
+
+  /* ── SPARKLINE ── */
+  .spark-cell { display:flex; align-items:center; padding:2px 6px; min-height:34px; box-sizing:border-box; }
+
+  /* ── BUBBLE ── */
+  .bubble { border-radius:999px; padding:2px 8px; font-weight:700; display:inline-block; }
+
+  /* ── ANNOTATION INDICATOR ──
+     Dotted underline on the text itself, white so it shows on colored cells too */
+  .has-note {
+    text-decoration: underline dotted 1.5px;
+    text-decoration-color: rgba(255,255,255,0.9);
+    text-underline-offset: 2px;
+    cursor: help;
+  }
+  /* On uncolored cells use a dark underline */
+  .cv:not([style]) .has-note,
+  .cv[style=""] .has-note {
+    text-decoration-color: rgba(0,0,0,0.4);
+  }
+
+  /* .dtfc-fixed-left bg handled in hover block above */
+
+  /* ── TOOLTIP ── */
+  #cell-tooltip {
+    position:fixed; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:7px;
+    padding:9px 13px; font-size:12px; color:#333; box-shadow:0 4px 16px rgba(0,0,0,.12);
+    pointer-events:none; display:none; max-width:320px; line-height:1.7;
+  }
+  #cell-tooltip .tt-title  { font-weight:700; font-size:13px; margin-bottom:4px; color:#222; }
+  #cell-tooltip .tt-row    { display:flex; justify-content:space-between; gap:12px; }
+  #cell-tooltip .tt-label  { color:#777; }
+  #cell-tooltip .tt-note   { margin-top:6px; padding-top:6px; border-top:1px solid #eee; color:#444; font-style:italic; font-size:11.5px; }
+</style>
+```
+
+```{r inject-data, results='asis'}
+cat(sprintf('<script>const RAW_DATA = %s;</script>\n', json_payload))
+```
+
+```{=html}
+<!-- suppress any Quarto anchor link on #tbl-outer -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.anchorjs-link').forEach(function(el){ el.style.display='none'; });
+});
+</script>
+
+<!-- ── CONTROLS ── -->
+<div id="controls">
+  <div class="ctrl-block">
+    <div class="ctrl-label">Measure of Distance</div>
+    <div class="ctrl-row" id="row-measure">
+      <button class="ctrl-btn active" data-val="global"    onclick="setMeasure(this)">Proximity to Global Centroid</button>
+      <button class="ctrl-btn"        data-val="own"       onclick="setMeasure(this)">Proximity to Cluster Centroid</button>
+      <button class="ctrl-btn"        data-val="extremity" onclick="setMeasure(this)">Extremity</button>
+    </div>
+    <div class="ctrl-subtitle" id="sub-measure"></div>
+  </div>
+  <div class="ctrl-block">
+    <div class="ctrl-label">Variable Transformation</div>
+    <div class="ctrl-row" id="row-transform">
+      <button class="ctrl-btn active" data-val="raw"          onclick="setTransform(this)">Raw</button>
+      <button class="ctrl-btn"        data-val="raw_delta"    onclick="setTransform(this)">Raw Deltas</button>
+      <button class="ctrl-btn"        data-val="ranked"       onclick="setTransform(this)">Ranked</button>
+      <button class="ctrl-btn"        data-val="ranked_delta" onclick="setTransform(this)">Ranked Deltas</button>
+    </div>
+    <div class="ctrl-subtitle" id="sub-transform"></div>
+  </div>
+  <div class="ctrl-block">
+    <div class="ctrl-label">Color Scheme</div>
+    <div class="ctrl-row" id="row-color">
+      <button class="ctrl-btn active" data-val="none"          onclick="setColor(this)">No Color</button>
+      <button class="ctrl-btn"        data-val="clusters"      onclick="setColor(this)">Colored Clusters</button>
+      <button class="ctrl-btn"        data-val="extremes"      onclick="setColor(this)">Extremes</button>
+      <button class="ctrl-btn"        data-val="top1"          onclick="setColor(this)">Top 1</button>
+      <button class="ctrl-btn"        data-val="clusters_top1" onclick="setColor(this)">Colored Clusters + Top 1</button>
+      <button class="ctrl-btn"        data-val="extremes_top1" onclick="setColor(this)">Extremes + Top 1</button>
+    </div>
+    <div class="ctrl-subtitle" id="sub-color"></div>
+  </div>
+</div>
+
+<div id="tbl-outer">
+  <div id="tbl-wrapper">
+    <table id="main-dt" class="display"></table>
+  </div>
+</div>
+<div id="cell-tooltip"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+
+<script>
+// ── COLOUR CONSTANTS ────────────────────────────────────────────────────────
+const CLUSTER_COLORS = { "1": "#B5463A", "2": "#2E86B5" };
+const EXTREMES_CLOSE = "#009E73";
+const EXTREMES_FAR   = "#D55E00";
+const N_TOP          = 3;
+const N_STATES       = 51; // DC counts as the 51st
+
+// ── SUBTITLE TEXT ────────────────────────────────────────────────────────────
+const SUB_MEASURE = {
+  global:    "Euclidean distance of each state from the overall centroid across all states and years.",
+  own:       "Euclidean distance of each state from the centroid of its assigned cluster.",
+  extremity: "How far each state sits from the centre of the full distribution — a measure of uniqueness."
+};
+const SUB_TRANSFORM = {
+  raw:          "Raw distance values for each year (2000–2019).",
+  raw_delta:    "Year-over-year change in raw distance (2001–2019). Positive = moving away; negative = moving closer.",
+  ranked:       "States ranked by distance each year (2000–2019). Lower rank = closer to centroid.",
+  ranked_delta: "Year-over-year change in rank (2001–2019). Negative = improved (moved closer); positive = worsened."
+};
+const SUB_COLOR = {
+  global: {
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+    top1:"The closest state(s) each year carry a bubble in the closest/green color.",
+    clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+    extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+  },
+  own: {
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+    top1:"The closest state(s) per cluster carry a bubble in that cluster's color.",
+    clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a white bubble.",
+    extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a white bubble."
+  },
+  extremity: {
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 most extreme (furthest) states each year are highlighted in orange. Ties are all colored.",
+    top1:"The most extreme state(s) each year carry a bubble in orange.",
+    clusters_top1:"Cluster fill applied; the most extreme state(s) carry a white bubble.",
+    extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a white bubble."
+  }
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let curMeasure="global", curTransform="raw", curColor="none", dtInstance=null;
+
+// ── COLOUR HELPERS ───────────────────────────────────────────────────────────
+function hexToRgb(h){return[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];}
+function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.round(Math.min(1,Math.max(0,v))*255).toString(16).padStart(2,'0')).join('');}
+function lighten(hex,amt){const[r,g,b]=hexToRgb(hex);return rgbToHex(r+amt*(1-r),g+amt*(1-g),b+amt*(1-b));}
+
+// ── INDEX HELPERS (all tie-aware) ────────────────────────────────────────────
+function nSmallestSet(arr,n){
+  const s=arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v<=cut).map(x=>x.i));
+}
+function nLargestSet(arr,n){
+  const s=arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v)).sort((a,b)=>b.v-a.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v>=cut).map(x=>x.i));
+}
+function nSmallestAbsSet(arr,n){
+  const s=arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v<=cut).map(x=>x.i));
+}
+function nLargestAbsSet(arr,n){
+  const s=arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v)).sort((a,b)=>b.v-a.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v>=cut).map(x=>x.i));
+}
+function top1Set(arr,isDelta,measure){
+  const valid=arr.filter(v=>v!==null&&!isNaN(v));
+  if(!valid.length)return new Set();
+  if(isDelta){
+    const mn=Math.min(...valid.map(Math.abs));
+    return new Set(arr.map((v,i)=>({v,i})).filter(x=>Math.abs(x.v)===mn).map(x=>x.i));
+  }
+  if(measure==='extremity'){
+    const mx=Math.max(...valid);
+    return new Set(arr.map((v,i)=>({v,i})).filter(x=>x.v===mx).map(x=>x.i));
+  }
+  const mn=Math.min(...valid);
+  return new Set(arr.map((v,i)=>({v,i})).filter(x=>x.v===mn).map(x=>x.i));
+}
+function top1PerCluster(arr,clustVals){
+  const res=new Set();
+  [...new Set(clustVals.filter(c=>c!==null))].forEach(cl=>{
+    const inCl=arr.map((v,i)=>({v,i})).filter(x=>clustVals[x.i]==cl&&x.v!==null&&!isNaN(x.v));
+    if(!inCl.length)return;
+    const mn=Math.min(...inCl.map(x=>x.v));
+    inCl.filter(x=>x.v===mn).forEach(x=>res.add(x.i));
+  });
+  return res;
+}
+
+// ── HIGHLIGHTS ───────────────────────────────────────────────────────────────
+function computeHighlights(colVals,clustVals,measure,isDelta,colorMode){
+  const hl=new Map();
+  let closeIdx=new Set(),farIdx=new Set(),top1Idx=new Set();
+
+  if(measure==='own'){
+    [...new Set(clustVals.filter(c=>c!==null))].forEach(cl=>{
+      const inCl=colVals.map((v,i)=>({v,i})).filter(x=>clustVals[x.i]==cl&&x.v!==null&&!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+      if(!inCl.length)return;
+      const cut=inCl[Math.min(N_TOP,inCl.length)-1].v;
+      inCl.filter(x=>x.v<=cut).forEach(x=>closeIdx.add(x.i));
+    });
+    top1Idx=top1PerCluster(colVals,clustVals);
+  }else if(measure==='extremity'){
+    if(!isDelta){farIdx=nLargestSet(colVals,N_TOP);top1Idx=top1Set(colVals,false,'extremity');}
+    else{closeIdx=nSmallestAbsSet(colVals,N_TOP);top1Idx=top1Set(colVals,true,'extremity');}
+  }else{
+    if(!isDelta){closeIdx=nSmallestSet(colVals,N_TOP);farIdx=nLargestSet(colVals,N_TOP);top1Idx=top1Set(colVals,false,'global');}
+    else{closeIdx=nSmallestAbsSet(colVals,N_TOP);farIdx=nLargestAbsSet(colVals,N_TOP);top1Idx=top1Set(colVals,true,'global');}
+  }
+
+  colVals.forEach((_,ri)=>{
+    const cl=clustVals?String(clustVals[ri]):null;
+    let cellBg=null,bubbleBg=null;
+
+    if(colorMode==='clusters'||colorMode==='clusters_top1'){
+      if(cl&&CLUSTER_COLORS[cl]) cellBg=CLUSTER_COLORS[cl];
+    }
+    if(colorMode==='extremes'||colorMode==='extremes_top1'){
+      if(measure==='own'){
+        if(closeIdx.has(ri)&&cl&&CLUSTER_COLORS[cl]) cellBg=CLUSTER_COLORS[cl];
+      }else if(measure==='extremity'){
+        if(farIdx.has(ri)) cellBg=EXTREMES_FAR;
+        if(closeIdx.has(ri)) cellBg=EXTREMES_CLOSE;
+      }else{
+        if(closeIdx.has(ri)) cellBg=EXTREMES_CLOSE;
+        if(farIdx.has(ri)) cellBg=EXTREMES_FAR;
+      }
+    }
+
+    const isTop1=top1Idx.has(ri)&&(colorMode==='top1'||colorMode==='clusters_top1'||colorMode==='extremes_top1');
+    if(isTop1){
+      if(colorMode==='clusters_top1'||colorMode==='extremes_top1'){
+        bubbleBg='rgba(255,255,255,0.88)';
+      }else{
+        if(measure==='own') bubbleBg=(cl&&CLUSTER_COLORS[cl])?lighten(CLUSTER_COLORS[cl],0.5):'#eee';
+        else if(measure==='extremity') bubbleBg=lighten(EXTREMES_FAR,0.5);
+        else bubbleBg=lighten(EXTREMES_CLOSE,0.5);
+      }
+    }
+    if(cellBg||bubbleBg) hl.set(ri,{cellBg,bubbleBg});
+  });
+  return hl;
+}
+
+// ── SPARKLINE ────────────────────────────────────────────────────────────────
+function buildSparkline(vals,gMin,gMax){
+  const W=60,H=24,P=2,rng=gMax-gMin||1;
+  const pts=vals.map((v,i)=>{
+    if(v===null||isNaN(v))return null;
+    const x=P+(i/Math.max(vals.length-1,1))*(W-P*2);
+    const y=H-P-((v-gMin)/rng)*(H-P*2);
+    return`${x.toFixed(1)},${y.toFixed(1)}`;
+  }).filter(Boolean);
+  if(pts.length<2)return`<svg width="${W}" height="${H}"></svg>`;
+  return`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><polyline points="${pts.join(' ')}" fill="none" stroke="#2E86B5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+// ── SORT HELPERS ─────────────────────────────────────────────────────────────
+function rowAvg(arr){const v=arr.filter(x=>x!==null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:Infinity;}
+function rowAvgAbs(arr){const v=arr.filter(x=>x!==null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+Math.abs(b),0)/v.length:Infinity;}
+
+// ── ANNOTATION LOOKUP ────────────────────────────────────────────────────────
+function getAnn(state,yr){
+  const key=`${state}__${yr}`;
+  if(curMeasure==='global')   return(RAW_DATA.ann_global   &&RAW_DATA.ann_global[key])  ||null;
+  if(curMeasure==='own')      return(RAW_DATA.ann_own      &&RAW_DATA.ann_own[key])     ||null;
+  if(curMeasure==='extremity')return(RAW_DATA.ann_extremity&&RAW_DATA.ann_extremity[key])||null;
+  return null;
+}
+
+// ── TOOLTIP ──────────────────────────────────────────────────────────────────
+function ordinal(n){
+  if(n===null||isNaN(n))return'—';
+  if(!Number.isInteger(n))return n.toFixed(1);
+  const s=Math.round(n),sfx=['th','st','nd','rd'],v=s%100;
+  return s+(sfx[(v-20)%10]||sfx[v]||sfx[0]);
+}
+function sgn(v){return v>=0?'+':'';}
+function getVal(slice,si,yr){const yi=slice.years.indexOf(yr);if(yi<0||si>=slice.values.length)return null;return slice.values[si][yi];}
+
+function buildTooltip(state,year){
+  const yr=parseInt(year);
+  const si=RAW_DATA.global_raw.states.indexOf(state);
+  if(si<0)return'';
+  const cyi=RAW_DATA.clusters.years.indexOf(yr);
+  const cluster=(cyi>=0&&si<RAW_DATA.clusters.values.length)?RAW_DATA.clusters.values[si][cyi]:null;
+  let lines=[];
+
+  if(curMeasure==='global'){
+    const raw=getVal(RAW_DATA.all_dist_1cs,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_1cs,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_1cs,si,yr);
+    if(raw!==null)   lines.push(['Distance',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Rank',`${ordinal(rank)} of ${N_STATES}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }else if(curMeasure==='own'){
+    const raw=getVal(RAW_DATA.all_dist_own,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_own,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_own,si,yr);
+    if(raw!==null)   lines.push(['Cluster distance',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Within-cluster rank',`${ordinal(rank)}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }else{
+    const raw=getVal(RAW_DATA.all_extremity,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_ext,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_ext,si,yr);
+    if(raw!==null)   lines.push(['Extremity',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Rank',`${ordinal(rank)} of ${N_STATES}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }
+  if(cluster!==null) lines.push(['Cluster',String(cluster)]);
+
+  const annNote=getAnn(state,yr);
+  let html=`<div class="tt-title">${state}, ${yr}</div>`;
+  html+=lines.map(([l,v])=>`<div class="tt-row"><span class="tt-label">${l}</span><span>${v}</span></div>`).join('');
+  if(annNote) html+=`<div class="tt-note">&#128204; ${annNote}</div>`;
+  return html;
+}
+
+// ── BUILD TABLE ───────────────────────────────────────────────────────────────
+function buildTableData(){
+  const key=curMeasure==='extremity'?'ext_'+curTransform:curMeasure+'_'+curTransform;
+  const slice=RAW_DATA[key];
+  if(!slice)return null;
+  const{states,years,values:vals}=slice;
+  const clustDat=RAW_DATA.clusters;
+  const isDelta=curTransform.includes('delta');
+  const isRanked=curTransform.includes('ranked');
+
+  let gMin=Infinity,gMax=-Infinity;
+  vals.forEach(row=>row.forEach(v=>{if(v!==null&&!isNaN(v)){if(v<gMin)gMin=v;if(v>gMax)gMax=v;}}));
+
+  const cym={};
+  clustDat.years.forEach((yr,ci)=>{cym[yr]=ci;});
+
+  const colHL=years.map((yr,yi)=>{
+    const cv=vals.map(r=>r[yi]);
+    const ci=cym[yr];
+    const clv=ci!==undefined?clustDat.values.map(r=>r[ci]):new Array(states.length).fill(null);
+    return computeHighlights(cv,clv,curMeasure,isDelta,curColor);
+  });
+
+  const avgs=vals.map(row=>(curMeasure==='extremity'&&!isDelta)?-rowAvg(row):isDelta?rowAvgAbs(row):rowAvg(row));
+  const order=avgs.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+
+  const rows=order.map(si=>{
+    const state=states[si];
+    const row=[
+      `<div class="cv">${state}</div>`,
+      `<div class="spark-cell">${buildSparkline(vals[si],gMin,gMax)}</div>`
+    ];
+    years.forEach((yr,yi)=>{
+      const raw=vals[si][yi];
+      const h=colHL[yi].get(si);
+      const annNote=getAnn(state,yr);
+      const disp=(raw===null||raw===undefined||isNaN(raw))?''
+        :isRanked?(Number.isInteger(raw)?String(raw):raw.toFixed(1))
+        :raw.toFixed(4);
+      const da=`data-state="${state}" data-year="${yr}"`;
+
+      // Wrap the number text in a span if there's a note
+      const inner=annNote?`<span class="has-note">${disp}</span>`:disp;
+
+      if(!h){
+        row.push(`<div class="cv" ${da}>${inner}</div>`);
+      }else{
+        const bg=h.cellBg?`background:${h.cellBg};`:'';
+        const fg=h.cellBg?'color:#fff;':'';
+        if(h.bubbleBg){
+          // bubble wraps the inner span
+          const bubbleContent=annNote?`<span class="has-note">${disp}</span>`:disp;
+          row.push(`<div class="cv" style="${bg}${fg}" ${da}><span class="bubble" style="background:${h.bubbleBg};color:#222;">${bubbleContent}</span></div>`);
+        }else{
+          row.push(`<div class="cv" style="${bg}${fg}" ${da}>${inner}</div>`);
+        }
+      }
+    });
+    return row;
+  });
+  return{years,rows};
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  document.getElementById('sub-measure').textContent  =SUB_MEASURE[curMeasure]||'';
+  document.getElementById('sub-transform').textContent=SUB_TRANSFORM[curTransform]||'';
+  document.getElementById('sub-color').textContent    =(SUB_COLOR[curMeasure]||{})[curColor]||'';
+
+  const result=buildTableData();
+  if(!result){
+    document.getElementById('tbl-wrapper').innerHTML='<p style="color:#c00;padding:1rem;">Not available for this combination.</p>';
+    return;
+  }
+  const{years,rows}=result;
+  const columns=[
+    {title:'State',  orderable:true},
+    {title:'Trend',  orderable:false}
+  ].concat(years.map(y=>({title:String(y),orderable:true})));
+
+  if(dtInstance){dtInstance.destroy();}
+  document.getElementById('tbl-wrapper').innerHTML='<table id="main-dt" class="display"></table>';
+
+  dtInstance=$('#main-dt').DataTable({
+    data:rows, columns, paging:false, searching:false, info:false,
+    ordering:true, order:[], scrollX:true,
+    fixedColumns:{leftColumns:2},
+    columnDefs:[
+      {targets:0,width:'110px',className:'dt-left',  orderable:true},
+      {targets:1,width:'70px', className:'dt-left',  orderable:false},
+      {targets:'_all',className:'dt-center',width:'32px'}
+    ],
+    dom:'t',
+    createdRow:function(row){$(row).find('td').css('padding','0');}
+  });
+
+  // Remove any stray empty first row DataTables sometimes injects
+  $('#main-dt tbody tr:first-child').each(function(){
+    if($(this).find('td').first().text().trim()===''){$(this).remove();}
+  });
+
+  attachTooltips();
+}
+
+// ── TOOLTIP EVENTS ────────────────────────────────────────────────────────────
+function attachTooltips(){
+  const tip=document.getElementById('cell-tooltip');
+  $(document).off('mouseenter mousemove mouseleave','.cv[data-state]');
+  $(document).on('mouseenter','.cv[data-state]',function(e){
+    const html=buildTooltip(this.dataset.state,this.dataset.year);
+    if(!html)return;
+    tip.innerHTML=html;tip.style.display='block';posTip(e);
+  });
+  $(document).on('mousemove','.cv[data-state]',function(e){posTip(e);});
+  $(document).on('mouseleave','.cv[data-state]',function(){tip.style.display='none';});
+}
+function posTip(e){
+  const tip=document.getElementById('cell-tooltip');
+  const tw=tip.offsetWidth||280,th=tip.offsetHeight||120;
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+tw>window.innerWidth -10)x=e.clientX-tw-10;
+  if(y+th>window.innerHeight-10)y=e.clientY-th-10;
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+
+// ── BUTTON HANDLERS ───────────────────────────────────────────────────────────
+function setMeasure(btn){
+  curMeasure=btn.dataset.val;
+  document.querySelectorAll('#row-measure .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  enforceConstraints();render();
+}
+function setTransform(btn){
+  if(btn.classList.contains('disabled'))return;
+  curTransform=btn.dataset.val;
+  document.querySelectorAll('#row-transform .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  render();
+}
+function setColor(btn){
+  curColor=btn.dataset.val;
+  document.querySelectorAll('#row-color .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  render();
+}
+function enforceConstraints(){
+  const rd=document.querySelector('[data-val="ranked_delta"]');
+  if(curMeasure==='own'){
+    rd.classList.add('disabled');
+    if(curTransform==='ranked_delta'){
+      curTransform='raw_delta';
+      document.querySelectorAll('#row-transform .ctrl-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===curTransform));
+    }
+  }else rd.classList.remove('disabled');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+$(document).ready(function(){enforceConstraints();render();});
+</script>
+```

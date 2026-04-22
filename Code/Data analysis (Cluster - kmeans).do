@@ -314,7 +314,7 @@ foreach var of varlist _all {
     if !_rc drop `var'
 }
 
-*Save data
+*Save data-- Top 1 SDs
 export delimited "Data\Other data\Cluster1_policies.csv", replace
 restore
 
@@ -811,6 +811,9 @@ forvalues t = 2001/2019 {
 	order cluster_`t' dist_1cs_`t' dist_1cs_delta_`t' rank_1cs_`t' rank_1cs_delta_`t' dist_own_`t' dist_own_delta_`t' rank_own_`t' extremity_`t' extremity_delta_`t' rank_extremity_`t' rank_extremity_delta_`t', last
 }
 order state cluster_2000 dist_1cs_2000 rank_1cs_2000 dist_own_2000 rank_own_2000 extremity_2000 rank_extremity_2000, first
+
+*Change District of Columbia to DC
+replace state = "DC" if state == "District of Columbia"
 
 *Save final dataset
 save "Data\Final data\state_distances (raw and deltas)", replace
