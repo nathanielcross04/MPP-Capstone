@@ -42,9 +42,9 @@ p1 <- ggplot(DATA_PATH, aes(x = year, y = n_medoids)) +
   ) +
   theme_minimal(base_family = "lato") +
   theme(
-    plot.subtitle        = element_text(size = 13, color = "black", family = "lato",
+    plot.subtitle        = element_text(size = 40, color = "black", family = "lato",
                                         hjust = 0),
-    axis.text            = element_text(size = 11, color = "#444444"),
+    axis.text            = element_text(size = 35, color = "#444444"),
     panel.grid.major     = element_line(color = "#CCCCCC", linewidth = 0.4),
     panel.grid.minor     = element_blank(),
     plot.background      = element_rect(fill = "white", color = NA),
@@ -64,9 +64,9 @@ p2 <- ggplot(DATA_PATH, aes(x = year, y = min_dist)) +
   ) +
   theme_minimal(base_family = "lato") +
   theme(
-    plot.subtitle        = element_text(size = 13, color = "black", family = "lato",
+    plot.subtitle        = element_text(size = 40, color = "black", family = "lato",
                                         hjust = 0),
-    axis.text            = element_text(size = 11, color = "#444444"),
+    axis.text            = element_text(size = 35, color = "#444444"),
     panel.grid.major     = element_line(color = "#CCCCCC", linewidth = 0.4),
     panel.grid.minor     = element_blank(),
     plot.background      = element_rect(fill = "white", color = NA),
@@ -76,11 +76,11 @@ p2 <- ggplot(DATA_PATH, aes(x = year, y = min_dist)) +
 
 p1 / p2 +
   plot_annotation(
-    title = "Once-convergent state policy profiles individualize\nmarkedly between 2000 and 2019",
+    title = "Once-convergent state policy profiles markedly\nindividualize from 2000 to 2019",
     theme = theme(
-      plot.title      = element_text(size = 25, face = "bold", family = "lato",
-                                     hjust = 0, lineheight = 0.8,
-                                     margin = margin(b = 10)),
+      plot.title      = element_text(size = 70, face = "bold", family = "lato",
+                                     hjust = 0, lineheight = 0.3,
+                                     margin = margin(b = 10, l = -20, t = 6)),
       plot.background = element_rect(fill = "white", color = NA),
       plot.margin     = margin(t = 15, r = 20, b = 15, l = 20)
     )
@@ -89,7 +89,7 @@ p1 / p2 +
 # Save plot
 ggsave(
   filename = file.path(OUTPUT_DIR, "medoids_combined.png"),
-  width    = 7,
+  width    = 7.5,
   height   = 10,
   dpi      = 300,
   bg       = "white"
