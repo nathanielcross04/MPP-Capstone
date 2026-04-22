@@ -18,7 +18,6 @@ knitr:
 library(dplyr)
 library(jsonlite)
 
-# ── Load data ──────────────────────────────────────────────────────────────────
 df <- read.csv(
   "https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Final%20data/state_distances%20(raw%20and%20deltas).csv",
   check.names = FALSE
@@ -27,28 +26,14 @@ df <- read.csv(
 YEARS       <- 2000:2019
 DELTA_YEARS <- 2001:2019
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CUSTOM CELL ANNOTATIONS
-# Format: "StateName__YYYY" = "Your note here"
-# These appear appended to the auto-generated tooltip for that cell.
-# EDIT: add or remove entries as needed. Uncomment examples below to try.
-# ══════════════════════════════════════════════════════════════════════════════
-annotations <- list(
-  # "Louisiana__2006" = "Post-Katrina displacement effects",
-  # "New York__2002"  = "Post-9/11 policy shifts"
-)
-
-# ── Extract series ─────────────────────────────────────────────────────────────
 extract_series <- function(prefix, years) {
   cols    <- paste0(prefix, "_", years)
   present <- cols[cols %in% names(df)]
   yrs_out <- years[paste0(prefix, "_", years) %in% names(df)]
   mat     <- df[, present, drop = FALSE]
-  list(
-    years  = as.integer(yrs_out),
-    states = df$state,
-    values = lapply(seq_len(nrow(mat)), function(i) as.numeric(mat[i, ]))
-  )
+  list(years  = as.integer(yrs_out),
+       states = df$state,
+       values = lapply(seq_len(nrow(mat)), function(i) as.numeric(mat[i, ])))
 }
 
 extract_clusters <- function(years) {
@@ -56,16 +41,73 @@ extract_clusters <- function(years) {
   present <- cols[cols %in% names(df)]
   yrs_out <- years[paste0("cluster_", years) %in% names(df)]
   mat     <- df[, present, drop = FALSE]
-  list(
-    years  = as.integer(yrs_out),
-    states = df$state,
-    values = lapply(seq_len(nrow(mat)), function(i) as.integer(mat[i, ]))
-  )
+  list(years  = as.integer(yrs_out),
+       states = df$state,
+       values = lapply(seq_len(nrow(mat)), function(i) as.integer(mat[i, ])))
 }
 
-# ── Build payload ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# ANNOTATIONS — three named sets, one per distance measure
+# Key format: "StateName__YYYY"   (two underscores)
+# EDIT: add, remove, or rewrite any note below.
+# ══════════════════════════════════════════════════════════════════════════════
+
+ann_global <- list(
+  "District of Columbia__2001" = "DC's distance to the global centroid surged by the largest single-year jump in the dataset in 2001. Post-9/11 federal security directives transformed local policing and enforcement in ways no state-level government could replicate, instantly making DC an extreme outlier.",
+  "Texas__2001"                = "Texas jumped sharply from the centroid in 2001. Post-9/11 border-security pressures — concentrated in the El Paso and Laredo corridors — combined with the state's unusually large undocumented population to push its policy mix well outside the national norm.",
+  "Michigan__2001"             = "Michigan moved 24 ranks away from the centroid in 2001, one of the largest jumps that year. Heightened scrutiny of Arab-American communities in metropolitan Detroit, driven by post-9/11 federal pressure, pushed the state's enforcement profile sharply away from the national average.",
+  "Iowa__2000"                 = "Iowa consistently holds the rank closest to the global centroid across the entire 20-year period, ranking between 1st and 6th in all but two years. Its moderate immigrant population, absence of omnibus legislation, and mixed benefit/enforcement posture make it the most 'typical' state in the dataset.",
+  "West Virginia__2016"        = "West Virginia became the single closest state to the global centroid in 2016 and held that position through 2019. Despite one of the smallest immigrant populations in the country, its combination of limited benefits, no drivers-license access, and no omnibus enforcement law placed it closest to the national middle ground.",
+  "Oklahoma__2003"             = "Oklahoma jumped 27 ranks in 2003 — the largest single-year rank change in the dataset — as the state built an early and unusually comprehensive enforcement portfolio, including one of the first 287(g) Task Force agreements outside the Southeast.",
+  "Alabama__2011"              = "Alabama enacted HB56 in 2011, one of the most comprehensive state omnibus immigration laws ever passed, modelled on Arizona's SB1070. The law propelled Alabama 14 ranks further from the centroid in a single year, its steepest single-year movement in the dataset.",
+  "Arizona__2005"              = "Arizona surged 30 ranks away from the centroid in 2005, the second-largest single-year rank jump in the dataset. The state was rapidly expanding 287(g) agreements and mandatory E-Verify well ahead of its landmark SB1070 (2010), establishing one of the most enforcement-intensive profiles in the country.",
+  "Massachusetts__2003"        = "Massachusetts moved 9 ranks closer to the centroid between 2002 and 2003, part of a sustained decade-long convergence. The state pulled back from some of its early outlier positions as its high-immigration integration policies became less unusual relative to other states adopting similar measures.",
+  "California__2013"           = "California reached rank 51 — the furthest any state has ever been from the global centroid — in 2013. The AB60 drivers-license law and the Trust Act limiting ICE detainer compliance passed in the same year, cementing a policy profile more distinctive than any other state at any point in the dataset.",
+  "Rhode Island__2007"         = "Rhode Island dropped 17 ranks in 2007 — moving sharply closer to the centroid — as the state scaled back several enforcement initiatives. This represents one of the largest single-year convergence moves outside the recession period.",
+  "Nebraska__2011"             = "Nebraska fell 17 ranks closer to the centroid in 2011 as budget pressures during the Great Recession led the state to defer planned enforcement expansions. After reaching a local peak in 2010, Nebraska rapidly converged back toward the national middle.",
+  "South Carolina__2008"       = "South Carolina jumped 21 ranks in 2008, part of a coordinated Southeast enforcement surge alongside Tennessee and North Carolina. The state expanded 287(g) jail agreements to multiple counties and began moving toward an omnibus-style bill.",
+  "Tennessee__2008"            = "Tennessee moved 19 ranks away from the centroid in 2008, driven by a rapid expansion of 287(g) agreements and early E-Verify legislation. Combined with fast-growing immigrant populations in Nashville and Memphis, the state's policy posture diverged sharply from its historical neighbours.",
+  "Wisconsin__2011"            = "Wisconsin dropped 11 ranks closer to the centroid in 2011 after its cluster switched the previous year. Budget constraints under the Walker administration curtailed planned enforcement spending, and the state's profile re-aligned with other Midwestern states that had not pursued omnibus legislation.",
+  "Montana__2019"              = "Montana jumped 17 ranks away from the centroid in 2019 — the largest single-year movement in the final period of the dataset — despite having one of the smallest immigrant populations nationally. Adoption of E-Verify expansion and English-only provisions moved a historically neutral state sharply toward the enforcement end of the spectrum."
+)
+
+ann_own <- list(
+  "District of Columbia__2001" = "DC's distance from its cluster centroid surged by the largest single-year jump in the entire own-cluster dataset in 2001 (+0.94). Post-9/11 federal mandates transformed local enforcement in ways structurally different from all other cluster members, instantly making DC the most atypical state within its group.",
+  "Michigan__2001"             = "Michigan's cluster distance jumped by +0.86 in 2001 — the second-largest single-year own-cluster movement in the dataset. Post-9/11 enforcement measures centred on the Detroit metro area distinguished Michigan sharply from other Cluster 2 states that lacked a comparable concentrated Arab-American community.",
+  "Louisiana__2007"            = "Louisiana recorded the third-largest single-year own-cluster jump in the dataset in 2007 (+0.83), driven by post-Katrina demographic upheaval. Massive inflows of Latino construction workers created policy pressures unlike any other state in the cluster, temporarily pushing Louisiana far from its cluster peers.",
+  "Arizona__2005"              = "Arizona's cluster distance spiked by +0.79 in 2005 — the fourth-largest own-cluster jump — as the state rapidly expanded 287(g) agreements and E-Verify well ahead of other Cluster 1 peers. Arizona was establishing itself as an enforcement outlier within its own group years before its landmark SB1070.",
+  "Tennessee__2008"            = "Tennessee's cluster distance surged +0.78 in 2008, the fifth-largest own-cluster jump in the dataset. The simultaneous expansion of 287(g) jail agreements and E-Verify legislation distinguished Tennessee sharply from neighbouring Cluster 1 states that had not yet moved in this direction.",
+  "Arkansas__2005"             = "Arkansas spiked +0.68 from its cluster centroid in 2005, one of the largest single-year own-cluster jumps in the Southeast. The state's rapid adoption of enforcement measures — 287(g) agreements and early E-Verify provisions — was driven by one of the fastest-growing Latino immigrant populations in the South.",
+  "Iowa__2000"                 = "Iowa is consistently one of the states closest to its cluster centroid across the full 20-year period. Its stable, moderate policy mix — no omnibus legislation, limited enforcement expansion, but also limited integration provisions — makes it the most representative member of Cluster 1 in almost every year.",
+  "South Dakota__2000"         = "South Dakota maintains the lowest average cluster distance in the dataset across all years, making it the most 'typical' state within its cluster. Its small immigrant population and stable, unremarkable policy environment mean it rarely diverges from the Cluster 1 norm.",
+  "Texas__2001"                = "Texas jumped +0.51 from its cluster centroid in 2001 and permanently shifted to Cluster 2 in 2007. Even before the cluster switch, Texas was structurally different from Cluster 1 peers: its border geography, large undocumented population, and mix of enforcement and tolerance policies had no parallel elsewhere.",
+  "Illinois__2017"             = "Illinois began a sharp sustained divergence from its cluster centroid in 2017 after the TRUST Act limited ICE cooperation and expanded healthcare access for undocumented children. By 2019 Illinois had the third-highest average own-cluster distance in the dataset, making it increasingly atypical within Cluster 2.",
+  "Florida__2014"              = "Florida's cluster distance spiked +0.59 in 2014 — one of its largest single-year jumps — as the state expanded enforcement cooperation in ways that diverged from its recent trend toward moderate integration. The movement reflects intense political competition in a swing state with a large and diverse immigrant population.",
+  "Wisconsin__2011"            = "Wisconsin's cluster distance dropped by -0.53 in 2011 — one of the largest single-year own-cluster convergences in the dataset — as Great Recession budget cuts curtailed enforcement plans. The state moved from being a notable outlier within its cluster to one of its most typical members within two years.",
+  "Minnesota__2012"            = "Minnesota's cluster distance fell sharply in 2012 (-0.50) after spiking to near-outlier levels in 2011. The state's immigrant policy posture briefly converged with cluster peers following the defeat of several enforcement bills in the legislature, before diverging again toward integration policies in subsequent years.",
+  "Vermont__2010"              = "Vermont's cluster distance surged +0.42 in 2010 as the state began a sustained move toward integration-oriented policies, including in-state tuition for undocumented students and expanded benefits. By 2011 Vermont had permanently switched clusters, reflecting one of the most decisive policy realignments in the dataset.",
+  "Missouri__2018"             = "Missouri recorded a cluster distance spike of +0.56 in 2018 — its largest single-year jump — as the state adopted a combination of E-Verify mandates and public-benefits restrictions that set it apart from other Cluster 1 peers. This sudden divergence suggests a rapid rightward shift in the state's immigration posture."
+)
+
+ann_extremity <- list(
+  "California__2016"           = "California reached its peak extremity score of 7.84 in 2016 — the highest value for any state in any year in the entire dataset. After SB1001 prohibited mandatory E-Verify for private employers and SB54 (the sanctuary bill) moved through the legislature, no other state was further from the national centre of gravity.",
+  "California__2013"           = "California's extremity first crossed 7.0 in 2013, driven by the simultaneous passage of AB60 (drivers licenses for undocumented immigrants) and the TRUST Act (limiting ICE detainer compliance). These two laws alone moved California further from the national distribution than any state had ever been.",
+  "California__2011"           = "California's extremity jumped +1.85 in 2011 — its largest single-year increase — as AB131 extended financial aid to undocumented students. This began a sustained period of growing distinctiveness that would make California the dominant outlier in the dataset for the remainder of the period.",
+  "District of Columbia__2001" = "DC's extremity score surged +2.66 in 2001 — the single largest one-year extremity jump in the entire dataset. Post-9/11 federal security directives transformed DC's enforcement posture in ways structurally impossible for state governments to replicate, making it an immediate and unique outlier.",
+  "Texas__2008"                = "Texas reached its peak extremity score of 6.13 in 2008 — at the time the highest in the dataset — driven by its unique combination of the nation's largest undocumented population, extensive 287(g) enforcement, and simultaneously more expansive in-state tuition and benefits provisions than most states. Texas was extreme in multiple directions at once.",
+  "Washington__2010"           = "Washington's extremity peaked at 5.62 in 2010 — its highest recorded value — as the state simultaneously expanded healthcare access for undocumented children and maintained Secure Communities activation. Washington occupied a distinctive mixed position that separated it from both the enforcement-heavy and integration-heavy poles.",
+  "Illinois__2019"             = "Illinois reached an extremity score of 6.03 in 2019, the second-highest value in the final year of the dataset. A suite of integration laws passed 2017–2019 — including the TRUST Act, expanded health insurance for undocumented children, and a ban on private-employer E-Verify mandates — placed Illinois in a category of its own among Midwestern states.",
+  "Oklahoma__2003"             = "Oklahoma's extremity surged +1.87 in 2003 — the third-largest single-year jump at that point — as the state adopted early and sweeping enforcement measures that made it deeply atypical among its Southern neighbours. This set the stage for Oklahoma's later omnibus SB1804 (2007), which became a model for other states.",
+  "Minnesota__2011"            = "Minnesota's extremity spiked to 5.10 in 2011 — its highest recorded value — as the state's policy mix diverged sharply with expanded public health insurance for immigrant children combined with simultaneous pressure for E-Verify mandates in the legislature. Minnesota briefly occupied the rare position of being extreme in contradictory policy directions simultaneously.",
+  "South Dakota__2000"         = "South Dakota consistently records the lowest extremity scores in the dataset across all 20 years, making it the most 'typical' state in the national distribution. Its small immigrant population and stable, unremarkable policy environment produce the closest thing to a 'median American state' in the data.",
+  "Iowa__2000"                 = "Iowa maintains one of the three lowest extremity scores in the dataset across the entire period. Like South Dakota, Iowa's position near the distributional centre reflects a genuinely moderate policy environment rather than policy inaction — the state has both modest enforcement and modest integration provisions.",
+  "Alabama__2011"              = "Alabama's extremity jumped +1.92 in 2011 — the largest single-year increase that year — following the enactment of HB56, modelled on Arizona's SB1070. The law's breadth (covering enforcement, employment, education, and benefits simultaneously) produced a sudden and sharp departure from the Southern norm.",
+  "Wisconsin__2011"            = "Wisconsin recorded the largest single-year extremity drop in the dataset in 2011 (-1.65), converging rapidly toward the distributional centre. Great Recession budget constraints reversed several years of enforcement expansion, and the state's policy profile quickly re-aligned with other Midwestern states.",
+  "New Mexico__2005"           = "New Mexico's extremity spiked to 4.59 in 2005 — its highest value through that point — as the state occupied a unique dual position: one of the earliest adopters of drivers licenses for undocumented immigrants (2003) while simultaneously facing enforcement pressures along its southern border. This combination was unusual in the national distribution.",
+  "Missouri__2018"             = "Missouri's extremity jumped +1.04 in 2018 — its largest single-year increase — as the state adopted a concentrated package of enforcement measures. The sudden shift moved Missouri from near the distributional centre to a notably atypical position, representing one of the fastest extremity increases among historically moderate states."
+)
+
 payload <- list(
-  # Primary table slices
   global_raw          = extract_series("dist_1cs",             YEARS),
   global_raw_delta    = extract_series("dist_1cs_delta",       DELTA_YEARS),
   global_ranked       = extract_series("rank_1cs",             YEARS),
@@ -73,13 +115,11 @@ payload <- list(
   own_raw             = extract_series("dist_own",             YEARS),
   own_raw_delta       = extract_series("dist_own_delta",       DELTA_YEARS),
   own_ranked          = extract_series("rank_own",             YEARS),
-  # own_ranked_delta intentionally omitted — columns don't exist in data
   ext_raw             = extract_series("extremity",            YEARS),
   ext_raw_delta       = extract_series("extremity_delta",      DELTA_YEARS),
   ext_ranked          = extract_series("rank_extremity",       YEARS),
   ext_ranked_delta    = extract_series("rank_extremity_delta", DELTA_YEARS),
   clusters            = extract_clusters(YEARS),
-  # Cross-reference slices for tooltips
   all_dist_1cs        = extract_series("dist_1cs",             YEARS),
   all_rank_1cs        = extract_series("rank_1cs",             YEARS),
   all_delta_1cs       = extract_series("dist_1cs_delta",       DELTA_YEARS),
@@ -89,7 +129,9 @@ payload <- list(
   all_extremity       = extract_series("extremity",            YEARS),
   all_rank_ext        = extract_series("rank_extremity",       YEARS),
   all_delta_ext       = extract_series("extremity_delta",      DELTA_YEARS),
-  annotations         = annotations
+  ann_global          = ann_global,
+  ann_own             = ann_own,
+  ann_extremity       = ann_extremity
 )
 
 json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
@@ -98,120 +140,109 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
 ```{=html}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
-
 <style>
-  /* ── PAGE ───────────────────────────────────────────────────────────────── */
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  /* ── reset Quarto's default anchor icon on headings inside the table ── */
+  #tbl-outer .anchorjs-link,
+  #tbl-outer a.anchor,
+  .quarto-title-block .quarto-title-meta a,
+  h1 .anchorjs-link, h2 .anchorjs-link, h3 .anchorjs-link { display:none !important; }
 
-  /* ── CONTROLS ───────────────────────────────────────────────────────────── */
-  .ctrl-block { margin-bottom: 14px; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
 
-  .ctrl-label {
-    /* EDIT: row label typography */
-    font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
-    color: #888; margin-bottom: 5px; font-weight: 700;
-  }
+  /* ── CONTROLS ── */
+  .ctrl-block    { margin-bottom:14px; }
+  .ctrl-label    { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:#888; margin-bottom:5px; font-weight:700; }
+  .ctrl-row      { display:flex; gap:6px; flex-wrap:wrap; }
+  .ctrl-btn      { padding:5px 14px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#444;
+                   cursor:pointer; font-size:12.5px; font-weight:500; line-height:1.4;
+                   transition:background .12s,color .12s,border-color .12s; }
+  .ctrl-btn:hover  { background:#f0f5fa; border-color:#aac4db; }
+  .ctrl-btn.active { background:#2E86B5; color:#fff; border-color:#2E86B5; }
+  .ctrl-btn.disabled { opacity:.35; cursor:not-allowed; pointer-events:none; }
+  .ctrl-subtitle { font-size:12px; color:#666; margin:5px 0 0 0; line-height:1.5; min-height:1.3em; font-style:italic; }
 
-  .ctrl-row { display: flex; gap: 6px; flex-wrap: wrap; }
-
-  .ctrl-btn {
-    /* EDIT: button base style */
-    padding: 5px 14px; border: 1px solid #ccc; border-radius: 6px;
-    background: #fff; color: #444; cursor: pointer; font-size: 12.5px;
-    font-weight: 500; line-height: 1.4;
-    transition: background .12s, color .12s, border-color .12s;
-  }
-  .ctrl-btn:hover  { background: #f0f5fa; border-color: #aac4db; }
-  .ctrl-btn.active {
-    /* EDIT: active button fill color */
-    background: #2E86B5; color: #fff; border-color: #2E86B5;
-  }
-  .ctrl-btn.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
-
-  /* ── SUBTITLES — all three rows share this style ─────────────────────── */
-  .ctrl-subtitle {
-    /* EDIT: subtitle typography */
-    font-size: 12px; color: #666; margin: 5px 0 0 0;
-    line-height: 1.5; min-height: 1.3em; font-style: italic;
-  }
-
-  /* ── TABLE OUTER BORDER ─────────────────────────────────────────────────── */
+  /* ── TABLE WRAPPER — full viewport width, breaks out of Quarto content column ── */
   #tbl-outer {
-    /* EDIT: border radius + color to match button aesthetic */
-    border: 1px solid #ccc; border-radius: 8px;
-    overflow: hidden; margin-top: 16px;
+    border:1px solid #ccc; border-radius:8px; overflow:hidden; margin-top:16px;
+    /* break out of Quarto's content max-width */
+    width:100vw;
+    position:relative;
+    left:50%;
+    transform:translateX(-50%);
+    box-sizing:border-box;
   }
-  #tbl-wrapper { overflow-x: auto; }
+  #tbl-wrapper { overflow-x:auto; width:100%; }
 
-  /* ── DATATABLE ──────────────────────────────────────────────────────────── */
-  table.display { border-collapse: collapse; font-size: 12px; width: 100% !important; }
-
+  /* ── DATATABLE ── */
+  table.display { border-collapse:collapse; font-size:12px; width:100% !important; table-layout:fixed; }
   table.display thead th {
-    /* EDIT: header style */
-    background: #f7f7f7; border-bottom: 2px solid #ddd;
-    padding: 8px 14px !important; white-space: nowrap;
-    font-weight: 600; color: #333; text-align: center !important;
+    background:#f7f7f7; border-bottom:2px solid #ddd;
+    padding:7px 18px 7px 8px !important;
+    white-space:nowrap; font-weight:600; color:#333;
+    text-align:center !important; position:relative;
   }
-  table.display thead th:first-child  { text-align: left !important; }
-  table.display thead th:nth-child(2) { text-align: left !important; }
+  table.display thead th:first-child  { text-align:left !important; padding-left:10px !important; }
+  table.display thead th:nth-child(2) { text-align:left !important; }
+  /* Pin sort arrows absolutely so they never push text */
+  table.display thead th.sorting::after,
+  table.display thead th.sorting_asc::after,
+  table.display thead th.sorting_desc::after {
+    position:absolute; right:3px; top:50%; transform:translateY(-50%);
+  }
 
   table.display tbody td {
-    padding: 0 !important;
-    border-bottom: 1px solid #f0f0f0;
-    text-align: right; white-space: nowrap; vertical-align: middle;
+    padding:0 !important; border-bottom:1px solid #f0f0f0;
+    text-align:right; white-space:nowrap; vertical-align:middle;
+    border-top:none !important;
   }
-  table.display tbody td:first-child  { text-align: left; font-weight: 500; }
-  table.display tbody td:nth-child(2) { text-align: left; }
-  table.display tbody tr:hover td     { background: rgba(46,134,181,.06) !important; }
-  table.display tbody tr:last-child td { border-bottom: none; }
+  table.display tbody td:first-child  { text-align:left; font-weight:500; }
+  table.display tbody td:nth-child(2) { text-align:left; }
+  table.display tbody tr:hover td     { background:rgba(46,134,181,.06) !important; }
+  table.display tbody tr:last-child td{ border-bottom:none; }
 
-  /* cell inner div — uniform height keeps all cells the same size */
+  /* Remove the phantom first-row gap DataTables sometimes adds */
+  table.display tbody { border-top:none; }
+
+  /* ── CELL INNER DIV ── */
   .cv {
-    display: flex; align-items: center; justify-content: flex-end;
-    /* EDIT: cell height and horizontal padding */
-    padding: 4px 12px; min-height: 38px; box-sizing: border-box;
+    display:flex; align-items:center; justify-content:center;
+    padding:4px 10px; min-height:34px; box-sizing:border-box;
   }
-  table.display tbody td:first-child .cv {
-    /* EDIT: state name cell padding */
-    justify-content: flex-start; padding: 4px 14px 4px 10px;
+  table.display tbody td:first-child .cv { justify-content:flex-start; padding:4px 14px 4px 10px; }
+  table.display tbody td:nth-child(2) .cv { justify-content:flex-start; padding:2px 6px; }
+
+  /* ── SPARKLINE ── */
+  .spark-cell { display:flex; align-items:center; padding:2px 6px; min-height:34px; box-sizing:border-box; }
+
+  /* ── BUBBLE ── */
+  .bubble { border-radius:999px; padding:2px 8px; font-weight:700; display:inline-block; }
+
+  /* ── ANNOTATION INDICATOR ──
+     Dotted underline on the text itself, white so it shows on colored cells too */
+  .has-note {
+    text-decoration: underline dotted 1.5px;
+    text-decoration-color: rgba(255,255,255,0.9);
+    text-underline-offset: 2px;
+    cursor: help;
+  }
+  /* On uncolored cells use a dark underline */
+  .cv:not([style]) .has-note,
+  .cv[style=""] .has-note {
+    text-decoration-color: rgba(0,0,0,0.4);
   }
 
-  /* sparkline cell */
-  .spark-cell {
-    display: flex; align-items: center;
-    /* EDIT: sparkline cell padding */
-    padding: 3px 8px; min-height: 38px; box-sizing: border-box;
-  }
+  .dtfc-fixed-left { background:#fff; }
 
-  /* top-1 bubble */
-  .bubble {
-    border-radius: 999px;
-    /* EDIT: bubble padding */
-    padding: 2px 8px;
-    font-weight: 700; display: inline-block;
-  }
-
-  .dtfc-fixed-left { background: #fff; }
-
-  /* ── TOOLTIP ────────────────────────────────────────────────────────────── */
+  /* ── TOOLTIP ── */
   #cell-tooltip {
-    position: fixed; z-index: 9999;
-    background: #fff; border: 1px solid #ccc; border-radius: 7px;
-    /* EDIT: tooltip padding and font */
-    padding: 8px 12px; font-size: 12px; color: #333;
-    box-shadow: 0 4px 16px rgba(0,0,0,.12);
-    pointer-events: none; display: none;
-    max-width: 280px; line-height: 1.7;
+    position:fixed; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:7px;
+    padding:9px 13px; font-size:12px; color:#333; box-shadow:0 4px 16px rgba(0,0,0,.12);
+    pointer-events:none; display:none; max-width:320px; line-height:1.7;
   }
-  #cell-tooltip .tt-title {
-    /* EDIT: tooltip header */
-    font-weight: 700; font-size: 13px; margin-bottom: 3px; color: #222;
-  }
-  #cell-tooltip .tt-note {
-    /* EDIT: custom annotation style */
-    margin-top: 5px; padding-top: 5px;
-    border-top: 1px solid #eee; color: #555; font-style: italic;
-  }
+  #cell-tooltip .tt-title  { font-weight:700; font-size:13px; margin-bottom:4px; color:#222; }
+  #cell-tooltip .tt-row    { display:flex; justify-content:space-between; gap:12px; }
+  #cell-tooltip .tt-label  { color:#777; }
+  #cell-tooltip .tt-note   { margin-top:6px; padding-top:6px; border-top:1px solid #eee; color:#444; font-style:italic; font-size:11.5px; }
 </style>
 ```
 
@@ -220,561 +251,448 @@ cat(sprintf('<script>const RAW_DATA = %s;</script>\n', json_payload))
 ```
 
 ```{=html}
-<!-- ── CONTROLS ─────────────────────────────────────────────────────────── -->
-<div id="controls">
+<!-- suppress any Quarto anchor link on #tbl-outer -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.anchorjs-link').forEach(function(el){ el.style.display='none'; });
+});
+</script>
 
+<!-- ── CONTROLS ── -->
+<div id="controls">
   <div class="ctrl-block">
-    <div class="ctrl-label">Measure of Distance</div>  <!-- EDIT: label -->
+    <div class="ctrl-label">Measure of Distance</div>
     <div class="ctrl-row" id="row-measure">
-      <button class="ctrl-btn active" data-val="global"    onclick="setMeasure(this)">Proximity to Global Centroid</button>   <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="own"       onclick="setMeasure(this)">Proximity to Cluster Centroid</button>  <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="extremity" onclick="setMeasure(this)">Extremity</button>                      <!-- EDIT: label -->
+      <button class="ctrl-btn active" data-val="global"    onclick="setMeasure(this)">Proximity to Global Centroid</button>
+      <button class="ctrl-btn"        data-val="own"       onclick="setMeasure(this)">Proximity to Cluster Centroid</button>
+      <button class="ctrl-btn"        data-val="extremity" onclick="setMeasure(this)">Extremity</button>
     </div>
     <div class="ctrl-subtitle" id="sub-measure"></div>
   </div>
-
   <div class="ctrl-block">
-    <div class="ctrl-label">Variable Transformation</div>  <!-- EDIT: label -->
+    <div class="ctrl-label">Variable Transformation</div>
     <div class="ctrl-row" id="row-transform">
-      <button class="ctrl-btn active" data-val="raw"          onclick="setTransform(this)">Raw</button>            <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="raw_delta"    onclick="setTransform(this)">Raw Deltas</button>     <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="ranked"       onclick="setTransform(this)">Ranked</button>         <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="ranked_delta" onclick="setTransform(this)">Ranked Deltas</button>  <!-- EDIT: label -->
+      <button class="ctrl-btn active" data-val="raw"          onclick="setTransform(this)">Raw</button>
+      <button class="ctrl-btn"        data-val="raw_delta"    onclick="setTransform(this)">Raw Deltas</button>
+      <button class="ctrl-btn"        data-val="ranked"       onclick="setTransform(this)">Ranked</button>
+      <button class="ctrl-btn"        data-val="ranked_delta" onclick="setTransform(this)">Ranked Deltas</button>
     </div>
     <div class="ctrl-subtitle" id="sub-transform"></div>
   </div>
-
   <div class="ctrl-block">
-    <div class="ctrl-label">Color Scheme</div>  <!-- EDIT: label -->
+    <div class="ctrl-label">Color Scheme</div>
     <div class="ctrl-row" id="row-color">
-      <button class="ctrl-btn active" data-val="none"          onclick="setColor(this)">No Color</button>                   <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="clusters"      onclick="setColor(this)">Colored Clusters</button>           <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="extremes"      onclick="setColor(this)">Extremes</button>                   <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="top1"          onclick="setColor(this)">Top 1</button>                      <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="clusters_top1" onclick="setColor(this)">Colored Clusters + Top 1</button>   <!-- EDIT: label -->
-      <button class="ctrl-btn"        data-val="extremes_top1" onclick="setColor(this)">Extremes + Top 1</button>           <!-- EDIT: label -->
+      <button class="ctrl-btn active" data-val="none"          onclick="setColor(this)">No Color</button>
+      <button class="ctrl-btn"        data-val="clusters"      onclick="setColor(this)">Colored Clusters</button>
+      <button class="ctrl-btn"        data-val="extremes"      onclick="setColor(this)">Extremes</button>
+      <button class="ctrl-btn"        data-val="top1"          onclick="setColor(this)">Top 1</button>
+      <button class="ctrl-btn"        data-val="clusters_top1" onclick="setColor(this)">Colored Clusters + Top 1</button>
+      <button class="ctrl-btn"        data-val="extremes_top1" onclick="setColor(this)">Extremes + Top 1</button>
     </div>
     <div class="ctrl-subtitle" id="sub-color"></div>
   </div>
-
 </div>
 
-<!-- ── TABLE ─────────────────────────────────────────────────────────────── -->
 <div id="tbl-outer">
   <div id="tbl-wrapper">
     <table id="main-dt" class="display"></table>
   </div>
 </div>
-
-<!-- ── TOOLTIP ───────────────────────────────────────────────────────────── -->
 <div id="cell-tooltip"></div>
 
-<!-- ── LIBS ──────────────────────────────────────────────────────────────── -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════════
-// EDIT: colour constants
-// ═══════════════════════════════════════════════════════════════════════════
+// ── COLOUR CONSTANTS ────────────────────────────────────────────────────────
 const CLUSTER_COLORS = { "1": "#B5463A", "2": "#2E86B5" };
-const EXTREMES_CLOSE = "#009E73";   // EDIT: closest states color
-const EXTREMES_FAR   = "#D55E00";   // EDIT: furthest states color
-const N_TOP          = 3;           // EDIT: number of extremes highlighted
+const EXTREMES_CLOSE = "#009E73";
+const EXTREMES_FAR   = "#D55E00";
+const N_TOP          = 3;
+const N_STATES       = 51; // DC counts as the 51st
 
-// ═══════════════════════════════════════════════════════════════════════════
-// EDIT: subtitle strings
-// ═══════════════════════════════════════════════════════════════════════════
+// ── SUBTITLE TEXT ────────────────────────────────────────────────────────────
 const SUB_MEASURE = {
-  global:    "Euclidean distance of each state from the overall centroid across all states and years.",     // EDIT
-  own:       "Euclidean distance of each state from the centroid of its assigned cluster.",                 // EDIT
-  extremity: "How far each state sits from the centre of the full distribution — a measure of uniqueness." // EDIT
+  global:    "Euclidean distance of each state from the overall centroid across all states and years.",
+  own:       "Euclidean distance of each state from the centroid of its assigned cluster.",
+  extremity: "How far each state sits from the centre of the full distribution — a measure of uniqueness."
 };
-
 const SUB_TRANSFORM = {
-  raw:          "Raw distance values for each year (2000–2019).",                                                                      // EDIT
-  raw_delta:    "Year-over-year change in raw distance (2001–2019). Positive = moving away; negative = moving closer.",                // EDIT
-  ranked:       "States ranked by distance each year (2000–2019). Lower rank = closer to centroid.",                                  // EDIT
-  ranked_delta: "Year-over-year change in rank (2001–2019). Negative = improved (moved closer); positive = worsened."                 // EDIT
+  raw:          "Raw distance values for each year (2000–2019).",
+  raw_delta:    "Year-over-year change in raw distance (2001–2019). Positive = moving away; negative = moving closer.",
+  ranked:       "States ranked by distance each year (2000–2019). Lower rank = closer to centroid.",
+  ranked_delta: "Year-over-year change in rank (2001–2019). Negative = improved (moved closer); positive = worsened."
 };
-
 const SUB_COLOR = {
   global: {
-    none:          "No highlighting applied.",
-    clusters:      "Cell fill shows each state's cluster membership.",
-    extremes:      "The 3 closest (green) and 3 furthest (orange) states each year are highlighted.",
-    top1:          "The single closest state each year is highlighted with a bubble. Bubble color reflects cluster.",
-    clusters_top1: "Cluster fill applied; the closest state each year carries a white bubble.",
-    extremes_top1: "Extremes highlighted; the single closest state each year carries a bubble."
-  },  // EDIT any of the strings above
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+    top1:"The closest state(s) each year carry a bubble in the closest/green color.",
+    clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+    extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+  },
   own: {
-    none:          "No highlighting applied.",
-    clusters:      "Cell fill shows each state's cluster membership.",
-    extremes:      "The 3 closest states per cluster each year are filled using that cluster's color.",
-    top1:          "The single closest state per cluster per year carries a bubble in that cluster's color.",
-    clusters_top1: "Cluster fill applied; the closest state per cluster per year carries a white bubble.",
-    extremes_top1: "Closest 3 per cluster highlighted; the single closest per cluster carries a bubble."
-  },  // EDIT any of the strings above
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+    top1:"The closest state(s) per cluster carry a bubble in that cluster's color.",
+    clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a white bubble.",
+    extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a white bubble."
+  },
   extremity: {
-    none:          "No highlighting applied.",
-    clusters:      "Cell fill shows each state's cluster membership.",
-    extremes:      "The 3 most extreme (furthest) states each year are highlighted in orange.",
-    top1:          "The single most extreme state each year carries a bubble. Bubble color reflects cluster.",
-    clusters_top1: "Cluster fill applied; the single most extreme state each year carries a white bubble.",
-    extremes_top1: "Top 3 most extreme highlighted; the single most extreme state carries a bubble."
-  }  // EDIT any of the strings above
+    none:"No highlighting applied.",
+    clusters:"Cell fill shows each state's cluster membership.",
+    extremes:"The 3 most extreme (furthest) states each year are highlighted in orange. Ties are all colored.",
+    top1:"The most extreme state(s) each year carry a bubble in orange.",
+    clusters_top1:"Cluster fill applied; the most extreme state(s) carry a white bubble.",
+    extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a white bubble."
+  }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════════════
-let curMeasure   = "global";
-let curTransform = "raw";
-let curColor     = "none";
-let dtInstance   = null;
+// ── STATE ────────────────────────────────────────────────────────────────────
+let curMeasure="global", curTransform="raw", curColor="none", dtInstance=null;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COLOUR HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-function hexToRgb(hex) {
-  return [
-    parseInt(hex.slice(1,3),16)/255,
-    parseInt(hex.slice(3,5),16)/255,
-    parseInt(hex.slice(5,7),16)/255
-  ];
-}
-function rgbToHex(r,g,b) {
-  return '#' + [r,g,b].map(v =>
-    Math.round(Math.min(1,Math.max(0,v))*255).toString(16).padStart(2,'0')
-  ).join('');
-}
-function lighten(hex, amount) {
-  const [r,g,b] = hexToRgb(hex);
-  return rgbToHex(r+amount*(1-r), g+amount*(1-g), b+amount*(1-b));
-}
+// ── COLOUR HELPERS ───────────────────────────────────────────────────────────
+function hexToRgb(h){return[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];}
+function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.round(Math.min(1,Math.max(0,v))*255).toString(16).padStart(2,'0')).join('');}
+function lighten(hex,amt){const[r,g,b]=hexToRgb(hex);return rgbToHex(r+amt*(1-r),g+amt*(1-g),b+amt*(1-b));}
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SORT / INDEX HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-function rowAvg(arr) {
-  const v = arr.filter(x => x !== null && !isNaN(x));
-  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : Infinity;
+// ── INDEX HELPERS (all tie-aware) ────────────────────────────────────────────
+function nSmallestSet(arr,n){
+  const s=arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v<=cut).map(x=>x.i));
 }
-function rowAvgAbs(arr) {
-  const v = arr.filter(x => x !== null && !isNaN(x));
-  return v.length ? v.reduce((a,b)=>a+Math.abs(b),0)/v.length : Infinity;
+function nLargestSet(arr,n){
+  const s=arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v)).sort((a,b)=>b.v-a.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v>=cut).map(x=>x.i));
 }
-function nSmallest(arr,n) {
-  return arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v))
-    .sort((a,b)=>a.v-b.v).slice(0,n).map(x=>x.i);
+function nSmallestAbsSet(arr,n){
+  const s=arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v<=cut).map(x=>x.i));
 }
-function nLargest(arr,n) {
-  return arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&!isNaN(x.v))
-    .sort((a,b)=>b.v-a.v).slice(0,n).map(x=>x.i);
+function nLargestAbsSet(arr,n){
+  const s=arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v)).sort((a,b)=>b.v-a.v);
+  if(!s.length)return new Set();
+  const cut=s[Math.min(n,s.length)-1].v;
+  return new Set(s.filter(x=>x.v>=cut).map(x=>x.i));
 }
-function nSmallestAbs(arr,n) {
-  return arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v))
-    .sort((a,b)=>a.v-b.v).slice(0,n).map(x=>x.i);
-}
-function nLargestAbs(arr,n) {
-  return arr.map((v,i)=>({v:Math.abs(v),i})).filter(x=>!isNaN(x.v))
-    .sort((a,b)=>b.v-a.v).slice(0,n).map(x=>x.i);
-}
-// All indices tied for global min/max (handles ties for Top 1)
-function allMinIdx(arr) {
-  const valid = arr.filter(v=>v!==null&&!isNaN(v));
-  if (!valid.length) return [];
-  const mn = Math.min(...valid);
-  return arr.map((v,i)=>({v,i})).filter(x=>x.v===mn).map(x=>x.i);
-}
-function allMaxIdx(arr) {
-  const valid = arr.filter(v=>v!==null&&!isNaN(v));
-  if (!valid.length) return [];
-  const mx = Math.max(...valid);
-  return arr.map((v,i)=>({v,i})).filter(x=>x.v===mx).map(x=>x.i);
-}
-function allMinAbsIdx(arr) {
-  const valid = arr.filter(v=>v!==null&&!isNaN(v));
-  if (!valid.length) return [];
-  const mn = Math.min(...valid.map(Math.abs));
-  return arr.map((v,i)=>({v,i})).filter(x=>Math.abs(x.v)===mn).map(x=>x.i);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SPARKLINE
-// ═══════════════════════════════════════════════════════════════════════════
-function buildSparkline(vals, globalMin, globalMax) {
-  // EDIT: W and H control sparkline dimensions in pixels
-  const W = 90, H = 30, PAD = 3;
-  const range = globalMax - globalMin || 1;
-  const pts = vals.map((v,i) => {
-    if (v === null || isNaN(v)) return null;
-    const x = PAD + (i / Math.max(vals.length-1,1)) * (W - PAD*2);
-    const y = H - PAD - ((v - globalMin) / range) * (H - PAD*2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).filter(Boolean);
-  if (pts.length < 2) return `<svg width="${W}" height="${H}"></svg>`;
-  return (
-    `<svg width="${W}" height="${H}" style="display:block;overflow:visible">` +
-    // EDIT: stroke color and width of sparkline
-    `<polyline points="${pts.join(' ')}" fill="none" stroke="#2E86B5" ` +
-    `stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
-    `</svg>`
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// HIGHLIGHTS
-// ═══════════════════════════════════════════════════════════════════════════
-function computeHighlights(colVals, clustVals, measure, isDelta, colorMode) {
-  const highlights = new Map();
-  let closeIdx = new Set(), farIdx = new Set(), top1Idx = new Set();
-
-  if (measure === "own") {
-    const clusters = [...new Set(clustVals.filter(c=>c!==null))];
-    clusters.forEach(cl => {
-      const inCl = colVals.map((v,i)=>({v,i}))
-        .filter(x => clustVals[x.i]==cl && x.v!==null && !isNaN(x.v))
-        .sort((a,b)=>a.v-b.v);
-      inCl.slice(0, N_TOP).forEach(x => closeIdx.add(x.i));
-      if (inCl.length) {
-        const mn = inCl[0].v;
-        inCl.filter(x=>x.v===mn).forEach(x=>top1Idx.add(x.i));
-      }
-    });
-
-  } else if (measure === "extremity") {
-    if (!isDelta) {
-      nLargest(colVals, N_TOP).forEach(i=>farIdx.add(i));
-      allMaxIdx(colVals).forEach(i=>top1Idx.add(i));
-    } else {
-      nSmallestAbs(colVals, N_TOP).forEach(i=>closeIdx.add(i));
-      allMinAbsIdx(colVals).forEach(i=>top1Idx.add(i));
-    }
-
-  } else {
-    // global
-    if (!isDelta) {
-      nSmallest(colVals, N_TOP).forEach(i=>closeIdx.add(i));
-      nLargest(colVals,  N_TOP).forEach(i=>farIdx.add(i));
-      allMinIdx(colVals).forEach(i=>top1Idx.add(i));
-    } else {
-      nSmallestAbs(colVals, N_TOP).forEach(i=>closeIdx.add(i));
-      nLargestAbs(colVals,  N_TOP).forEach(i=>farIdx.add(i));
-      allMinAbsIdx(colVals).forEach(i=>top1Idx.add(i));
-    }
+function top1Set(arr,isDelta,measure){
+  const valid=arr.filter(v=>v!==null&&!isNaN(v));
+  if(!valid.length)return new Set();
+  if(isDelta){
+    const mn=Math.min(...valid.map(Math.abs));
+    return new Set(arr.map((v,i)=>({v,i})).filter(x=>Math.abs(x.v)===mn).map(x=>x.i));
   }
-
-  colVals.forEach((_, ri) => {
-    const cl    = clustVals ? String(clustVals[ri]) : null;
-    let cellBg  = null;
-    let bubbleBg = null;
-
-    // Cell background
-    if (colorMode === "clusters" || colorMode === "clusters_top1") {
-      if (cl && CLUSTER_COLORS[cl]) cellBg = CLUSTER_COLORS[cl];
-    }
-    if (colorMode === "extremes" || colorMode === "extremes_top1") {
-      if (measure === "own") {
-        if (closeIdx.has(ri) && cl && CLUSTER_COLORS[cl]) cellBg = CLUSTER_COLORS[cl];
-      } else if (measure === "extremity") {
-        if (farIdx.has(ri))   cellBg = EXTREMES_FAR;
-        if (closeIdx.has(ri)) cellBg = EXTREMES_CLOSE;
-      } else {
-        if (closeIdx.has(ri)) cellBg = EXTREMES_CLOSE;
-        if (farIdx.has(ri))   cellBg = EXTREMES_FAR;
-      }
-    }
-
-    // Bubble — uniform size; color logic:
-    const isTop1 = top1Idx.has(ri) &&
-      (colorMode==="top1"||colorMode==="clusters_top1"||colorMode==="extremes_top1");
-    if (isTop1) {
-      if (colorMode === "clusters_top1") {
-        // cell fill already shows cluster; use white bubble
-        bubbleBg = "rgba(255,255,255,0.85)";
-      } else {
-        // Top 1 only, or Extremes + Top 1:
-        // bubble color = lightened cluster color of that state
-        bubbleBg = (cl && CLUSTER_COLORS[cl])
-          ? lighten(CLUSTER_COLORS[cl], 0.5)
-          : "#eeeeee";
-      }
-    }
-
-    if (cellBg || bubbleBg) highlights.set(ri, { cellBg, bubbleBg });
+  if(measure==='extremity'){
+    const mx=Math.max(...valid);
+    return new Set(arr.map((v,i)=>({v,i})).filter(x=>x.v===mx).map(x=>x.i));
+  }
+  const mn=Math.min(...valid);
+  return new Set(arr.map((v,i)=>({v,i})).filter(x=>x.v===mn).map(x=>x.i));
+}
+function top1PerCluster(arr,clustVals){
+  const res=new Set();
+  [...new Set(clustVals.filter(c=>c!==null))].forEach(cl=>{
+    const inCl=arr.map((v,i)=>({v,i})).filter(x=>clustVals[x.i]==cl&&x.v!==null&&!isNaN(x.v));
+    if(!inCl.length)return;
+    const mn=Math.min(...inCl.map(x=>x.v));
+    inCl.filter(x=>x.v===mn).forEach(x=>res.add(x.i));
   });
-
-  return highlights;
+  return res;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TOOLTIP
-// ═══════════════════════════════════════════════════════════════════════════
-function ordinal(n) {
-  if (n===null||isNaN(n)) return "—";
-  const s = Math.round(n);
-  const sfx = ["th","st","nd","rd"];
-  const v = s % 100;
-  return s + (sfx[(v-20)%10]||sfx[v]||sfx[0]);
-}
-function sgn(v) { return v >= 0 ? "+" : ""; }
+// ── HIGHLIGHTS ───────────────────────────────────────────────────────────────
+function computeHighlights(colVals,clustVals,measure,isDelta,colorMode){
+  const hl=new Map();
+  let closeIdx=new Set(),farIdx=new Set(),top1Idx=new Set();
 
-function getVal(slice, si, yr) {
-  const yi = slice.years.indexOf(yr);
-  if (yi<0||si>=slice.values.length) return null;
-  return slice.values[si][yi];
-}
-
-function buildTooltip(state, year) {
-  const yr = parseInt(year);
-  const si = RAW_DATA.global_raw.states.indexOf(state);
-  if (si < 0) return "";
-
-  // Cluster for this year
-  const cyi     = RAW_DATA.clusters.years.indexOf(yr);
-  const cluster = (cyi>=0 && si<RAW_DATA.clusters.values.length)
-    ? RAW_DATA.clusters.values[si][cyi] : null;
-
-  let lines = [];
-
-  if (curMeasure === "global") {
-    const raw   = getVal(RAW_DATA.all_dist_1cs,  si, yr);
-    const rank  = getVal(RAW_DATA.all_rank_1cs,  si, yr);
-    const delta = getVal(RAW_DATA.all_delta_1cs, si, yr);
-    if (raw   !== null) lines.push(`Distance: ${raw.toFixed(4)}`);
-    if (rank  !== null) lines.push(`Rank: ${ordinal(rank)} of 50`);
-    if (delta !== null) lines.push(`Δ prior year: ${sgn(delta)}${delta.toFixed(4)}`);
-  } else if (curMeasure === "own") {
-    const raw   = getVal(RAW_DATA.all_dist_own,  si, yr);
-    const rank  = getVal(RAW_DATA.all_rank_own,  si, yr);
-    const delta = getVal(RAW_DATA.all_delta_own, si, yr);
-    if (raw   !== null) lines.push(`Cluster distance: ${raw.toFixed(4)}`);
-    if (rank  !== null) lines.push(`Within-cluster rank: ${ordinal(rank)}`);
-    if (delta !== null) lines.push(`Δ prior year: ${sgn(delta)}${delta.toFixed(4)}`);
-  } else {
-    const raw   = getVal(RAW_DATA.all_extremity, si, yr);
-    const rank  = getVal(RAW_DATA.all_rank_ext,  si, yr);
-    const delta = getVal(RAW_DATA.all_delta_ext, si, yr);
-    if (raw   !== null) lines.push(`Extremity: ${raw.toFixed(4)}`);
-    if (rank  !== null) lines.push(`Rank: ${ordinal(rank)} of 50`);
-    if (delta !== null) lines.push(`Δ prior year: ${sgn(delta)}${delta.toFixed(4)}`);
+  if(measure==='own'){
+    [...new Set(clustVals.filter(c=>c!==null))].forEach(cl=>{
+      const inCl=colVals.map((v,i)=>({v,i})).filter(x=>clustVals[x.i]==cl&&x.v!==null&&!isNaN(x.v)).sort((a,b)=>a.v-b.v);
+      if(!inCl.length)return;
+      const cut=inCl[Math.min(N_TOP,inCl.length)-1].v;
+      inCl.filter(x=>x.v<=cut).forEach(x=>closeIdx.add(x.i));
+    });
+    top1Idx=top1PerCluster(colVals,clustVals);
+  }else if(measure==='extremity'){
+    if(!isDelta){farIdx=nLargestSet(colVals,N_TOP);top1Idx=top1Set(colVals,false,'extremity');}
+    else{closeIdx=nSmallestAbsSet(colVals,N_TOP);top1Idx=top1Set(colVals,true,'extremity');}
+  }else{
+    if(!isDelta){closeIdx=nSmallestSet(colVals,N_TOP);farIdx=nLargestSet(colVals,N_TOP);top1Idx=top1Set(colVals,false,'global');}
+    else{closeIdx=nSmallestAbsSet(colVals,N_TOP);farIdx=nLargestAbsSet(colVals,N_TOP);top1Idx=top1Set(colVals,true,'global');}
   }
 
-  if (cluster !== null) lines.push(`Cluster: ${cluster}`);
+  colVals.forEach((_,ri)=>{
+    const cl=clustVals?String(clustVals[ri]):null;
+    let cellBg=null,bubbleBg=null;
 
-  const annNote = RAW_DATA.annotations && RAW_DATA.annotations[`${state}__${yr}`];
-  let html = `<div class="tt-title">${state} — ${yr}</div>`;
-  html += lines.map(l=>`<div>${l}</div>`).join("");
-  if (annNote) html += `<div class="tt-note">&#128204; ${annNote}</div>`;
+    if(colorMode==='clusters'||colorMode==='clusters_top1'){
+      if(cl&&CLUSTER_COLORS[cl]) cellBg=CLUSTER_COLORS[cl];
+    }
+    if(colorMode==='extremes'||colorMode==='extremes_top1'){
+      if(measure==='own'){
+        if(closeIdx.has(ri)&&cl&&CLUSTER_COLORS[cl]) cellBg=CLUSTER_COLORS[cl];
+      }else if(measure==='extremity'){
+        if(farIdx.has(ri)) cellBg=EXTREMES_FAR;
+        if(closeIdx.has(ri)) cellBg=EXTREMES_CLOSE;
+      }else{
+        if(closeIdx.has(ri)) cellBg=EXTREMES_CLOSE;
+        if(farIdx.has(ri)) cellBg=EXTREMES_FAR;
+      }
+    }
+
+    const isTop1=top1Idx.has(ri)&&(colorMode==='top1'||colorMode==='clusters_top1'||colorMode==='extremes_top1');
+    if(isTop1){
+      if(colorMode==='clusters_top1'||colorMode==='extremes_top1'){
+        bubbleBg='rgba(255,255,255,0.88)';
+      }else{
+        if(measure==='own') bubbleBg=(cl&&CLUSTER_COLORS[cl])?lighten(CLUSTER_COLORS[cl],0.5):'#eee';
+        else if(measure==='extremity') bubbleBg=lighten(EXTREMES_FAR,0.5);
+        else bubbleBg=lighten(EXTREMES_CLOSE,0.5);
+      }
+    }
+    if(cellBg||bubbleBg) hl.set(ri,{cellBg,bubbleBg});
+  });
+  return hl;
+}
+
+// ── SPARKLINE ────────────────────────────────────────────────────────────────
+function buildSparkline(vals,gMin,gMax){
+  const W=88,H=28,P=3,rng=gMax-gMin||1;
+  const pts=vals.map((v,i)=>{
+    if(v===null||isNaN(v))return null;
+    const x=P+(i/Math.max(vals.length-1,1))*(W-P*2);
+    const y=H-P-((v-gMin)/rng)*(H-P*2);
+    return`${x.toFixed(1)},${y.toFixed(1)}`;
+  }).filter(Boolean);
+  if(pts.length<2)return`<svg width="${W}" height="${H}"></svg>`;
+  return`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><polyline points="${pts.join(' ')}" fill="none" stroke="#2E86B5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+// ── SORT HELPERS ─────────────────────────────────────────────────────────────
+function rowAvg(arr){const v=arr.filter(x=>x!==null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:Infinity;}
+function rowAvgAbs(arr){const v=arr.filter(x=>x!==null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+Math.abs(b),0)/v.length:Infinity;}
+
+// ── ANNOTATION LOOKUP ────────────────────────────────────────────────────────
+function getAnn(state,yr){
+  const key=`${state}__${yr}`;
+  if(curMeasure==='global')   return(RAW_DATA.ann_global   &&RAW_DATA.ann_global[key])  ||null;
+  if(curMeasure==='own')      return(RAW_DATA.ann_own      &&RAW_DATA.ann_own[key])     ||null;
+  if(curMeasure==='extremity')return(RAW_DATA.ann_extremity&&RAW_DATA.ann_extremity[key])||null;
+  return null;
+}
+
+// ── TOOLTIP ──────────────────────────────────────────────────────────────────
+function ordinal(n){
+  if(n===null||isNaN(n))return'—';
+  if(!Number.isInteger(n))return n.toFixed(1);
+  const s=Math.round(n),sfx=['th','st','nd','rd'],v=s%100;
+  return s+(sfx[(v-20)%10]||sfx[v]||sfx[0]);
+}
+function sgn(v){return v>=0?'+':'';}
+function getVal(slice,si,yr){const yi=slice.years.indexOf(yr);if(yi<0||si>=slice.values.length)return null;return slice.values[si][yi];}
+
+function buildTooltip(state,year){
+  const yr=parseInt(year);
+  const si=RAW_DATA.global_raw.states.indexOf(state);
+  if(si<0)return'';
+  const cyi=RAW_DATA.clusters.years.indexOf(yr);
+  const cluster=(cyi>=0&&si<RAW_DATA.clusters.values.length)?RAW_DATA.clusters.values[si][cyi]:null;
+  let lines=[];
+
+  if(curMeasure==='global'){
+    const raw=getVal(RAW_DATA.all_dist_1cs,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_1cs,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_1cs,si,yr);
+    if(raw!==null)   lines.push(['Distance',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Rank',`${ordinal(rank)} of ${N_STATES}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }else if(curMeasure==='own'){
+    const raw=getVal(RAW_DATA.all_dist_own,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_own,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_own,si,yr);
+    if(raw!==null)   lines.push(['Cluster distance',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Within-cluster rank',`${ordinal(rank)}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }else{
+    const raw=getVal(RAW_DATA.all_extremity,si,yr);
+    const rank=getVal(RAW_DATA.all_rank_ext,si,yr);
+    const delta=getVal(RAW_DATA.all_delta_ext,si,yr);
+    if(raw!==null)   lines.push(['Extremity',raw.toFixed(4)]);
+    if(rank!==null)  lines.push(['Rank',`${ordinal(rank)} of ${N_STATES}`]);
+    if(delta!==null) lines.push(['Δ prior year',`${sgn(delta)}${delta.toFixed(4)}`]);
+  }
+  if(cluster!==null) lines.push(['Cluster',String(cluster)]);
+
+  const annNote=getAnn(state,yr);
+  let html=`<div class="tt-title">${state}, ${yr}</div>`;
+  html+=lines.map(([l,v])=>`<div class="tt-row"><span class="tt-label">${l}</span><span>${v}</span></div>`).join('');
+  if(annNote) html+=`<div class="tt-note">&#128204; ${annNote}</div>`;
   return html;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// BUILD TABLE
-// ═══════════════════════════════════════════════════════════════════════════
-function buildTableData() {
-  const key = curMeasure === "extremity"
-    ? "ext_" + curTransform
-    : curMeasure + "_" + curTransform;
+// ── BUILD TABLE ───────────────────────────────────────────────────────────────
+function buildTableData(){
+  const key=curMeasure==='extremity'?'ext_'+curTransform:curMeasure+'_'+curTransform;
+  const slice=RAW_DATA[key];
+  if(!slice)return null;
+  const{states,years,values:vals}=slice;
+  const clustDat=RAW_DATA.clusters;
+  const isDelta=curTransform.includes('delta');
+  const isRanked=curTransform.includes('ranked');
 
-  const slice    = RAW_DATA[key];
-  const clustDat = RAW_DATA.clusters;
-  if (!slice) return null;
+  let gMin=Infinity,gMax=-Infinity;
+  vals.forEach(row=>row.forEach(v=>{if(v!==null&&!isNaN(v)){if(v<gMin)gMin=v;if(v>gMax)gMax=v;}}));
 
-  const states   = slice.states;
-  const years    = slice.years;
-  const isDelta  = curTransform.includes("delta");
-  const isRanked = curTransform.includes("ranked");
-  const vals     = slice.values;
+  const cym={};
+  clustDat.years.forEach((yr,ci)=>{cym[yr]=ci;});
 
-  // Shared sparkline scale
-  let gMin = Infinity, gMax = -Infinity;
-  vals.forEach(row => row.forEach(v => {
-    if (v!==null&&!isNaN(v)) { if(v<gMin) gMin=v; if(v>gMax) gMax=v; }
-  }));
-
-  // Cluster year map
-  const cym = {};
-  clustDat.years.forEach((yr,ci) => { cym[yr]=ci; });
-
-  // Per-column highlights
-  const colHL = years.map((yr,yi) => {
-    const cv = vals.map(r=>r[yi]);
-    const ci = cym[yr];
-    const clv = ci!==undefined
-      ? clustDat.values.map(r=>r[ci])
-      : new Array(states.length).fill(null);
-    return computeHighlights(cv, clv, curMeasure, isDelta, curColor);
+  const colHL=years.map((yr,yi)=>{
+    const cv=vals.map(r=>r[yi]);
+    const ci=cym[yr];
+    const clv=ci!==undefined?clustDat.values.map(r=>r[ci]):new Array(states.length).fill(null);
+    return computeHighlights(cv,clv,curMeasure,isDelta,curColor);
   });
 
-  // Sort order: avg ascending (closest first)
-  // Extremity non-delta: avg descending (most extreme first)
-  const avgs = vals.map(row =>
-    (curMeasure==="extremity"&&!isDelta) ? -rowAvg(row)
-    : isDelta ? rowAvgAbs(row)
-    : rowAvg(row)
-  );
-  const order = avgs.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+  const avgs=vals.map(row=>(curMeasure==='extremity'&&!isDelta)?-rowAvg(row):isDelta?rowAvgAbs(row):rowAvg(row));
+  const order=avgs.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v).map(x=>x.i);
 
-  const rows = order.map(si => {
-    const state = states[si];
-    const row = [
+  const rows=order.map(si=>{
+    const state=states[si];
+    const row=[
       `<div class="cv">${state}</div>`,
-      `<div class="spark-cell">${buildSparkline(vals[si], gMin, gMax)}</div>`
+      `<div class="spark-cell">${buildSparkline(vals[si],gMin,gMax)}</div>`
     ];
-    years.forEach((yr,yi) => {
-      const raw = vals[si][yi];
-      const hl  = colHL[yi].get(si);
-      const disp = (raw===null||raw===undefined||isNaN(raw)) ? ""
-        : isRanked ? (Number.isInteger(raw) ? String(raw) : raw.toFixed(1))
-        : raw.toFixed(4);
+    years.forEach((yr,yi)=>{
+      const raw=vals[si][yi];
+      const h=colHL[yi].get(si);
+      const annNote=getAnn(state,yr);
+      const disp=(raw===null||raw===undefined||isNaN(raw))?''
+        :isRanked?(Number.isInteger(raw)?String(raw):raw.toFixed(1))
+        :raw.toFixed(4);
+      const da=`data-state="${state}" data-year="${yr}"`;
 
-      const da = `data-state="${state}" data-year="${yr}"`;
-      if (!hl) {
-        row.push(`<div class="cv" ${da}>${disp}</div>`);
-      } else {
-        const bg  = hl.cellBg  ? `background:${hl.cellBg};`  : "";
-        const fg  = hl.cellBg  ? "color:#fff;"                : "";
-        if (hl.bubbleBg) {
-          row.push(
-            `<div class="cv" style="${bg}${fg}" ${da}>` +
-            `<span class="bubble" style="background:${hl.bubbleBg};color:#222;">${disp}</span>` +
-            `</div>`
-          );
-        } else {
-          row.push(`<div class="cv" style="${bg}${fg}" ${da}>${disp}</div>`);
+      // Wrap the number text in a span if there's a note
+      const inner=annNote?`<span class="has-note">${disp}</span>`:disp;
+
+      if(!h){
+        row.push(`<div class="cv" ${da}>${inner}</div>`);
+      }else{
+        const bg=h.cellBg?`background:${h.cellBg};`:'';
+        const fg=h.cellBg?'color:#fff;':'';
+        if(h.bubbleBg){
+          // bubble wraps the inner span
+          const bubbleContent=annNote?`<span class="has-note">${disp}</span>`:disp;
+          row.push(`<div class="cv" style="${bg}${fg}" ${da}><span class="bubble" style="background:${h.bubbleBg};color:#222;">${bubbleContent}</span></div>`);
+        }else{
+          row.push(`<div class="cv" style="${bg}${fg}" ${da}>${inner}</div>`);
         }
       }
     });
     return row;
   });
-
-  return { years, rows };
+  return{years,rows};
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════════════════════════════════
-function render() {
-  document.getElementById("sub-measure").textContent   = SUB_MEASURE[curMeasure]     || "";
-  document.getElementById("sub-transform").textContent = SUB_TRANSFORM[curTransform] || "";
-  document.getElementById("sub-color").textContent     = (SUB_COLOR[curMeasure]||{})[curColor] || "";
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  document.getElementById('sub-measure').textContent  =SUB_MEASURE[curMeasure]||'';
+  document.getElementById('sub-transform').textContent=SUB_TRANSFORM[curTransform]||'';
+  document.getElementById('sub-color').textContent    =(SUB_COLOR[curMeasure]||{})[curColor]||'';
 
-  const result = buildTableData();
-  if (!result) {
-    document.getElementById("tbl-wrapper").innerHTML =
-      '<p style="color:#c00;padding:1rem;">Not available for this combination.</p>';
+  const result=buildTableData();
+  if(!result){
+    document.getElementById('tbl-wrapper').innerHTML='<p style="color:#c00;padding:1rem;">Not available for this combination.</p>';
     return;
   }
+  const{years,rows}=result;
+  const columns=[
+    {title:'State',  orderable:true},
+    {title:'Trend',  orderable:false}
+  ].concat(years.map(y=>({title:String(y),orderable:true})));
 
-  const { years, rows } = result;
-  const columns = [
-    { title: "State", orderable: true  },  // EDIT: column header label
-    { title: "Trend", orderable: false }   // EDIT: sparkline column header label
-  ].concat(years.map(y => ({ title: String(y), orderable: true })));
+  if(dtInstance){dtInstance.destroy();}
+  document.getElementById('tbl-wrapper').innerHTML='<table id="main-dt" class="display"></table>';
 
-  if (dtInstance) {
-    dtInstance.destroy();
-    document.getElementById("tbl-wrapper").innerHTML =
-      '<table id="main-dt" class="display"></table>';
-  }
-
-  dtInstance = $('#main-dt').DataTable({
-    data:     rows,
-    columns:  columns,
-    paging:   false,
-    searching: false,
-    info:     false,
-    ordering: true,
-    order:    [],
-    scrollX:  true,
-    fixedColumns: { leftColumns: 2 },
-    columnDefs: [
-      { targets: 0, width: "130px", className: "dt-left",   orderable: true  },
-      { targets: 1, width: "100px", className: "dt-left",   orderable: false },
-      { targets: "_all", className: "dt-center", width: "70px" }
+  dtInstance=$('#main-dt').DataTable({
+    data:rows, columns, paging:false, searching:false, info:false,
+    ordering:true, order:[], scrollX:true,
+    fixedColumns:{leftColumns:2},
+    columnDefs:[
+      {targets:0,width:'130px',className:'dt-left',  orderable:true},
+      {targets:1,width:'100px',className:'dt-left',  orderable:false},
+      {targets:'_all',className:'dt-center',width:'68px'}
     ],
-    dom: 't',
-    createdRow: function(row) { $(row).find('td').css('padding','0'); }
+    dom:'t',
+    createdRow:function(row){$(row).find('td').css('padding','0');}
+  });
+
+  // Remove any stray empty first row DataTables sometimes injects
+  $('#main-dt tbody tr:first-child').each(function(){
+    if($(this).find('td').first().text().trim()===''){$(this).remove();}
   });
 
   attachTooltips();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TOOLTIP EVENTS
-// ═══════════════════════════════════════════════════════════════════════════
-function attachTooltips() {
-  const tip = document.getElementById("cell-tooltip");
-  $(document).off("mouseenter mousemove mouseleave", ".cv[data-state]");
-
-  $(document).on("mouseenter", ".cv[data-state]", function(e) {
-    const html = buildTooltip(this.dataset.state, this.dataset.year);
-    if (!html) return;
-    tip.innerHTML = html;
-    tip.style.display = "block";
-    positionTip(e);
+// ── TOOLTIP EVENTS ────────────────────────────────────────────────────────────
+function attachTooltips(){
+  const tip=document.getElementById('cell-tooltip');
+  $(document).off('mouseenter mousemove mouseleave','.cv[data-state]');
+  $(document).on('mouseenter','.cv[data-state]',function(e){
+    const html=buildTooltip(this.dataset.state,this.dataset.year);
+    if(!html)return;
+    tip.innerHTML=html;tip.style.display='block';posTip(e);
   });
-  $(document).on("mousemove", ".cv[data-state]", function(e) { positionTip(e); });
-  $(document).on("mouseleave", ".cv[data-state]", function() {
-    tip.style.display = "none";
-  });
+  $(document).on('mousemove','.cv[data-state]',function(e){posTip(e);});
+  $(document).on('mouseleave','.cv[data-state]',function(){tip.style.display='none';});
 }
-function positionTip(e) {
-  const tip = document.getElementById("cell-tooltip");
-  const tw = tip.offsetWidth||240, th = tip.offsetHeight||100;
-  let x = e.clientX+14, y = e.clientY+14;
-  if (x+tw > window.innerWidth -10) x = e.clientX-tw-10;
-  if (y+th > window.innerHeight-10) y = e.clientY-th-10;
-  tip.style.left = x+"px"; tip.style.top = y+"px";
+function posTip(e){
+  const tip=document.getElementById('cell-tooltip');
+  const tw=tip.offsetWidth||280,th=tip.offsetHeight||120;
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+tw>window.innerWidth -10)x=e.clientX-tw-10;
+  if(y+th>window.innerHeight-10)y=e.clientY-th-10;
+  tip.style.left=x+'px';tip.style.top=y+'px';
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// BUTTON HANDLERS
-// ═══════════════════════════════════════════════════════════════════════════
-function setMeasure(btn) {
-  curMeasure = btn.dataset.val;
-  document.querySelectorAll("#row-measure .ctrl-btn")
-    .forEach(b=>b.classList.toggle("active",b===btn));
-  enforceConstraints();
+// ── BUTTON HANDLERS ───────────────────────────────────────────────────────────
+function setMeasure(btn){
+  curMeasure=btn.dataset.val;
+  document.querySelectorAll('#row-measure .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  enforceConstraints();render();
+}
+function setTransform(btn){
+  if(btn.classList.contains('disabled'))return;
+  curTransform=btn.dataset.val;
+  document.querySelectorAll('#row-transform .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
   render();
 }
-function setTransform(btn) {
-  if (btn.classList.contains("disabled")) return;
-  curTransform = btn.dataset.val;
-  document.querySelectorAll("#row-transform .ctrl-btn")
-    .forEach(b=>b.classList.toggle("active",b===btn));
+function setColor(btn){
+  curColor=btn.dataset.val;
+  document.querySelectorAll('#row-color .ctrl-btn').forEach(b=>b.classList.toggle('active',b===btn));
   render();
 }
-function setColor(btn) {
-  curColor = btn.dataset.val;
-  document.querySelectorAll("#row-color .ctrl-btn")
-    .forEach(b=>b.classList.toggle("active",b===btn));
-  render();
-}
-
-function enforceConstraints() {
-  const rdBtn = document.querySelector('[data-val="ranked_delta"]');
-  if (curMeasure === "own") {
-    rdBtn.classList.add("disabled");
-    if (curTransform === "ranked_delta") {
-      curTransform = "raw_delta";
-      document.querySelectorAll("#row-transform .ctrl-btn")
-        .forEach(b=>b.classList.toggle("active", b.dataset.val===curTransform));
+function enforceConstraints(){
+  const rd=document.querySelector('[data-val="ranked_delta"]');
+  if(curMeasure==='own'){
+    rd.classList.add('disabled');
+    if(curTransform==='ranked_delta'){
+      curTransform='raw_delta';
+      document.querySelectorAll('#row-transform .ctrl-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===curTransform));
     }
-  } else {
-    rdBtn.classList.remove("disabled");
-  }
+  }else rd.classList.remove('disabled');
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════════════════
-$(document).ready(function() {
-  enforceConstraints();
-  render();
-});
+// ── INIT ──────────────────────────────────────────────────────────────────────
+$(document).ready(function(){enforceConstraints();render();});
 </script>
 ```
