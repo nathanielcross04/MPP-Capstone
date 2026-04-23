@@ -325,18 +325,16 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
   /* ── BUBBLE ── */
   .bubble { border-radius:999px; padding:2px 8px; font-weight:700; display:inline-block; }
 
-  /* ── ANNOTATION INDICATOR ──
-     Dotted underline on the text itself, white so it shows on colored cells too */
+/* ── ANNOTATION INDICATOR ── */
   .has-note {
     text-decoration: underline dotted 1.5px;
-    text-decoration-color: rgba(255,255,255,0.9);
+    text-decoration-color: rgba(0,0,0,0.35);
     text-underline-offset: 2px;
     cursor: help;
   }
-  /* On uncolored cells use a dark underline */
-  .cv:not([style]) .has-note,
-  .cv[style=""] .has-note {
-    text-decoration-color: rgba(0,0,0,0.4);
+  /* On colored cells (white text), switch to white underline */
+  .cv[style*="background"] .has-note {
+    text-decoration-color: rgba(255,255,255,0.85);
   }
 
   /* .dtfc-fixed-left bg handled in hover block above */
@@ -677,12 +675,21 @@ function getAnn(state,yr){
 }
 
 // ── TOOLTIP ──────────────────────────────────────────────────────────────────
-function ordinal(n){
-  if(n===null||isNaN(n))return'—';
-  if(!Number.isInteger(n))return n.toFixed(1);
-  const s=Math.round(n),sfx=['th','st','nd','rd'],v=s%100;
-  return s+(sfx[(v-20)%10]||sfx[v]||sfx[0]);
+function ordinal(n) {
+  if (n === null || isNaN(n)) return '—';
+  // For ties like 4.5, show "4.5th"
+  if (!Number.isInteger(n)) return n.toFixed(1) + 'th';
+  const s = Math.round(n);
+  const v = s % 100;
+  if (v >= 11 && v <= 13) return s + 'th';
+  switch (s % 10) {
+    case 1: return s + 'st';
+    case 2: return s + 'nd';
+    case 3: return s + 'rd';
+    default: return s + 'th';
+  }
 }
+
 function sgn(v){return v>=0?'+':'';}
 function getVal(slice,si,yr){const yi=slice.years.indexOf(yr);if(yi<0||si>=slice.values.length)return null;return slice.values[si][yi];}
 
