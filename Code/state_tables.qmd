@@ -243,7 +243,7 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
 
   /* ── CONTROLS ── */
   .ctrl-block    { margin-bottom:14px; }
-  .ctrl-label    { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:#888; margin-bottom:5px; font-weight:700; }
+  .ctrl-label    { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:#888; margin-bottom:5px; font-weight:700; }
   .ctrl-row      { display:flex; gap:6px; flex-wrap:wrap; }
   .ctrl-btn      { padding:5px 14px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#444;
                    cursor:pointer; font-size:12.5px; font-weight:500; line-height:1.4;
@@ -257,13 +257,17 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
   #tbl-outer {
     border:1px solid #ccc; border-radius:8px; overflow:hidden; margin-top:16px;
     /* EDIT: negative margins push table wider than content column while keeping visible border */
-    margin-left:-8vw; margin-right:-8vw;
+    margin-left:-10vw; margin-right:-10vw;
     box-sizing:border-box;
   }
   #tbl-wrapper { overflow-x:auto; width:100%; }
-
+#tbl-outer table.display { border-bottom:none !important; }
+  .dtfc-right, .dtfc-left { border-bottom:none !important; }
+  .DTFC_Cloned { border-bottom:none !important; }
+  #tbl-wrapper > div { border-bottom:none !important; }
+  
   /* ── DATATABLE ── */
-  table.display { border-collapse:collapse; font-size:11px; width:100% !important; table-layout:fixed; }
+  table.display { border-collapse:collapse; font-size:12px; width:100% !important; table-layout:fixed; }
   table.display thead th {
     background:#f7f7f7; border-bottom:2px solid #ddd;
     /* EDIT: right padding leaves room for the sort arrow; increase if still overlapping */
@@ -293,7 +297,7 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
   table.display tbody td {
     padding:0 !important; border-bottom:1px solid #f0f0f0;
     text-align:right; white-space:nowrap; vertical-align:middle;
-    border-top:none !important;
+    border-top:none !important; height:1px;
   }
   table.display tbody td:first-child  { text-align:left; font-weight:500; }
   table.display tbody td:nth-child(2) { text-align:left; }
@@ -302,7 +306,7 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
   /* Override fixed-column white bg on hover so row highlight shows through */
   /* .dtfc-fixed-left bg handled in hover block above */
   table.display tbody tr:hover .dtfc-fixed-left { background:rgba(46,134,181,.08) !important; }
-  table.display tbody tr:last-child td{ border-bottom:none; }
+  table.display tbody tr:last-child td{ border-bottom:none !important; }
 
   /* Remove the phantom first-row gap DataTables sometimes adds */
   table.display tbody { border-top:none; }
@@ -310,7 +314,7 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
   /* ── CELL INNER DIV ── */
   .cv {
     display:flex; align-items:center; justify-content:center;
-    padding:3px 4px; min-height:30px; box-sizing:border-box;
+    padding:3px 4px; min-height:30px; box-sizing:border-box; height:100%;
   }
   table.display tbody td:first-child .cv { justify-content:flex-start; padding:4px 14px 4px 10px; }
   table.display tbody td:nth-child(2) .cv { justify-content:flex-start; padding:2px 6px; }
@@ -418,40 +422,118 @@ const N_STATES       = 51; // DC counts as the 51st
 
 // ── SUBTITLE TEXT ────────────────────────────────────────────────────────────
 const SUB_MEASURE = {
-  global:    "Euclidean distance of each state from the overall centroid across all states and years.",
+  global:    "Euclidean distance of each state from the global centroid.",
   own:       "Euclidean distance of each state from the centroid of its assigned cluster.",
-  extremity: "How far each state sits from the centre of the full distribution — a measure of uniqueness."
+  extremity: "Product of euclidean distance to own cluster centroid and distance to other cluster centroid, measuring policy profile uniqueness."
 };
 const SUB_TRANSFORM = {
   raw:          "Raw distance values for each year (2000–2019).",
-  raw_delta:    "Year-over-year change in raw distance (2001–2019). Positive = moving away; negative = moving closer.",
-  ranked:       "States ranked by distance each year (2000–2019). Lower rank = closer to centroid.",
-  ranked_delta: "Year-over-year change in rank (2001–2019). Negative = improved (moved closer); positive = worsened."
+  raw_delta:    "Year-over-year change in raw distance (2001–2019).",
+  ranked:       "States ranked by distance each year (2000–2019).",
+  ranked_delta: "Year-over-year change in rank (2001–2019)."
 };
 const SUB_COLOR = {
   global: {
-    none:"No highlighting applied.",
-    clusters:"Cell fill shows each state's cluster membership.",
-    extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
-    top1:"The closest state(s) each year carry a bubble in the closest/green color.",
-    clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
-    extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+    raw:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+      top1:"The closest state(s) each year carry a bubble.",
+      clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+      extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+    },
+    raw_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+      top1:"The most stable state(s) each year carry a bubble.",
+      clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+      extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+    },
+    ranked:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+      top1:"The closest state(s) each year carry a bubble.",
+      clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+      extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+    },
+    ranked_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest (green) and 3 furthest (orange) states each year are highlighted. Ties are all colored.",
+      top1:"The most stable state(s) each year carry a bubble.",
+      clusters_top1:"Cluster fill applied; the closest state(s) carry a white bubble.",
+      extremes_top1:"Extremes highlighted; the closest state(s) carry a white bubble."
+    }
   },
   own: {
-    none:"No highlighting applied.",
-    clusters:"Cell fill shows each state's cluster membership.",
-    extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
-    top1:"The closest state(s) per cluster carry a bubble in that cluster's color.",
-    clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a white bubble.",
-    extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a white bubble."
+    raw:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+      top1:"The closest state(s) per cluster carry a bubble in that cluster's color.",
+      clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a bubble.",
+      extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a bubble."
+    },
+    raw_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+      top1:"The most stable state(s) per cluster carry a bubble in that cluster's color.",
+      clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a bubble.",
+      extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a bubble."
+    },
+    ranked:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+      top1:"The closest state(s) per cluster carry a bubble in that cluster's color.",
+      clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a bubble.",
+      extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a bubble."
+    },
+    ranked_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 closest states per cluster each year are filled using that cluster's color. Ties are all colored.",
+      top1:"The most stable state(s) per cluster carry a bubble in that cluster's color.",
+      clusters_top1:"Cluster fill applied; the closest state(s) per cluster carry a bubble.",
+      extremes_top1:"Closest 3 per cluster highlighted; the closest per cluster carry a bubble."
+    }
   },
   extremity: {
-    none:"No highlighting applied.",
-    clusters:"Cell fill shows each state's cluster membership.",
-    extremes:"The 3 most extreme (furthest) states each year are highlighted in orange. Ties are all colored.",
-    top1:"The most extreme state(s) each year carry a bubble in orange.",
-    clusters_top1:"Cluster fill applied; the most extreme state(s) carry a white bubble.",
-    extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a white bubble."
+    raw:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 most extreme, or unique, states each year are highlighted in orange. Ties are all colored.",
+      top1:"The most extreme state(s) each year carry a bubble in orange.",
+      clusters_top1:"Cluster fill applied; the most extreme state(s) carry a bubble.",
+      extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a bubble."
+    },
+    raw_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 most extreme, or unique, states each year are highlighted in orange. Ties are all colored.",
+      top1:"The most stable state(s) each year carry a bubble in orange.",
+      clusters_top1:"Cluster fill applied; the most extreme state(s) carry a bubble.",
+      extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a bubble."
+    },
+    ranked:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 most extreme, or unique, states each year are highlighted in orange. Ties are all colored.",
+      top1:"The most extreme state(s) each year carry a bubble in orange.",
+      clusters_top1:"Cluster fill applied; the most extreme state(s) carry a bubble.",
+      extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a bubble."
+    },
+    ranked_delta:{
+      none:"No highlighting applied.",
+      clusters:"Cell fill shows each state's cluster membership, Cluster 1 = red, Cluster 2 = blue.",
+      extremes:"The 3 most extreme, or unique, states each year are highlighted in orange. Ties are all colored.",
+      top1:"The most stable state(s) each year carry a bubble in orange.",
+      clusters_top1:"Cluster fill applied; the most extreme state(s) carry a bubble.",
+      extremes_top1:"Top 3 most extreme highlighted; the most extreme state(s) carry a bubble."
+    }
   }
 };
 
@@ -570,7 +652,7 @@ function computeHighlights(colVals,clustVals,measure,isDelta,colorMode){
 
 // ── SPARKLINE ────────────────────────────────────────────────────────────────
 function buildSparkline(vals,gMin,gMax){
-  const W=60,H=24,P=2,rng=gMax-gMin||1;
+  const W=70,H=24,P=2,rng=gMax-gMin||1;
   const pts=vals.map((v,i)=>{
     if(v===null||isNaN(v))return null;
     const x=P+(i/Math.max(vals.length-1,1))*(W-P*2);
@@ -681,7 +763,7 @@ function buildTableData(){
       const annNote=getAnn(state,yr);
       const disp=(raw===null||raw===undefined||isNaN(raw))?''
         :isRanked?(Number.isInteger(raw)?String(raw):raw.toFixed(1))
-        :raw.toFixed(4);
+        :raw.toFixed(2);
       const da=`data-state="${state}" data-year="${yr}"`;
 
       // Wrap the number text in a span if there's a note
@@ -710,7 +792,7 @@ function buildTableData(){
 function render(){
   document.getElementById('sub-measure').textContent  =SUB_MEASURE[curMeasure]||'';
   document.getElementById('sub-transform').textContent=SUB_TRANSFORM[curTransform]||'';
-  document.getElementById('sub-color').textContent    =(SUB_COLOR[curMeasure]||{})[curColor]||'';
+  document.getElementById('sub-color').textContent = ((SUB_COLOR[curMeasure] || {})[curTransform] || {})[curColor] || '';
 
   const result=buildTableData();
   if(!result){
@@ -718,31 +800,46 @@ function render(){
     return;
   }
   const{years,rows}=result;
-  const columns=[
-    {title:'State',  orderable:true},
-    {title:'Trend',  orderable:false}
-  ].concat(years.map(y=>({title:String(y),orderable:true})));
+  const columns = [
+    { title: 'State', orderable: true,  width: '100px' },
+    { title: 'Trend', orderable: false, width: '65px'  }
+  ].concat(years.map(y => ({ title: String(y), orderable: true, width: '38px' })));
 
   if(dtInstance){dtInstance.destroy();}
   document.getElementById('tbl-wrapper').innerHTML='<table id="main-dt" class="display"></table>';
 
-  dtInstance=$('#main-dt').DataTable({
-    data:rows, columns, paging:false, searching:false, info:false,
-    ordering:true, order:[], scrollX:true,
-    fixedColumns:{leftColumns:2},
-    columnDefs:[
-      {targets:0,width:'110px',className:'dt-left',  orderable:true},
-      {targets:1,width:'70px', className:'dt-left',  orderable:false},
-      {targets:'_all',className:'dt-center',width:'32px'}
-    ],
-    dom:'t',
-    createdRow:function(row){$(row).find('td').css('padding','0');}
-  });
+//  dtInstance=$('#main-dt').DataTable({
+//    data:rows, columns, paging:false, searching:false, info:false,
+//    ordering:true, order:[], scrollX:true,
+//    fixedColumns:{leftColumns:2},
+//    columnDefs:[
+//      {targets:0, className:'dt-left',  orderable:true},
+//      {targets:1, className:'dt-left',  orderable:false},
+//      {targets:'_all', className:'dt-center'}
+//    ],
+//    createdRow:function(row){$(row).find('td').css('padding','0');}
+//  });
+  
+  dtInstance = $('#main-dt').DataTable({
+    data: rows, columns, paging: false, searching: false, info: false,
+    ordering: true, order: [], scrollX: true,
+    autoWidth: false,                    // ← critical
+    fixedColumns: { leftColumns: 2 },
+    columnDefs: [
+      { targets: 0, className: 'dt-left', orderable: true },
+      { targets: 1, className: 'dt-left', orderable: false },
+      { targets: '_all', className: 'dt-center' }
+  ],
+  createdRow: function(row){ $(row).find('td').css('padding','0'); }
+});
 
   // Remove any stray empty first row DataTables sometimes injects
   $('#main-dt tbody tr:first-child').each(function(){
     if($(this).find('td').first().text().trim()===''){$(this).remove();}
   });
+  
+    // Remove double bottom border from fixed-columns clone
+  $('#tbl-wrapper').find('table, div').css('border-bottom', 'none');
 
   attachTooltips();
 }
