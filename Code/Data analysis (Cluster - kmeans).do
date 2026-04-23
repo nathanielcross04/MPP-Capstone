@@ -144,6 +144,120 @@ forvalues t = 2000(1)2019 {
 
 rmdir "Data\Other data\Cluster solutions (temp)"
 
+**# Describe 1CS policies
+mkdir "Data\Other data\Cluster_mean_sd"
+
+forvalues t = 2000/2019 {
+
+	**Two cluster solution
+
+	*Load data
+	use "Data\Final data\Policy vectors (std) (nomiss)", clear
+	
+	*Create vector of policy vars
+	vl clear
+	vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
+
+	*Setup
+	keep if year == `t'
+
+	*Calculate mean and SD of each policy collapse
+	preserve
+		collapse (mean) $policies
+		rename ($policies) (=_mean)
+		gen year = `t'
+		tempfile means
+		save `means'
+	restore
+
+	collapse (sd) $policies
+	rename ($policies) (=_sd)
+	gen year = `t'
+
+	merge 1:1 year using `means', nogen
+
+	*Save data
+	save "Data\Other data\Cluster_mean_sd\centroids`t'.dta"
+
+}
+
+*Append all sets
+use "Data\Other data\Cluster_mean_sd\centroids2000"
+
+forvalues t = 2001/2019 {
+	append using "Data\Other data\Cluster_mean_sd\centroids`t'"
+	erase "Data\Other data\Cluster_mean_sd\centroids`t'.dta"
+}
+
+*Clean wd
+erase "Data\Other data\Cluster_mean_sd\centroids2000.dta"
+rmdir "Data\Other data\Cluster_mean_sd"
+
+*Clean dataset
+order year
+
+*Reshape
+reshape long enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license, i(year) j(stat) string
+
+replace stat = subinstr(stat, "_", "", 1)
+
+*Add missings
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+
+foreach var in `policies' {
+	bysort year (stat): gen byte zero_flag = ///
+		(`var'[1] == 0 & `var'[2] == 0)
+
+	replace `var' = . if zero_flag
+	drop zero_flag
+}
+
+reshape wide
+
+*Identify least SD each year
+local sd_policies "enf_task_force_287gsd enf_warrant_287gsd enf_jail_287gsd enf_secure_commssd enf_lim_coop_detainerssd enf_everifysd enf_limits_everifysd enf_state_omnibussd pub_tanf_post5sd pub_cashass_during5sd pub_foodass_lprkidssd pub_foodass_lpradultssd pub_ssi_replacementsd pub_medicaid_lprkidssd pub_pubins_unauthkidssd pub_pubins_lpradultssd pub_pubins_unauthadultsd pub_medicaid_lprpregsd pub_medicaid_unauthpregsd pub_medicaid_lpr_post5sd int_instate_tuitionsd int_state_finaidsd int_uni_bansd int_official_engsd int_drivers_licensesd"
+egen min_sd = rowmin(`sd_policies')
+
+foreach var in `sd_policies' {
+	gen temp_`var' = `var'
+}
+
+foreach var in `sd_policies' {
+	replace temp_`var' = . if temp_`var' == min_sd
+}
+
+egen min_sd2 = rowmin(temp*)
+
+foreach var in `sd_policies' {
+	replace temp_`var' = . if temp_`var' == min_sd2
+}
+
+egen min_sd3 = rowmin(temp*)
+
+drop temp*
+
+*Blank out SDs
+local policies "enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license"
+
+foreach var in `policies' {
+	gen mean_`var' = .
+	replace mean_`var' = `var'mean if `var'sd == min_sd
+	replace mean_`var' = `var'mean if `var'sd == min_sd2
+	replace mean_`var' = `var'mean if `var'sd == min_sd3
+}
+
+*Clean up dataset
+drop *mean *sd min*
+foreach var of varlist _all {
+    quietly count if !missing(`var')
+    if r(N) == 0 {
+        drop `var'
+    }
+}
+
+*Export
+export delimited "Data\Other data\Global_policies.csv", replace
+
 
 
 **# Describe cluster policies
