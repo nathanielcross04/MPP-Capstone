@@ -813,7 +813,7 @@ forvalues t = 2001/2019 {
 order state cluster_2000 dist_1cs_2000 rank_1cs_2000 dist_own_2000 rank_own_2000 extremity_2000 rank_extremity_2000, first
 
 *Change District of Columbia to DC
-replace state = "DC" if state == "District of Columbia"
+replace state = "D.C." if state == "District of Columbia"
 
 *Save final dataset
 save "Data\Final data\state_distances (raw and deltas)", replace
