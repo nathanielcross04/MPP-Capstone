@@ -557,10 +557,6 @@ foreach var of varlist diff*{
 
 drop max*
 
-foreach var of varlist _all {
-	replace `var' = 0 if `var' == .
-}
-
 *Export data
 export delimited "Data\Other data\Imp policies ranked.csv", replace
 
