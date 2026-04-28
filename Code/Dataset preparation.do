@@ -1254,6 +1254,7 @@ missings report *
 
 **Saving/cleaning directory 
 save "Data\Final data\Policy vectors (std) (nomiss)", replace
+export delimited "Data\Final data\Policy vectors (std) (nomiss).csv", replace
 
 *Erasing unneeded files
 forvalues i = 1(1)25 {
