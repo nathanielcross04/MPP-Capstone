@@ -938,6 +938,33 @@ erase "Data\Other data\distances_1CS.dta"
 
 **# Visualizations
 
+**Network map -- 3D
+use "Data\Final data\Policy vectors (std) (nomiss)", clear
+
+forvalues t = 2000/2019 {
+	preserve
+		vl clear
+		vl create policies = (enf_task_force_287g enf_warrant_287g enf_jail_287g enf_secure_comms enf_lim_coop_detainers enf_everify enf_limits_everify enf_state_omnibus pub_tanf_post5 pub_cashass_during5 pub_foodass_lprkids pub_foodass_lpradults pub_ssi_replacement pub_medicaid_lprkids pub_pubins_unauthkids pub_pubins_lpradults pub_pubins_unauthadult pub_medicaid_lprpreg pub_medicaid_unauthpreg pub_medicaid_lpr_post5 int_instate_tuition int_state_finaid int_uni_ban int_official_eng int_drivers_license)
+
+		keep if year == `t'
+		cluster kmeans $policies, k(2) name(state_cluster_id) start(krandom(80504))	
+
+		tempfile clust_`t'
+		save `clust_`t''
+	restore
+}
+
+use `clust_2000', clear
+forvalues t = 2001/2019 {
+	append using `clust_`t''
+}
+
+tab state_cluster_id, m
+
+*Export
+export delimited "Data\Other data\network_map.csv", replace
+
+
 **Radar plot - 1CS
 use "Data\Other data\Clusters", clear
 
