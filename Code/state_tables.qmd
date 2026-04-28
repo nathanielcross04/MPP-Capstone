@@ -328,13 +328,9 @@ json_payload <- toJSON(payload, auto_unbox = TRUE, digits = 6, na = "null")
 /* ── ANNOTATION INDICATOR ── */
   .has-note {
     text-decoration: underline dotted 1.5px;
-    text-decoration-color: rgba(0,0,0,0.35);
+    text-decoration-color: currentColor;
     text-underline-offset: 2px;
     cursor: help;
-  }
-  /* On colored cells (white text), switch to white underline */
-  .cv[style*="background"] .has-note {
-    text-decoration-color: rgba(255,255,255,0.85);
   }
 
   /* .dtfc-fixed-left bg handled in hover block above */
