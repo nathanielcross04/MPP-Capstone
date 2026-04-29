@@ -1,0 +1,17 @@
+---
+title: "Manuscript"
+author: Nathaniel Cross
+format:
+  html:
+    embed-resources: true
+    page-layout: full
+    echo: false
+    warning: false
+    message: false
+execute:
+  eval: true
+bibliography: references.bib
+knitr:
+  opts_knit:
+    root.dir: "C:/Users/ndmcr/Desktop/MPP Capstone"
+---
