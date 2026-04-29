@@ -11,15 +11,20 @@ format:
       - "C:/Users/ndmcr/Desktop/MPP Capstone/title-block.html"
       - "C:/Users/ndmcr/Desktop/MPP Capstone/title-metadata.html"
     embed-resources: true
-    page-layout: full
     echo: false
     warning: false
     message: false
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-title: "Contents"
+    anchor-sections: false
+    css: styles.css
 execute:
   eval: true
 bibliography: references.bib
 csl: apa.csl
-link-citations: false
+link-citations: true
 suppress-bibliography: false
 reference-section-title: ""
 knitr:
@@ -69,7 +74,7 @@ Addressing this gap requires a more complete analytic approach which attempts to
 
 Ultimately, historical policy implementations—beginning with Clinton-era “personal responsibility”-based reforms to the public welfare and immigration sectors and continuing into the 2000s—have caused devolution in immigration policy, limiting federal primacy for an increased role of state governments. Consequently, there has evolved vast fragmentation in the immigration policy space due to the aforementioned devolution, with competing frameworks, contexts, and goals in the state policymaking arena. Such fragmentation can hold immense equity consequences for immigrant populations across the nation, as state of residence can significantly impact quality of life for immigrants, including sense of belonging and personal health and wellbeing. Patchworked state immigration policies not only create administrative inefficiencies and challenges to federal enforcement, but also unequal treatment of similarly-situated immigrants across state lines. And while “voting with one’s feet” is often an argument in favor of distinctive state-level policy environments, immigrants often find themselves systemically underresourced, limiting their abilities to change the policy environment in which they reside. These equity concerns are furthered when potential impacts on immigrants’ economic mobility, health, and civic participation are also considered. State-level variation has real and consequential human impacts and warrants further investigation into characteristics and drivers of state-level heterogeneity.
 
-### Research Questions & Goals
+### Research Questions
 
 The dynamics of the literature surrounding state-level immigration policy motivated an exploratory investigation into the metrics, qualities, and implications of state policy profiles. The overarching goal was set to identify trends, groupings, and patterns in state policies, not only across units of analysis, states, but also across time. As evidenced by the immigration policy literature, this policy area has become increasingly salient, complex, and polarized over the past two decades. An analysis of this timeframe was designed to yield results that were both contemporarily relevant yet historically rooted, with enough temporal backing to ground results and contribute to internal validity. With these goals in mind, the following research questions were drafted:
 
@@ -79,7 +84,7 @@ The dynamics of the literature surrounding state-level immigration policy motiva
 
 These questions—exploratory in nature—were responded to through a dual-stage cluster analysis process. A secondary goal of the investigation revolved around visualizing multi-dimensional data to best identify clusters of states and communicate findings. Ultimately, this study aims to broaden our understanding of determinants and characterizations of state-level immigration policy profiles.
 
-## Research Design & Methodology
+## Research Design
 
 ### Methodology
 

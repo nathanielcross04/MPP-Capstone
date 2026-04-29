@@ -1,0 +1,21 @@
+.sidebar.toc-left {
+  margin-top: 240px; /* adjust this value to match your title/author block height */
+}
+
+#refs a {
+  color: inherit;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+/* Remove blue color from in-text citations but keep the link */
+a[href^="#ref-"] {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Hover effect — shows a subtle highlight to indicate it's clickable */
+a[href^="#ref-"]:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
