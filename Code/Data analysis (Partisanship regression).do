@@ -665,23 +665,23 @@ replace cluster = cluster - 1
 **# REGRESSIONS
 
 *Run probit for group identification
-xtlogit cluster govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old, or //VALID
-xtlogit cluster govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe or //VALID
+xtlogit cluster govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old, or //VALID
+xtlogit cluster govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe or //VALID
 
 *Run reg for extremity (FE)
 forvalues i = 0/1 {
 	preserve
 	keep if cluster == `i'
-	xtreg dist_own govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
-	xtreg extremity govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
+	xtreg dist_own govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
+	xtreg extremity govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
 	restore
 } //Gov party strongly predicts cluster 2 distances, not cluster 1
 
 
 *Visualization
 eststo clear
-eststo reg1: xtlogit cluster govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old, or
-eststo reg2: xtlogit cluster govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe or
+eststo reg1: xtlogit cluster govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old, or
+eststo reg2: xtlogit cluster govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe or
 esttab reg1 reg2 using "Figures/xtlogit.rtf", se replace nogap onecell title({\b Table X.} Odds ratios for determinants of cluster membership)
 
 
@@ -690,8 +690,8 @@ forvalues i = 0/1 {
 	keep if cluster == `i'
 	local c = `i' + 1
 	eststo clear
-	eststo reg1: xtreg dist_own govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
-	eststo reg2: xtreg extremity govt_cont p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
+	eststo reg1: xtreg dist_own govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
+	eststo reg2: xtreg extremity govt_cont pop p_latino p_white p_unemp p_foreign_born p_undoc p_poverty p_old i.year, fe vce(cluster state) 
 	esttab reg1 reg2 using "Figures/xtreg_clust`c'.rtf", se replace nogap onecell title({\b Table X.} Coefficients of policy determinants on two-cluster solution euclidian distances, Cluster `c')
 	restore
 }
