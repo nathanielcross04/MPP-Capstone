@@ -215,6 +215,15 @@ labels_df$x[labels_df$variable == "index_enf_anti"] <-
 labels_df$y[labels_df$variable == "index_enf_anti"] <-
   labels_df$y[labels_df$variable == "index_enf_anti"] * 0.85
 
+labels_df$x[labels_df$variable == "index_int_anti"] <-
+  labels_df$x[labels_df$variable == "index_int_anti"] * 1.1
+labels_df$y[labels_df$variable == "index_int_anti"] <-
+  labels_df$y[labels_df$variable == "index_int_anti"] * 1.1
+
+labels_df$x[labels_df$variable == "index_enf_pro"] <-
+  labels_df$x[labels_df$variable == "index_enf_pro"] * 1.1
+labels_df$y[labels_df$variable == "index_enf_pro"] <-
+  labels_df$y[labels_df$variable == "index_enf_pro"] * 1.1
 
 ring_label_angle <- SPOKE_ANGLES[1]
 ring_labels <- data.frame(
@@ -249,26 +258,37 @@ p_radar <- ggplot() +
             aes(x = x, y = y, group = frame_id),
             color = "#888888", linewidth = 0.3) +
   
-  # -- Animated spoke points: colored by pro/anti
-  geom_point(data = interp_pts,
-             aes(x = x, y = y, color = spoke_color),
+  # -- Animated spoke points: colored by pro/anti — split by color
+  geom_point(data = interp_pts[interp_pts$spoke_color == "#009E73", ],
+             aes(x = x, y = y),
+             color = "#009E73",
+             size = 10, show.legend = FALSE) +
+  geom_point(data = interp_pts[interp_pts$spoke_color == "#D55E00", ],
+             aes(x = x, y = y),
+             color = "#D55E00",
              size = 10, show.legend = FALSE) +
   
-  # -- Spoke labels (static, colored)
-  geom_text(data = labels_df,
-            aes(x = x, y = y, label = label, color = color),
+  # -- Spoke labels (static, colored) — split by color to avoid scale conflict
+  geom_text(data = labels_df[labels_df$color == "#009E73", ],
+            aes(x = x, y = y, label = label),
+            color = "#009E73",
+            size = 8, lineheight = 0.9, fontface = "bold",
+            show.legend = FALSE) +
+  geom_text(data = labels_df[labels_df$color == "#D55E00", ],
+            aes(x = x, y = y, label = label),
+            color = "#D55E00",
             size = 8, lineheight = 0.9, fontface = "bold",
             show.legend = FALSE) +
   
   # -- Animated subtitle: year ticker embedded in subtitle text
   geom_text(data = year_label_df,
-            aes(x = -1.54, y = 1.55,
+            aes(x = -1.85, y = 1.75,
                 label = paste0("Policy index scores for a one-cluster solution, in ", year_label)),
             size = 10, color = "#555555",
             hjust = 0, vjust = 1,
             inherit.aes = FALSE) +
   
-  coord_fixed(xlim = c(-1.4, 1.4), ylim = c(-1.6, 1.4), clip = "off") +
+  coord_fixed(xlim = c(-1.9, 1.9), ylim = c(-1.9, 1.9), clip = "off") +
   
   labs(
     title = "\n\nCentroid states diversify implemented\npolicy types over time"
@@ -283,7 +303,7 @@ p_radar <- ggplot() +
                                    hjust = 0, 
                                    margin = margin(t = 50, b = 15)),
     plot.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(t = 60, r = 20, b = -60, l = 20)
+    plot.margin = margin(t = 80, r = 20, b = -80, l = 20)
   ) +
   
   transition_states(

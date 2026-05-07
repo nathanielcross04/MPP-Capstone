@@ -102,7 +102,7 @@ A variety of supplemental datasets were also used for further data cleaning or s
 
 ### Methods
 
-Two forms of cluster analysis drove the analysis and results presented below. First, hierarchical clustering was used to gain a more comprehensive understanding of the structure of the data, including an empirically-informed ideal k number of groups into which states would be clustered. Dendrograms yielded from this analysis indicated a strong bifurcation of states, or binary split dividing states, and can be found in Appendix A. These results informed the second, and core, cluster analysis, using the k-means clustering technique. After clustering using a fixed-seed k-means process, clusters were aligned year-over-year to maintain temporal parity as cluster labels are variable. Two distinct “clustering” processes were conducted. The first, a more quasi-cluster analysis, identified a one-cluster solution, i.e. the global centroid without any clustering of states. The second utilized the findings from the hierarchical clustering mentioned above and clustered states into two clusters. After clustering, key policies and representative states of each cluster were explored. 
+Two forms of cluster analysis drove the analysis and results presented below. First, hierarchical clustering was used to gain a more comprehensive understanding of the structure of the data, including an empirically-informed ideal k number of groups into which states would be clustered. Dendrograms yielded from this analysis indicated a strong bifurcation of states, or binary split dividing states. These results informed the second, and core, cluster analysis, using the k-means clustering technique. After clustering using a fixed-seed k-means process, clusters were aligned year-oapver-year to maintain temporal parity as cluster labels are variable. Two distinct “clustering” processes were conducted. The first, a more quasi-cluster analysis, identified a one-cluster solution, i.e. the global centroid without any clustering of states. The second utilized the findings from the hierarchical clustering mentioned above and clustered states into two clusters. After clustering, key policies and representative states of each cluster were explored. 
 
 Key policies were identified in two main ways. First, policies that best defined or characterized clusters were calculated by identifying the least standard deviations of collapsed policies among each cluster in each year to identify policies with the least variance between all cluster-member states. Second, policies that differentiated the two clusters were identified by taking the difference in mean policy score between each cluster each year to identify the greatest “distances” between cluster policy profiles.
 
@@ -185,9 +185,32 @@ p1
 
 This trend suggests that state policy profiles are becoming more and more unique and individualized over the course of the examined time period, which likely indicates that immigration policy is falling into the state policymaking arena in many dimensions, with less federal uniformity. This explanation is also corroborated by many changes made to the nationwide immigration system following the terrorist attacks in 2001, namely the wave of immigration enforcement adoption at the state level through 287(g) programs. These results also corroborate the “variegated landscape” of immigration policies proposed by Walker & Leitner [-@walker_variegated_2011].
 
-Diversifying state policy profiles can also be illustrated by looking at the types of policies that define the centroid profile each year. Categorizing the 25 policies included in the dataset into five groups in two dimensions enables an understanding of how nationwide state immigration policy profiles change over time. The dimensions of categorization are type of immigration policy (enforcement, public benefits, and integration) and favorability towards immigrants (pro- or anti-immigrant). This typology of immigration policies aligns with norms established in the literature. Note: all public benefits policies are pro-immigrant, yielding five categories. As explored in Figure 2, which depicts the centroid policy scores from 0 to 1, the early centroid profile is mostly bidimensional, with foci in anti-immigrant integration policies and pro-immigrant public benefits policies. Anti-immigrant policies begin to expand throughout the 2000s in the wake of 9/11 and waves of increasing enforcement, but federal mandates regarding Secure Communities programs in 2015 and 2016 cause a temporary pause in this type of policy. Pro-immigrant integration and enforcement policies also expanded in the 2010s, largely in reaction to anti-immigrant enforcement policies enacted in the late 2000s. Limitations on cooperation with ICE detainer requests and limitations on E-Verify mandates make up most of the pro-immigrant enforcement policy expansion seen here. Overall, each dimension grows in score across the identified time range, supporting the finding that state immigration policy profiles individualize and diversify from 2000 to 2019.
+Diversifying state policy profiles can also be illustrated by looking at the types of policies that define the centroid profile each year. Categorizing the 25 policies included in the dataset into five groups in two dimensions enables an understanding of how nationwide state immigration policy profiles change over time. The dimensions of categorization are type of immigration policy (enforcement, public benefits, and integration) and favorability towards immigrants (pro- or anti-immigrant). This typology of immigration policies aligns with norms established in the literature. Note: all public benefits policies are pro-immigrant, yielding five categories. As explored in Figure 2 which depicts the centroid policy scores from 0 to 1, the early centroid profile is mostly bidimensional, with foci in anti-immigrant integration policies and pro-immigrant public benefits policies.
 
-The spatial element to this panel dataset also enables a geographic analysis which can help identify medoid states that are most representative of the global centroid. Across the investigated timeframe and visible in Figure 3, medoid states are remarkably stable, with the vast majority of states closest to the centroid (medoid states were identified until at least four medoids were selected, ordered by distance to the centroid to provide a mostly stable number of medoid states each year, despite fluctuating raw number of medoids as explored in Figure 1) entrenched Republican states. Indeed, Iowa and South Dakota are the most consistent medoids, with similar smaller, historically-Republican states like Montana, West Virginia, and Alaska (geographically distinct, but demographically similar) also displaying prominently in medoid frequencies. The association between policy, cluster, and partisanship will be further explored in later stages of the analysis. 
+**Figure 2**
+
+```{=html}
+<video controls style="width:60%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
+</video>
+```
+
+ 
+
+Anti-immigrant policies begin to expand throughout the 2000s in the wake of 9/11 and waves of increasing enforcement, but federal mandates regarding Secure Communities programs in 2015 and 2016 cause a temporary pause in this type of policy. Pro-immigrant integration and enforcement policies also expanded in the 2010s, largely in reaction to anti-immigrant enforcement policies enacted in the late 2000s. Limitations on cooperation with ICE detainer requests and limitations on E-Verify mandates make up most of the pro-immigrant enforcement policy expansion seen here. Overall, each dimension grows in score across the identified time range, supporting the finding that state immigration policy profiles individualize and diversify from 2000 to 2019.
+
+The spatial element to this panel dataset also enables a geographic analysis which can help identify medoid states that are most representative of the global centroid. Across the investigated timeframe and visible in Figure 3, medoid states are remarkably stable, with the vast majority of states closest to the centroid (medoid states were identified until at least four medoids were selected, ordered by distance to the centroid to provide a mostly stable number of medoid states each year, despite fluctuating raw number of medoids as explored in Figure 1) entrenched Republican states.
+
+**Figure 3**
+```{=html}
+<video controls style="width:60%; height:auto;">
+  <source src="XXX" type="video/mp4">
+</video>
+```
+
+ 
+
+Indeed, Iowa and South Dakota are the most consistent medoids, with similar smaller, historically-Republican states like Montana, West Virginia, and Alaska (geographically distinct, but demographically similar) also displaying prominently in medoid frequencies. The association between policy, cluster, and partisanship will be further explored in later stages of the analysis. 
 
 Although not displayed in Figure 3, tables of state distances to the global centroid also depict those states which are most dissimilar to the global centroid, and thereby have the most distinct or unique policy profiles relative to the nationwide mean. California, Washington, New York, and the District of Columbia are often the most dissimilar states—longstanding fortresses for Democratic policymakers, which is logical given the traditionally Republican partisanship of the aforementioned medoid states. The moderate alignment of the distinction of medoid and dissimilar states with partisan trends indicates that a one-cluster solution may not be faithfully depicting divisions or bifurcations in this dataset; rather, a two-cluster solution that is able to accommodate the divergent partisan trends may be more appropriate.
 
@@ -232,7 +255,7 @@ df |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
 
-&nbsp;
+ 
 
 *Cluster 2 summary statistics*
 
@@ -268,15 +291,39 @@ df |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
 
-&nbsp;
+ 
 
 Key differences between the two include the clear shrinkage of Cluster 1 and therefore growth of Cluster 2 across the 20 year time period studied and the clear distinction in mean distances to cluster centroid between the two. Outlier members of Cluster 2 like California and Washington—far from their assigned centroid—bring the mean distance to own-cluster centroid up drastically for Cluster 2. This phenomenon also impacts extremity scores for Cluster 2 states, which trend much higher than their Cluster 1 counterparts. Overall, these statistics indicate the distribution of Cluster 1 is much tighter and with fewer outliers than that of Cluster 2, which may be a more diverse cluster in terms of the policy profiles of its members.
 
-Unlike expectations garnered from the one-cluster solution, the centers of each cluster of the two-cluster solution do not revolve around the medoid states and most dissimilar states in the one-cluster solution. Rather, the medoid states from the one-cluster solution remain the medoid states of the Cluster 1 of the two-cluster solution like Iowa, South Dakota, and Alaska, however the second cluster is not characterized by the same states that were most dissimilar in the one-cluster solution, like New York and Washington. Contrastingly, similar but less characteristically or canonically “liberal” states make up the medoids of the second cluster, such as New Jersey, Rhode Island, Delaware, and Pennsylvania. The states that make up each cluster’s medoid profile are shown in Figure 4. The states most dissimilar to the one-cluster solution centroid are consistently Cluster 2 members, however do not score close to the Cluster 2 centroid. In fact, New York, Washington, and California—hallmarks of dissimilar states in the one-cluster solution—now approximately rank 10th, 16th, and 19th from the Cluster 2 centroid, respectively, on average across all years. This finding is interesting as it begins to characterize the levels of extremity, or uniqueness, state immigration policy profiles take on. 
+Unlike expectations garnered from the one-cluster solution, the centers of each cluster of the two-cluster solution do not revolve around the medoid states and most dissimilar states in the one-cluster solution. Rather, the medoid states from the one-cluster solution remain the medoid states of the Cluster 1 of the two-cluster solution like Iowa, South Dakota, and Alaska, however the second cluster is not characterized by the same states that were most dissimilar in the one-cluster solution, like New York and Washington. Contrastingly, similar but less characteristically or canonically “liberal” states make up the medoids of the second cluster, such as New Jersey, Rhode Island, Delaware, and Pennsylvania. The states that make up each cluster’s medoid profile are shown in Figure 4.
 
-Further investigations of extremity reveal, as evidenced in extremity tables, states like California, Washington, and New York consistently score highly across years on this metric. This supports the aforementioned finding that Cluster 2 may not best represent these outlier states’ policy profiles, suggesting further clusters may be needed to best capture variation in the distribution of policy profiles. However, findings from early k-testing, as corroborated in silhouette scores in Appendix A, suggest that a two-cluster solution is most appropriate for these data, and adding clusters would only result in a compounding phenomenon until there were 51 clusters (one for each state). California, for example, ranks as 51st most extreme from 2011 through 2019, which is likely due to its unique policy profile, including implementation of AB131, AB60, and the TRUST Act, which extended financial aid to undocumented students, provided drivers’ licenses to undocumented immigrants, and limited cooperation with ICE detainer requests, respectively. These policies complexified California’s policy profile, pushing it to the boundaries of Cluster 2, and adding to its already-prevalent extremity. California, Washington, and New York are not the only states that score high in extremity, critically. Texas also is a rather extreme state with regards to its immigration policy profile, reliably ranking as one of the states furthest from its own centroid as well as one of the most extreme states. Interestingly, Texas switched cluster memberships from Cluster 1 to Cluster 2 in 2007, but remains far from its updated cluster centroid and still quite extreme. The simultaneous enforcement-intensive yet integration-accepting policies implemented in Texas mean it is an outlier regardless of cluster membership.
+**Figure 4**
 
-Descriptions of policies are not solely limited to individual states; indeed, each cluster’s policy profile can be characterized in a radar plot similar to the plot used to describe centroid policies of a one-cluster solution. As evidenced in Figure 5, significant differences underscore each cluster’s policy profile. Cluster 1, in red, is characterized by anti-immigrant policies, across the integration and enforcement dimensions. It is limited in pro-immigrant policies in all dimensions except public benefits policies, which likely reflects the uniformity of adoption of food assistance for LPR children in 2003, instigated by changing federal guidelines on food assistance eligibility. Contrastingly, the Cluster 2 centroid lean much more towards pro-immigrant policies, with drastically greater scores of pro-immigrant public benefits policies relative to Cluster 1. Additionally, starting around the beginning of the 2010s, Cluster 2 states began implementing more pro-immigrant enforcement and integration policies as well, like limitations on E-Verify and state financial aid for undocumented students, respectively. It is important to note that although a cluster is characterized by certain policy dimensions more than others, both clusters do not completely exclude a certain policy dimension, indicating a baseline level of diversity among policy types implemented, regardless of cluster membership. 
+```{=html}
+<video controls style="width:60%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
+</video>
+```
+
+ 
+
+The states most dissimilar to the one-cluster solution centroid are consistently Cluster 2 members, however do not score close to the Cluster 2 centroid. In fact, New York, Washington, and California—hallmarks of dissimilar states in the one-cluster solution—now approximately rank 10th, 16th, and 19th from the Cluster 2 centroid, respectively, on average across all years. This finding is interesting as it begins to characterize the levels of extremity, or uniqueness, state immigration policy profiles take on. 
+
+Further investigations of extremity reveal, as evidenced in extremity tables, states like California, Washington, and New York consistently score highly across years on this metric. This supports the aforementioned finding that Cluster 2 may not best represent these outlier states’ policy profiles, suggesting further clusters may be needed to best capture variation in the distribution of policy profiles. However, findings from early k-testing, as corroborated in silhouette scores, suggest that a two-cluster solution is most appropriate for these data, and adding clusters would only result in a compounding phenomenon until there were 51 clusters (one for each state). California, for example, ranks as 51st most extreme from 2011 through 2019, which is likely due to its unique policy profile, including implementation of AB131, AB60, and the TRUST Act, which extended financial aid to undocumented students, provided drivers’ licenses to undocumented immigrants, and limited cooperation with ICE detainer requests, respectively. These policies complexified California’s policy profile, pushing it to the boundaries of Cluster 2, and adding to its already-prevalent extremity. California, Washington, and New York are not the only states that score high in extremity, critically. Texas also is a rather extreme state with regards to its immigration policy profile, reliably ranking as one of the states furthest from its own centroid as well as one of the most extreme states. Interestingly, Texas switched cluster memberships from Cluster 1 to Cluster 2 in 2007, but remains far from its updated cluster centroid and still quite extreme. The simultaneous enforcement-intensive yet integration-accepting policies implemented in Texas mean it is an outlier regardless of cluster membership.
+
+Descriptions of policies are not solely limited to individual states; indeed, each cluster’s policy profile can be characterized in a radar plot similar to the plot used to describe centroid policies of a one-cluster solution. As evidenced in Figure 5, significant differences underscore each cluster’s policy profile.
+
+**Figure 5**
+
+```{=html}
+<video controls style="width:60%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
+</video>
+```
+
+ 
+
+Cluster 1, in red, is characterized by anti-immigrant policies, across the integration and enforcement dimensions. It is limited in pro-immigrant policies in all dimensions except public benefits policies, which likely reflects the uniformity of adoption of food assistance for LPR children in 2003, instigated by changing federal guidelines on food assistance eligibility. Contrastingly, the Cluster 2 centroid lean much more towards pro-immigrant policies, with drastically greater scores of pro-immigrant public benefits policies relative to Cluster 1. Additionally, starting around the beginning of the 2010s, Cluster 2 states began implementing more pro-immigrant enforcement and integration policies as well, like limitations on E-Verify and state financial aid for undocumented students, respectively. It is important to note that although a cluster is characterized by certain policy dimensions more than others, both clusters do not completely exclude a certain policy dimension, indicating a baseline level of diversity among policy types implemented, regardless of cluster membership. 
 
 These policies can be described in further detail. Although categorizing policies into five dimensions provides a comprehensive higher-level overview of changes over time, examining specific, individual policies also proves fruitful. Table 2 displays the most defining policies of Cluster 1. Policies are selected if their standard deviation is the least standard deviation for each year. Although standard deviation is used to identify these policies, mean policy scores are shown in the table for more meaningful interpretation.
 
@@ -310,7 +357,7 @@ df |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
 
-&nbsp;
+ 
 
 Enforcement policies that characterize Cluster 1 include Secure Communities and a lack of limiting E-Verify. Secure Communities began in the Obama Administration and became federally mandated from 2012-2014, and again from 2017-2019, explaining the uniformity in policy adoption. E-Verify mandates, the employment eligibility verification software provided by DHS and the SSA, were limited by some state-level legislatures to prevent the state or substate jurisdictions from implementing E-Verify mandates. Here, Cluster 1 states are characterized by not limiting E-Verify. Public benefits policies also define Cluster 1 policy profiles, namely by not providing food assistance for LPR adults nor public insurance for LPR adults, unauthorized adults, or unauthorized children. As aforementioned, the widespread adoption of food assistance for LPR children is another defining policy of this cluster. The policy profile shifts, however, when examining Cluster 2, as evidenced in Table 3.
 
@@ -343,7 +390,7 @@ df |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
 
-&nbsp;
+ 
 
 Some similarities exist, like those policies impacted by federal mandates or guidelines (Secure Communities, food assistance for LPR children), however stark differences also arise. Cluster 2 adopts more pro-immigrant public benefits policies, like TANF eligibility after the five-year bar and greater Medicaid accessibility and different integration policies, like limited adoption of state financial aid for undocumented students and no university ban for undocumented immigrants. The main takeaway from comparing the defining policies of each cluster is that while Cluster 1 has a very homogenous policy profile (almost exclusive adoption of anti-immigrant policies or non-adoption of pro-immigrant policies), Cluster 2 has a much more heterogeneous profile, which also reflects the wider range of states included in Cluster 2 and the frequency of states further from the centroid and extreme states in Cluster 2 relative to Cluster 1. This is logical as Cluster 2 states tend to have larger, more institutionally engaged immigrant populations and more complex policy environments than Cluster 1 states, which tend to be lower-immigration, more enforcement-uniform states. 
 
@@ -427,7 +474,7 @@ df_colored |>
   row_spec(1:nrow(df_colored), extra_css = "border-top: none; border-bottom: none;")
 ```
 
-&nbsp;
+ 
 
 Almost every year studied, two policies play the core role in differentiating the two clusters: Medicaid for pregnant LPRs and Medicaid for LPR children. Other policies do differentiate the two clusters but do so either secondary to one of the aforementioned Medicaid policies or inconsistently year-over-year. Hence, Medicaid for vulnerable LPRs is the policy type that reliably differentiates the clusters the most over the studied years. Finally, important to note is the decreasing differences in means year-over-year, which serves as another indication of increasing policy profile diversity of states leading up to 2019.
 
@@ -499,7 +546,7 @@ df |>
   row_spec(21, extra_css = "border-bottom: 1px solid black;")
 ```
 
-&nbsp;
+ 
 
 In Model 1, state government partisanship and the population proportions for 65+ in age are both statistically significant at the $\alpha = 0.05$ significance level. When examining Model 2, the more internally-valid model, state government partisanship and the population proportion for age are again the only covariates that are statistically significant, which suggests that these two variables are the drivers of state cluster membership (or switching) given the parity between models. Indeed, state governments that are completely controlled by Democrats (governor, house/assembly, and senate), are *16.41 times more likely* to be assigned to or switch to Cluster 2 than governments controlled completely by Republicans. Separately, a 10 percentage point increase in the population proportion of the elderly population is correlated with 1.66 $(e^{\beta \times 0.10} = (e^{\beta})^{0.10} = OR^{ 0.10})$ greater odds of clustering with Cluster 2 instead of Cluster 1, a treatment effect of much lesser magnitude relative to the effect of state government partisanship. These results suggest that state government partisanship is an important determinant of cluster membership and switching.
 
@@ -602,7 +649,7 @@ df |>
   row_spec(21, extra_css = "border-bottom: 1px solid black;")
 ```
 
-&nbsp;
+ 
 
 Interestingly, the battery of policy determinants—including state government partisanship—had no predictive power of distance to own-cluster centroid and extremity for Cluster 1 states, however played a much more predictive role in estimating these metrics for Cluster 2 states. No covariates were statistically significant in estimating these metrics among Cluster 1 states, however state government partisanship was statistically significant in Cluster 2 models. Furthermore, switching from a state government controlled completely by Republicans to one controlled completely by Democrats was found to correlate with a 0.11 unit increase in Euclidean distance to own-cluster centroid, as well as a 0.67 unit increase in extremity score. These results align with previous findings regarding the greater distribution of own-centroid distances and extremity scores among Cluster 2 states. 
 
