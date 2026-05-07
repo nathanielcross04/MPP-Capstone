@@ -1,0 +1,45 @@
+---
+title: "Abstract"
+format:
+  html:
+    self-contained: true
+    anchor-sections: false
+    include-in-header:
+      text: |
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+        <style>h1.title { display: none; }</style>
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Abstract
+
+Increasing diversity and fragmentation of state-level immigration policy has resulted in vast policy heterogeneity. To better understand this heterogeneity, this study investigated characteristics and determinants of these policies. With a rich panel dataset spanning 51 states, 20 years, and 25 policy types sourced from the Urban Institute, a dual-stage cluster analysis explored policy tendencies, norms, and deviations from 2000 to 2019 in the United States. Supplemental regression modeling was used to identify policy determinants of immigration policy. Ultimately, results yielded found that public benefits, namely Medicaid for vulnerable Legal Permanent Resident populations, differentiated the clusters of a two-cluster solution. Additionally, partisanship was found to play a strong role in cluster assignment, enabling an analysis of the policies that define the partisan gap in the role and utilization of immigration policy. Results were generalized to real-world policy impacts, including implications for advocates and policymakers interested in state-level reform.
+
+***Keywords:** immigration policy, policy analysis, cluster analysis, data visualization*
+
+------------------------------------------------------------------------
+
+::::::: grid
+:::: g-col-6
+::: {.card .h-100 style="padding: 1.2rem;"}
+### <i class="bi bi-book"></i> Read the paper
+
+Get up to speed on research design and results by browsing the full article.
+
+[Read now →](Manuscript.qmd){.btn .btn-outline-primary}
+:::
+::::
+
+:::: g-col-6
+::: {.card .h-100 style="padding: 1.2rem;"}
+### <i class="bi bi-bounding-box"></i> Explore the data
+
+Interact with policy distance matrices and network maps.
+
+[Explore now →](Code/state_tables.qmd){.btn .btn-outline-primary}
+:::
+::::
+:::::::

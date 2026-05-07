@@ -35,7 +35,7 @@ showtext_auto()
 # Map is landscape so we use a non-square output
 OUTPUT_WIDTH  <- 1800
 OUTPUT_HEIGHT <- 1100
-SCALE         <- OUTPUT_WIDTH / 900   # = 2; matches original ggsave width of 900px
+SCALE         <- 1   # = 2; matches original ggsave width of 900px
 
 MEDOID_COLOR    <- "#009E73"
 BASE_MAP_FILL   <- "#D9D9D9"
@@ -191,8 +191,8 @@ base_plot <- ggplot() +
   theme_void(base_family = "lato") +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
-    plot.margin     = margin(t = 20 * SCALE, r = 20 * SCALE,
-                             b = 10 * SCALE, l = 20 * SCALE)
+    plot.margin     = margin(t = 20 * SCALE, r = 10 * SCALE,
+                             b = 10 * SCALE, l = 10 * SCALE)
   )
 
 total_frames <- max(frame_lookup$frame_id)
@@ -215,25 +215,26 @@ for (fid in seq_len(total_frames)) {
     scale_alpha_identity() +
     
     labs(
-      title    = "Medoid states remain mostly consistent over\ntime, many are entrenched red states",
+      title    = "Medoid states remain mostly consistent over time, many are\nentrenched red states",
       subtitle = paste0("States closest to the policy vector centroid, in ", yr_label)
     ) +
     
     theme(
       plot.title.position = "plot",
-      plot.title    = element_text(size   = 25 * SCALE,
+      plot.title    = element_text(size   = 35 * SCALE,
                                    face   = "bold",
                                    family = "lato",
                                    hjust  = 0,
+                                   lineheight = 0.6,
                                    margin = margin(t = 20 * SCALE, b = 8 * SCALE)),
-      plot.subtitle = element_text(size   = 14 * SCALE,
+      plot.subtitle = element_text(size   = 20 * SCALE,
                                    color  = "#555555",
                                    family = "lato",
                                    hjust  = 0,
                                    margin = margin(b = 8 * SCALE)),
       plot.background = element_rect(fill = "white", color = NA),
-      plot.margin     = margin(t = 10 * SCALE, r = 20 * SCALE,
-                               b = 10 * SCALE, l = 20 * SCALE)
+      plot.margin     = margin(t = 10 * SCALE, r = 10 * SCALE,
+                               b = 10 * SCALE, l = 10 * SCALE)
     )
   
   ggsave(
@@ -296,7 +297,7 @@ showtext_auto()
 # Resolution & scale
 OUTPUT_WIDTH  <- 1800
 OUTPUT_HEIGHT <- 1100
-SCALE         <- OUTPUT_WIDTH / 900   # = 2
+SCALE         <- 1
 
 CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
 BASE_MAP_FILL   <- "#D9D9D9"
@@ -467,8 +468,8 @@ base_plot <- ggplot() +
   theme_void(base_family = "lato") +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
-    plot.margin     = margin(t = 10 * SCALE, r = 20 * SCALE,
-                             b = 10 * SCALE, l = 20 * SCALE)
+    plot.margin     = margin(t = 10 * SCALE, r = 10 * SCALE,
+                             b = 10 * SCALE, l = 10 * SCALE)
   )
 
 total_frames <- max(frame_lookup$frame_id)
@@ -491,25 +492,26 @@ for (fid in seq_len(total_frames)) {
     scale_alpha_identity() +
     
     labs(
-      title    = "Geographic differences demarcate cluster\ndistinctions over time",
+      title    = "Geographic differences demarcate cluster distinctions over time",
       subtitle = paste0("States closest to their respective cluster centroid, in ", yr_label)
     ) +
     
     theme(
       plot.title.position = "plot",
-      plot.title    = element_text(size   = 25 * SCALE,
+      plot.title    = element_text(size   = 35 * SCALE,
                                    face   = "bold",
                                    family = "lato",
                                    hjust  = 0,
+                                   lineheight = 0.6,
                                    margin = margin(t = 20 * SCALE, b = 8 * SCALE)),
-      plot.subtitle = element_text(size   = 14 * SCALE,
+      plot.subtitle = element_text(size   = 20 * SCALE,
                                    color  = "#555555",
                                    family = "lato",
                                    hjust  = 0,
                                    margin = margin(b = 8 * SCALE)),
       plot.background = element_rect(fill = "white", color = NA),
-      plot.margin     = margin(t = 10 * SCALE, r = 20 * SCALE,
-                               b = 10 * SCALE, l = 20 * SCALE)
+      plot.margin     = margin(t = 10 * SCALE, r = 10 * SCALE,
+                               b = 10 * SCALE, l = 10 * SCALE)
     )
   
   ggsave(

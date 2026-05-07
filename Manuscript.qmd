@@ -1,5 +1,5 @@
 ---
-title: "Manuscript"
+title: "What a Clusterf*ck! Making Sense of State-Level Immigration Policy"
 author: "Nathaniel Cross"
 university: "The University of Arizona"
 advisor: "Adam Douglas Henry"
@@ -8,8 +8,8 @@ date: 2026-05-12
 format:
   html:
     template-partials:
-      - "C:/Users/ndmcr/Desktop/MPP Capstone/title-block.html"
-      - "C:/Users/ndmcr/Desktop/MPP Capstone/title-metadata.html"
+      - title-block.html
+      - title-metadata.html
     embed-resources: true
     echo: false
     warning: false
@@ -19,7 +19,7 @@ format:
     toc-depth: 3
     toc-title: "Contents"
     anchor-sections: false
-    css: styles.css
+    body-classes: manuscript-page
 execute:
   eval: true
 bibliography: references.bib
@@ -190,7 +190,7 @@ Diversifying state policy profiles can also be illustrated by looking at the typ
 **Figure 2**
 
 ```{=html}
-<video controls style="width:60%; height:auto;">
+<video controls style="width:100%; height:auto;">
   <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
 </video>
 ```
@@ -202,9 +202,10 @@ Anti-immigrant policies begin to expand throughout the 2000s in the wake of 9/11
 The spatial element to this panel dataset also enables a geographic analysis which can help identify medoid states that are most representative of the global centroid. Across the investigated timeframe and visible in Figure 3, medoid states are remarkably stable, with the vast majority of states closest to the centroid (medoid states were identified until at least four medoids were selected, ordered by distance to the centroid to provide a mostly stable number of medoid states each year, despite fluctuating raw number of medoids as explored in Figure 1) entrenched Republican states.
 
 **Figure 3**
+
 ```{=html}
-<video controls style="width:60%; height:auto;">
-  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_2CS.mp4" type="video/mp4">
+<video controls style="width:100%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\medoid_map_1cs.mp4" type="video/mp4">
 </video>
 ```
 
@@ -299,11 +300,13 @@ Unlike expectations garnered from the one-cluster solution, the centers of each 
 
 **Figure 4**
 
+::: {.column-body}
 ```{=html}
-<video controls style="width:60%; height:auto;">
-  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
+<video controls style="width:100%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\medoid_map_2cs.mp4" type="video/mp4">
 </video>
 ```
+:::
 
  
 
@@ -315,11 +318,13 @@ Descriptions of policies are not solely limited to individual states; indeed, ea
 
 **Figure 5**
 
+::: {.column-body}
 ```{=html}
-<video controls style="width:60%; height:auto;">
-  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_1CS.mp4" type="video/mp4">
+<video controls style="width:100%; height:auto;">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_2CS.mp4" type="video/mp4">
 </video>
 ```
+:::
 
  
 
@@ -331,7 +336,8 @@ These policies can be described in further detail. Although categorizing policie
 
 *Defining policies of Cluster 1*
 
-```{r Table 2}
+::: {.column-screen-inset}
+```{r}
 
 #| column: screen-inset
 
@@ -356,6 +362,7 @@ df |>
   ) |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
+:::
 
  
 
@@ -365,7 +372,8 @@ Enforcement policies that characterize Cluster 1 include Secure Communities and 
 
 *Defining policies of Cluster 2*
 
-```{r Table 3}
+::: {.column-screen-inset}
+```{r}
 #| column: screen-inset
 
 library(kableExtra)
@@ -389,6 +397,7 @@ df |>
   ) |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
+:::
 
  
 

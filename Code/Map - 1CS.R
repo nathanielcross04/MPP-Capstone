@@ -204,7 +204,7 @@ base_plot <- ggplot() +
   theme_void(base_family = "lato") +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
-    plot.margin     = margin(t = 20, r = 20, b = 10, l = 20)
+    plot.margin     = margin(t = 20, r = 10, b = 10, l = 10)
   )
 
 # Render one PNG per frame_id
@@ -245,7 +245,7 @@ for (fid in seq_len(total_frames)) {
                                    hjust  = 0,
                                    margin = margin(b = 8)),
       plot.background = element_rect(fill = "white", color = NA),
-      plot.margin     = margin(t = 10, r = 20, b = 10, l = 20)
+      plot.margin     = margin(t = 10, r = 10, b = 10, l = 10)
     )
   
   ggsave(
@@ -267,8 +267,8 @@ png_files <- list.files(frame_dir, pattern = "\\.png$",
 gifski::gifski(
   png_files,
   gif_file = file.path(OUTPUT_DIR, "medoid_map_1cs_2000_2019.gif"),
-  width    = 900,
-  height   = 550,
+  width    = 1800,
+  height   = 1100,
   delay    = 1 / FRAMES_PER_YEAR
 )
 

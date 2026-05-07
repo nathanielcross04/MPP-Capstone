@@ -1,0 +1,40 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - Manuscript.qmd
+    - Appendices.qmd
+    - network_map.qmd
+    - Code/state_tables.qmd
+    - "!map_data/network_map_interactive.html"
+    - "!map_data/network_map_years/"
+  resources:
+    - apa.csl
+    - map_data/network_map_interactive.html
+    - map_data/network_map_years/
+
+website:
+  title: "What a Clusterf*ck!"
+  navbar:
+    left:
+      - text: "Read the Paper"
+        menu:
+          - text: "Article"
+            href: Manuscript.qmd
+          - text: "Appendices"
+            href: Appendices.qmd
+      - text: "Explore the Data"
+        menu:
+          - text: "Policy Profile Distance Matrices"
+            href: Code/state_tables.qmd
+          - text: "State Immigration Policy Network Map"
+            href: network_map.qmd
+      - icon: github
+        text: "Visit the Repo"
+        href: https://github.com/nathanielcross04/MPP-Capstone-Replication
+        target: _blank
+        
+format:
+  html:
+    css: styles.css

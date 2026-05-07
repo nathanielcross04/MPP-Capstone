@@ -374,7 +374,7 @@ build_widget <- function(year, raw) {
     edge.color   = "#CCCCCC",
     edge.width   = 0.3,
     edge.alpha   = 0.5,
-    bg           = "#F7F7F7",
+    bg           = "#FFFFFF",
     main         = "",
     opacity      = NODE_OPACITY,
     stroke       = NODE_STROKE,
@@ -399,7 +399,7 @@ message("All years rendered. Saving individual year files...")
 
 # ── 3. SAVE EACH YEAR AS INDIVIDUAL HTML ─────────────────────
 
-OUTPUT_DIR <- "C:/Users/ndmcr/Desktop/MPP Capstone/Figures"
+OUTPUT_DIR <- "C:/Users/ndmcr/Desktop/MPP Capstone/map_data"
 dir.create(OUTPUT_DIR, showWarnings = FALSE)
 
 TEMP_DIR <- file.path(OUTPUT_DIR, "network_map_years")
@@ -426,12 +426,13 @@ page_css <- '
 
   body {
     font-family: "Lato", sans-serif;
-    background: #F7F7F7;
+    background: #FFFFFF;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
     padding: 28px 16px 16px;
+    overflow: hidden
   }
 
   #page-title {
@@ -516,7 +517,7 @@ page_css <- '
     border: none;
     visibility: hidden;
     z-index: 0;
-    background: #F7F7F7;
+    background: #FFFFFF;
   }
 '
 
@@ -563,7 +564,7 @@ iframe_tags <- sapply(YEARS, function(yr) {
   paste0(
     '<iframe id="map-', yr, '" class="map-frame" ',
     src, ' ',
-    'style="visibility:', vis, ';z-index:', zi, ';background:#F7F7F7;" ',
+    'style="visibility:', vis, ';z-index:', zi, ';background:#FFFFFF;" ',
     'scrolling="no"></iframe>'
   )
 })
@@ -611,5 +612,5 @@ message("Saved to: ", OUTPUT_FILE)
 # Run this block separately after saving to preview locally.
 # Requires the servr package: install.packages("servr")
 
-library(servr)
-servr::httd("C:/Users/ndmcr/Desktop/MPP Capstone/Figures")
+#library(servr)
+#servr::httd("C:/Users/ndmcr/Desktop/MPP Capstone/Figures")
