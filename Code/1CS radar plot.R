@@ -237,9 +237,9 @@ p_radar <- ggplot() +
   
   # -- Spoke axes (colored by pro/anti, static)
   geom_segment(data = spoke_axes,
-               aes(x = 0, y = 0, xend = x_end, yend = y_end, color = color),
+               aes(x = 0, y = 0, xend = x_end, yend = y_end),
+               color = "black",
                linewidth = 1.2, show.legend = FALSE) +
-  scale_color_identity() +
   
   # -- Animated polygon: neutral gray fill + dark gray outline
   geom_polygon(data = interp_poly,
@@ -252,38 +252,38 @@ p_radar <- ggplot() +
   # -- Animated spoke points: colored by pro/anti
   geom_point(data = interp_pts,
              aes(x = x, y = y, color = spoke_color),
-             size = 5, show.legend = FALSE) +
+             size = 10, show.legend = FALSE) +
   
   # -- Spoke labels (static, colored)
   geom_text(data = labels_df,
             aes(x = x, y = y, label = label, color = color),
-            size = 4, lineheight = 0.9, fontface = "bold",
+            size = 8, lineheight = 0.9, fontface = "bold",
             show.legend = FALSE) +
   
   # -- Animated subtitle: year ticker embedded in subtitle text
   geom_text(data = year_label_df,
             aes(x = -1.54, y = 1.55,
                 label = paste0("Policy index scores for a one-cluster solution, in ", year_label)),
-            size = 5, color = "#555555",
+            size = 10, color = "#555555",
             hjust = 0, vjust = 1,
             inherit.aes = FALSE) +
   
   coord_fixed(xlim = c(-1.4, 1.4), ylim = c(-1.6, 1.4), clip = "off") +
   
   labs(
-    title = "\nCentroid states diversify implemented\npolicy types over time"
+    title = "\n\nCentroid states diversify implemented\npolicy types over time"
   ) +
   
   theme_void(base_family = "lato") +
   theme(
     plot.title.position = "plot",
-    plot.title      = element_text(size = 25, 
+    plot.title      = element_text(size = 50, 
                                    family = "lato-bold", 
                                    lineheight = 1.2,
                                    hjust = 0, 
                                    margin = margin(t = 50, b = 15)),
     plot.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(t = 20, r = 20, b = -30, l = 20)
+    plot.margin = margin(t = 60, r = 20, b = -60, l = 20)
   ) +
   
   transition_states(
