@@ -38,7 +38,7 @@ enf_everify|E-Verify mandate|State has a policy to mandate that some or all empl
 |pub_pubins_unauthkids|Public health insurance to some unauthorized immigrant children|State funds public health insurance for children regardless of immigration status. Some of these programs offer more comprehensive health insurance coverage than others.|binary byte | |
 |pub_pubins_lpradults|Public health insurance to LPR adults during the five-year bar|State funds public health insurance for LPR adults during their first five years with this status.|binary byte| |
 |pub_pubins_unauthadult|Public health insurance to some unauthorized immigrant adults|State funds public health insurance for adults regardless of immigration status.|binary byte| |
-|pub_medicaid_lprpreg|Medicaid for pregnant LPRs duing the five-year bar|State provides prenatal care to LPR pregnant women during their first five years with this status.^^|binary byte| |
+|pub_medicaid_lprpreg|Medicaid for pregnant LPRs during the five-year bar|State provides prenatal care to LPR pregnant women during their first five years with this status.^^|binary byte| |
 |pub_medicaid_unauthpreg|Medicaid for pregnant unauthorized immigrants|State provides prenatal care regardless of a woman's immigration status, through either a state-funded program or through a 2002 CHIP option.|binary byte| |
 |pub_medicaid_lpr_post5|Medicaid for LPRs after the five-year bar|State provides Medicaid and CHIP to LPRs after their first five years with this status. States have the option to provide Medicaid/CHIP to LPRs after five years with this status.|binary byte| |
 
