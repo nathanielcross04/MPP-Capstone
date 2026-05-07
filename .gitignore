@@ -16,3 +16,9 @@ frames_tmp/
 network_map_2019_files/
 network_map_years/
 *.rtf
+/.quarto/
+**/*.quarto_ipynb
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
