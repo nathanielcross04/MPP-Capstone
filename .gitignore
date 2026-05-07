@@ -2,7 +2,6 @@
 *.log
 ~*.do
 ~*.do.stswp
-*.html
 .DS_Store
 Thumbs.db
 Data/Using data/
