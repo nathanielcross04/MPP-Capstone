@@ -211,7 +211,7 @@ df <- read_csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/
 
 df |>
   kable(
-    col.names = c("Year", "N", "Mean", "SD", "Mean", "SD"),
+    col.names = c("", "", "Mean", "SD", "Mean", "SD"),
     digits = 2,
     align = c("c", "c", "c", "c", "c", "c"),
     booktabs = FALSE,
@@ -222,7 +222,8 @@ df |>
     bootstrap_options = c("hover", "condensed")
   ) |>
   add_header_above(
-    c("   " = 2,
+    c("Year" = 1,
+      "N" = 1,
       "Distance (own cluster)" = 2,
       "Extremity" = 2),
     line = TRUE,
@@ -247,7 +248,7 @@ df <- read_csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/
 
 df |>
   kable(
-    col.names = c("Year", "N", "Mean", "SD", "Mean", "SD"),
+    col.names = c("", "", "Mean", "SD", "Mean", "SD"),
     digits = 2,
     align = c("c", "c", "c", "c", "c", "c"),
     booktabs = FALSE,
@@ -257,7 +258,8 @@ df |>
     full_width = FALSE
   ) |>
   add_header_above(
-    c("   " = 2,
+    c("Year" = 1,
+      "N" = 1,
       "Distance (own cluster)" = 2,
       "Extremity" = 2),
     line = TRUE,
@@ -341,15 +343,268 @@ df |>
   row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;")
 ```
 
+&nbsp;
+
 Some similarities exist, like those policies impacted by federal mandates or guidelines (Secure Communities, food assistance for LPR children), however stark differences also arise. Cluster 2 adopts more pro-immigrant public benefits policies, like TANF eligibility after the five-year bar and greater Medicaid accessibility and different integration policies, like limited adoption of state financial aid for undocumented students and no university ban for undocumented immigrants. The main takeaway from comparing the defining policies of each cluster is that while Cluster 1 has a very homogenous policy profile (almost exclusive adoption of anti-immigrant policies or non-adoption of pro-immigrant policies), Cluster 2 has a much more heterogeneous profile, which also reflects the wider range of states included in Cluster 2 and the frequency of states further from the centroid and extreme states in Cluster 2 relative to Cluster 1. This is logical as Cluster 2 states tend to have larger, more institutionally engaged immigrant populations and more complex policy environments than Cluster 1 states, which tend to be lower-immigration, more enforcement-uniform states. 
 
-Although implied in the above analysis, the policies that differentiate the two clusters can also be examined with greater scrutiny. These are defined as the policies with the greatest difference of means between the two clusters (greatest three differences in means were selected) and can be found in Table 4. Almost every year studied, two policies play the core role in differentiating the two clusters: Medicaid for pregnant LPRs and Medicaid for LPR children. Other policies do differentiate the two clusters but do so either secondary to one of the aforementioned Medicaid policies or inconsistently year-over-year. Hence, Medicaid for vulnerable LPRs is the policy type that reliably differentiates the clusters the most over the studied years. Finally, important to note is the decreasing differences in means year-over-year, which serves as another indication of increasing policy profile diversity of states leading up to 2019.
+Although implied in the above analysis, the policies that differentiate the two clusters can also be examined with greater scrutiny. These are defined as the policies with the greatest difference of means between the two clusters (greatest three differences in means were selected) and can be found in Table 4.
+
+**Table 4**
+
+*Policies differentiating Clusters 1 and 2, colored by rank*
+
+```{r}
+library(kableExtra)
+library(readr)
+library(dplyr)
+
+options(knitr.kable.NA = "")
+
+df_raw <- read_csv("https://raw.githubusercontent.com/nathanielcross04/MPP-Capstone/refs/heads/main/Data/Other%20data/Imp%20policies%20ranked.csv")
+
+diff_cols <- c("year", grep("^diff_", names(df_raw), value = TRUE))
+df <- df_raw[, diff_cols]
+
+col_1st <- "#009E73"
+col_2nd <- "#99D9C5"
+col_3rd <- "#CCECE3"
+
+wrap_span <- function(value_str, bg) {
+  paste0('<span style="background-color:', bg, '; padding: 2px 6px; border-radius: 3px;">', value_str, '</span>')
+}
+
+val_cols <- grep("^diff_", names(df), value = TRUE)
+
+# Convert to character BEFORE the loop
+df_colored <- df |>
+  mutate(year = as.character(year),
+         across(all_of(val_cols), as.character))
+
+for (i in seq_len(nrow(df))) {
+  row_vals <- as.numeric(df[i, val_cols])
+  
+  non_na_idx <- which(!is.na(row_vals))
+  if (length(non_na_idx) == 0) next
+  
+  sorted_unique <- sort(unique(row_vals[non_na_idx]), decreasing = TRUE)
+  
+  for (j in seq_along(val_cols)) {
+    v <- row_vals[j]
+    if (is.na(v)) {
+      df_colored[i, val_cols[j]] <- ""
+      next
+    }
+    rank_pos <- which(sorted_unique == v)[1]
+    bg <- switch(as.character(rank_pos),
+                 "1" = col_1st,
+                 "2" = col_2nd,
+                 "3" = col_3rd,
+                 NA_character_)
+    val_str <- sprintf("%.4f", v)
+    df_colored[i, val_cols[j]] <- if (!is.na(bg)) wrap_span(val_str, bg) else val_str
+  }
+}
+
+df_colored |>
+  kable(
+    col.names = c(
+      "Year",
+      "Limited cooperation with ICE detainer requests",
+      "English as the official state language",
+      "Medicaid/CHIP for LPR children during the five-year bar",
+      "Medicaid for pregnant LPRs during the five-year bar",
+      "Medicaid for pregnant unauthorized immigrants",
+      "Public health insurance to LPR adults during the five-year bar"
+    ),
+    digits = 2,
+    align = c("c", "c", "c", "c", "c", "c", "c"),
+    booktabs = FALSE,
+    escape = FALSE,
+    format = "html",
+    na = ""
+  ) |>
+  kable_styling(full_width = TRUE) |>
+  row_spec(1:nrow(df_colored), extra_css = "border-top: none; border-bottom: none;")
+```
+
+&nbsp;
+
+Almost every year studied, two policies play the core role in differentiating the two clusters: Medicaid for pregnant LPRs and Medicaid for LPR children. Other policies do differentiate the two clusters but do so either secondary to one of the aforementioned Medicaid policies or inconsistently year-over-year. Hence, Medicaid for vulnerable LPRs is the policy type that reliably differentiates the clusters the most over the studied years. Finally, important to note is the decreasing differences in means year-over-year, which serves as another indication of increasing policy profile diversity of states leading up to 2019.
 
 The final part of the two-cluster solution analysis involved identifying the determinants of cluster membership. Results from the first set of regression, testing determinants of cluster assignment, are presented in Table 5. Model 1 presents a naïve model with covariates garnered from the literature. Model 2 expands on Model 1 by including unit and time fixed effects. Due to the high frequency of limited variance in the dependent variable, cluster assignment (i.e. many states did not change cluster membership during the studied period), the fixed effects model presented in Model 2 has a much smaller sample size than that of Model 1. Hence, the results garnered from Model 2 are best generalized to findings regarding the determinants of cluster switching not cluster assignment. Although this limits the external validity of these models, making this distinction helps maintain a rigorous model specification. Model 1, lacking fixed effects, may be incomplete and therefore lack internal validity. The presentation of both models best balances internal and external validity.
 
+**Table 5**
+
+*Odds ratios for determinants of cluster membership*
+
+```{r}
+library(knitr)
+library(kableExtra)
+
+df <- data.frame(
+  Variable = c(
+    "State government partisanship (0 = entirely Republican, 1 = entirely Democratic)", "",
+    "Population", "",
+    "Prop. Latino", "",
+    "Prop. white", "",
+    "Prop. unemployed", "",
+    "Prop. foreign-born", "",
+    "Prop. undocumented", "",
+    "Prop. in poverty", "",
+    "Prop. old (65+)", "",
+    "Year FE", "State FE", "N",
+    "Standard errors in parentheses",
+    "* p < 0.05, ** p < 0.01, *** p < 0.001"
+  ),
+  Naive = c(
+    "1.989*", "(0.791)",
+    "0.000000374", "(0.000000208)",
+    "0.0132", "(0.240)",
+    "0.0658", "(0.140)",
+    "0.384", "(0.228)",
+    "0.635", "(0.655)",
+    "-61.45", "(64.69)",
+    "0.318", "(0.201)",
+    "1.049**", "(0.348)",
+    "", "", "909", "", ""
+  ),
+  FE = c(
+    "2.798*", "(1.385)",
+    "-0.000000569", "(0.00000426)",
+    "0.856", "(2.035)",
+    "-0.512", "(0.619)",
+    "0.164", "(0.568)",
+    "-2.190", "(1.724)",
+    "-14.55", "(234.1)",
+    "-0.516", "(0.584)",
+    "5.077*", "(2.238)",
+    "Y", "Y", "320", "", ""
+  ),
+  stringsAsFactors = FALSE
+)
+
+df |>
+  kable(
+    col.names = c("", "Naïve model", "Fixed-effects model"),
+    align = c("l", "c", "c"),
+    booktabs = FALSE,
+    escape = FALSE
+  ) |>
+  kable_styling(
+    full_width = FALSE
+  ) |>
+  row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;") |>
+  row_spec(18, extra_css = "border-bottom: 0.5px dashed black;") |>
+  row_spec(20, extra_css = "border-bottom: 0.5px dashed black;") |>
+  row_spec(21, extra_css = "border-bottom: 1px solid black;")
+```
+
+&nbsp;
+
 In Model 1, state government partisanship and the population proportions for 65+ in age are both statistically significant at the $\alpha = 0.05$ significance level. When examining Model 2, the more internally-valid model, state government partisanship and the population proportion for age are again the only covariates that are statistically significant, which suggests that these two variables are the drivers of state cluster membership (or switching) given the parity between models. Indeed, state governments that are completely controlled by Democrats (governor, house/assembly, and senate), are *16.41 times more likely* to be assigned to or switch to Cluster 2 than governments controlled completely by Republicans. Separately, a 10 percentage point increase in the population proportion of the elderly population is correlated with 1.66 $(e^{\beta \times 0.10} = (e^{\beta})^{0.10} = OR^{ 0.10})$ greater odds of clustering with Cluster 2 instead of Cluster 1, a treatment effect of much lesser magnitude relative to the effect of state government partisanship. These results suggest that state government partisanship is an important determinant of cluster membership and switching.
 
-Secondary regressions were used to test whether the same battery of policy determinants were able to predict Euclidean distances yielded from the two-cluster solution: distance to own cluster and extremity. These results can be found in Table 6. Interestingly, the battery of policy determinants—including state government partisanship—had no predictive power of distance to own-cluster centroid and extremity for Cluster 1 states, however played a much more predictive role in estimating these metrics for Cluster 2 states. No covariates were statistically significant in estimating these metrics among Cluster 1 states, however state government partisanship was statistically significant in Cluster 2 models. Furthermore, switching from a state government controlled completely by Republicans to one controlled completely by Democrats was found to correlate with a 0.11 unit increase in Euclidean distance to own-cluster centroid, as well as a 0.67 unit increase in extremity score. These results align with previous findings regarding the greater distribution of own-centroid distances and extremity scores among Cluster 2 states. 
+Secondary regressions were used to test whether the same battery of policy determinants were able to predict Euclidean distances yielded from the two-cluster solution: distance to own cluster and extremity. These results can be found in Table 6.
+
+**Table 6**
+
+*Coefficients of policy determinants on two-cluster solution Euclidean distances*
+
+```{r}
+library(knitr)
+library(kableExtra)
+
+df <- data.frame(
+  Variable = c(
+    "State government partisanship (0 = entirely Republican, 1 = entirely Democratic)", "",
+    "Population", "",
+    "Prop. Latino", "",
+    "Prop. white", "",
+    "Prop. unemployed", "",
+    "Prop. foreign-born", "",
+    "Prop. undocumented", "",
+    "Prop. in poverty", "",
+    "Prop. old (65+)", "",
+    "Year FE", "State FE", "N",
+    "Standard errors in parentheses",
+    "* p < 0.05, ** p < 0.01, *** p < 0.001"
+  ),
+  C1_dist = c(
+    "-0.0783", "(0.0600)",
+    "0.0000000201", "(0.0000000795)",
+    "0.0889", "(0.0752)",
+    "-0.0112", "(0.0329)",
+    "0.00911", "(0.0266)",
+    "0.0245", "(0.106)",
+    "2.305", "(6.436)",
+    "-0.0245", "(0.0296)",
+    "0.0744", "(0.0747)",
+    "Y", "Y", "545", "", ""
+  ),
+  C1_ext = c(
+    "-0.236", "(0.178)",
+    "0.0000000868e", "(0.000000270)",
+    "0.218", "(0.192)",
+    "-0.0137", "(0.103)",
+    "0.0407", "(0.0664)",
+    "-0.0369", "(0.287)",
+    "10.89", "(19.33)",
+    "-0.0613", "(0.0763)",
+    "0.321", "(0.220)",
+    "Y", "Y", "545", "", ""
+  ),
+  C2_dist = c(
+    "0.112*", "(0.0517)",
+    "0.0000000895", "(0.0000000771)",
+    "-0.0867*", "(0.0404)",
+    "-0.0142", "(0.0250)",
+    "-0.0151", "(0.0227)",
+    "-0.0211", "(0.0620)",
+    "4.224", "(6.338)",
+    "0.0373", "(0.0264)",
+    "-0.0323", "(0.0560)",
+    "Y", "Y", "364", "", ""
+  ),
+  C2_ext = c(
+    "0.673**", "(0.210)",
+    "0.000000317", "(0.000000334)",
+    "-0.223", "(0.166)",
+    "-0.0281", "(0.105)",
+    "-0.100", "(0.100)",
+    "-0.166", "(0.212)",
+    "16.83", "(16.58)",
+    "0.112", "(0.112)",
+    "-0.0396", "(0.254)",
+    "Y", "Y", "364", "", ""
+  ),
+  stringsAsFactors = FALSE
+)
+
+df |>
+  kable(
+    col.names = c("", "Own-cluster distance", "Extremity",
+                  "Own-cluster distance", "Extremity"),
+    align = c("l", "c", "c", "c", "c"),
+    booktabs = FALSE,
+    escape = FALSE
+  ) |>
+  kable_styling(
+    full_width = FALSE
+  ) |>
+  add_header_above(
+    c("Covariate" = 1, "Cluster 1" = 2, "Cluster 2" = 2),
+    line = TRUE,
+    background = "#f7f7f7",
+    escape = FALSE
+  ) |>
+  row_spec(1:nrow(df), extra_css = "border-top: none; border-bottom: none;") |>
+  row_spec(18, extra_css = "border-bottom: 0.5px dashed black;") |>
+  row_spec(20, extra_css = "border-bottom: 0.5px dashed black;") |>
+  row_spec(21, extra_css = "border-bottom: 1px solid black;")
+```
+
+&nbsp;
+
+Interestingly, the battery of policy determinants—including state government partisanship—had no predictive power of distance to own-cluster centroid and extremity for Cluster 1 states, however played a much more predictive role in estimating these metrics for Cluster 2 states. No covariates were statistically significant in estimating these metrics among Cluster 1 states, however state government partisanship was statistically significant in Cluster 2 models. Furthermore, switching from a state government controlled completely by Republicans to one controlled completely by Democrats was found to correlate with a 0.11 unit increase in Euclidean distance to own-cluster centroid, as well as a 0.67 unit increase in extremity score. These results align with previous findings regarding the greater distribution of own-centroid distances and extremity scores among Cluster 2 states. 
 
 ## Discussion
 
