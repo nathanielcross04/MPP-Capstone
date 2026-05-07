@@ -13,6 +13,10 @@ project:
     - apa.csl
     - map_data/network_map_interactive.html
     - map_data/network_map_years/
+    - Figures/radar_plot_1CS.mp4
+    - Figures/radar_plot_2CS.mp4
+    - Figures/medoid_map_1cs.mp4
+    - Figures/medoid_map_2cs.mp4
 
 website:
   title: "What a Clusterf*ck!"
