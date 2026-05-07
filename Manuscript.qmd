@@ -204,7 +204,7 @@ The spatial element to this panel dataset also enables a geographic analysis whi
 **Figure 3**
 ```{=html}
 <video controls style="width:60%; height:auto;">
-  <source src="XXX" type="video/mp4">
+  <source src="C:\Users\ndmcr\Desktop\MPP Capstone\Figures\radar_plot_2CS.mp4" type="video/mp4">
 </video>
 ```
 
