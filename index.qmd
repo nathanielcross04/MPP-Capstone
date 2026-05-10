@@ -14,7 +14,7 @@ execute:
   message: false
 ---
 
-# What a *Cluster*f\*ck! Making Sense of State-Level Immigration Policy
+# What a Clusterf\*ck! Making Sense of State-Level Immigration Policy
 
 ## Abstract
 

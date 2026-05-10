@@ -19,7 +19,7 @@ project:
     - Figures/medoid_map_2cs_new.mp4
 
 website:
-  title: What a *Cluster*f\*ck!
+  title: What a Clusterf\*ck!
   navbar:
     left:
       - text: "Read the Paper"

@@ -1,5 +1,5 @@
 ---
-title: What a *Cluster*f\*ck! Making Sense of State-Level Immigration Policy
+title: What a Clusterf\*ck! Making Sense of State-Level Immigration Policy
 author: "Nathaniel Cross"
 university: "The University of Arizona"
 advisor: "Adam Douglas Henry"
