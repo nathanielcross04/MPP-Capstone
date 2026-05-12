@@ -36,7 +36,7 @@ showtext_auto()
 
 # Colors
 #CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
-CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
+CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#D9D9D9")
 BASE_MAP_FILL   <- "#D9D9D9"
 BASE_MAP_BORDER <- "#FFFFFF"
 
@@ -47,7 +47,7 @@ YEARS           <- YEAR:YEAR
 FRAMES_PER_YEAR <- 1
 #FADE_FRAMES     <- round(FRAMES_PER_YEAR * 0.25)   # ~0.25 sec fade
 FADE_FRAMES     <- 0
-TITLE <- "medoid_map_2cs_2019_both.gif"
+TITLE <- "medoid_map_2cs_2019_red.gif"
 
 
 # ── 1. LOAD & PREP DISTANCE DATA ─────────────────────────────
