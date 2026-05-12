@@ -35,14 +35,19 @@ font_add_google("Lato", "lato")
 showtext_auto()
 
 # Colors
+#CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
 CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
 BASE_MAP_FILL   <- "#D9D9D9"
 BASE_MAP_BORDER <- "#FFFFFF"
 
+
 # Misc. parameters
-YEARS           <- 2000:2019
-FRAMES_PER_YEAR <- 64
-FADE_FRAMES     <- round(FRAMES_PER_YEAR * 0.25)   # ~0.25 sec fade
+YEAR <- 2019
+YEARS           <- YEAR:YEAR
+FRAMES_PER_YEAR <- 1
+#FADE_FRAMES     <- round(FRAMES_PER_YEAR * 0.25)   # ~0.25 sec fade
+FADE_FRAMES     <- 0
+TITLE <- "medoid_map_2cs_2019_both.gif"
 
 
 # ── 1. LOAD & PREP DISTANCE DATA ─────────────────────────────
@@ -286,7 +291,7 @@ png_files <- list.files(frame_dir, pattern = "\\.png$",
 
 gifski::gifski(
   png_files,
-  gif_file = file.path(OUTPUT_DIR, "medoid_map_2cs_2000_2019.gif"),
+  gif_file = file.path(OUTPUT_DIR, TITLE),
   width    = 1800,
   height   = 1100,
   delay    = 1 / FRAMES_PER_YEAR
@@ -295,6 +300,6 @@ gifski::gifski(
 # Clean up temp frames
 unlink(frame_dir, recursive = TRUE)
 
-message("GIF saved to: ", file.path(OUTPUT_DIR, "medoid_map_2cs_2000_2019.gif"))
+message("GIF saved to: ", file.path(OUTPUT_DIR, TITLE))
 
 rm(list = ls())

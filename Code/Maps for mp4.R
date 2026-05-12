@@ -303,7 +303,7 @@ CLUSTER_COLORS  <- c("1" = "#B5463A", "2" = "#2E86B5")
 BASE_MAP_FILL   <- "#D9D9D9"
 BASE_MAP_BORDER <- "#FFFFFF"
 
-YEARS           <- 2000:2019
+YEARS           <- 2005:2019
 FRAMES_PER_YEAR <- 64
 FADE_FRAMES     <- round(FRAMES_PER_YEAR * 0.25)
 
@@ -534,7 +534,7 @@ png_files <- list.files(frame_dir, pattern = "\\.png$",
 
 av::av_encode_video(
   input     = png_files,
-  output    = file.path(OUTPUT_DIR, "medoid_map_2cs.mp4"),
+  output    = file.path(OUTPUT_DIR, "medoid_map_2cs_2005on.mp4"),
   framerate = FRAMES_PER_YEAR,
   vfilter   = "scale=trunc(iw/2)*2:trunc(ih/2)*2"
 )
