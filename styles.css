@@ -259,12 +259,29 @@ table.table-striped thead td {
 
 /* ── NAVBAR DROPDOWN MENU ── */
 .navbar .dropdown-menu {
-  margin-top: 0 !important;        /* flush with navbar bottom */
-  border-radius: 0 0 6px 6px !important;  /* flat top, curved bottom */
+  margin-top: 0 !important;
+  border-radius: 0 0 6px 6px !important;
   border: none !important;
   background-color: #2E86B5 !important;
   padding: 4px 0 !important;
   box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.navbar .dropdown-menu.show {
+  top: 100% !important;
+  transform: none !important;
+  inset: auto !important;
+}
+
+/* ── KILL THE GAP BETWEEN NAVBAR AND DROPDOWN ── */
+.navbar .nav-item.dropdown,
+.navbar .nav-item.dropdown > .nav-link {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.navbar .dropdown-toggle::after {
+  vertical-align: middle !important;
 }
 
 /* ── DROPDOWN ITEMS — match navbar text style ── */
