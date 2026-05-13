@@ -256,3 +256,30 @@ table.table-striped thead td {
   width: 100% !important;
   overflow: visible !important;
 }
+
+/* ── NAVBAR DROPDOWN MENU ── */
+.navbar .dropdown-menu {
+  margin-top: 0 !important;        /* flush with navbar bottom */
+  border-radius: 0 0 6px 6px !important;  /* flat top, curved bottom */
+  border: none !important;
+  background-color: #2E86B5 !important;
+  padding: 4px 0 !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* ── DROPDOWN ITEMS — match navbar text style ── */
+.navbar .dropdown-menu .dropdown-item {
+  color: #fff !important;
+  background-color: transparent !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  padding: 6px 16px !important;
+  border-radius: 0 !important;
+}
+
+/* ── DROPDOWN ITEM HOVER — blue → white swap ── */
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item:focus {
+  background-color: #fff !important;
+  color: #2E86B5 !important;
+}

@@ -6,6 +6,7 @@ project:
     - Manuscript.qmd
     - Appendices.qmd
     - network_map.qmd
+    - Presentation.qmd
     - Code/state_tables.qmd
     - "!map_data/network_map_interactive.html"
     - "!map_data/network_map_years/"
@@ -34,6 +35,8 @@ website:
             href: Code/state_tables.qmd
           - text: "State Immigration Policy Network Map"
             href: network_map.qmd
+      - text: "Watch the Presentation"
+        href: Presentation.qmd
       - icon: github
         text: "Visit the Repo"
         href: https://github.com/nathanielcross04/MPP-Capstone-Replication
